@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+use strict;
+use RPC::XML::Client;
+use Data::Dumper;
+use YAML;
+
+my $ip = shift || die "first arg is IP";
+my $port = shift || die "second arg is port";
+my $function = shift || die "third arg is function";
+my @args = @ARGV;
+
+my $c = RPC::XML::Client->new("http://$ip:$port/");
+
+my $r = $c->send_request($function, @args);
+print Dump($r->value());

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "inspecting $2 in database $1"
+
+echo "structure:"
+mtcon $1 -e "desc \`$2\`;"
+echo "count:"
+mtcon $1 -e "select count(*) from \`$2\`;"
+echo "last row:"
+mtcon $1 -e "select * from \`$2\` order by id desc limit 1;"
