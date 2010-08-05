@@ -1,0 +1,12 @@
+set editing-mode vi
+set keymap vi
+
+$if mode=vi
+set keymap vi-command
+# these are only in command mode
+set keymap vi-insert
+# these are only in insert mode
+"\C-l":clear-screen
+"\C-p":yank-last-arg
+"\C-k":backward-kill-word
+$endif

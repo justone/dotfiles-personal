@@ -1,0 +1,31 @@
+[user]
+	name = Nate Jones
+	email = nate@endot.org
+[color]
+	diff = auto
+	status = auto
+	branch = auto
+	interactive = auto
+	ui = true
+	pager = true
+[alias]
+	st = status
+	ss = status --short
+	ci = commit
+	di = diff
+	co = checkout
+	w = whatchanged
+	vimdiff = difftool --tool=vimdiff -y
+	unstage = reset HEAD
+	lol = log --oneline --graph --decorate
+	hist = log --all --graph --pretty='[%C(cyan)%h%Creset]%C(bold cyan)%d%Creset %s'
+	showdiff = "!sh -c 'git difftool --tool=vimdiff -y $1^ $1' -"
+	lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
+[merge]
+	tool = vimdiff
+[diff]
+	tool = opendiff
+[difftool]
+	prompt = false
+[push]
+	default = matching
