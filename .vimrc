@@ -106,6 +106,8 @@ function PerlTidy()
     let ptline = line('.')
     if filereadable('/usr/bin/perltidy') || filereadable('/Users/nate/perl5/bin/perltidy')
         %! perltidy -pbp
+    else
+        %! lwp-request -m POST http://perlster.com/tools/perltidy/service.pl
     endif
     exe ptline
 endfunction
