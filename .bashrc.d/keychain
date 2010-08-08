@@ -1,0 +1,21 @@
+
+if which keychain >/dev/null; then
+    # figure out what keys we have available to us
+    KEYS=""
+
+    for key in $HOME/.ssh/id_dsa $HOME/.ssh/id_rsa; do
+        if [ -e $key ]; then
+            KEYS="$KEYS $key"
+        fi
+    done
+
+    echo $KEYS
+
+    # Load them up with keychain
+    keychain --agents ssh $KEYS
+
+    # and populate the environment
+    eval `keychain --eval --quiet`
+else
+    echo "keychain command not found, not loaded"
+fi

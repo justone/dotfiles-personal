@@ -1,0 +1,6 @@
+# check for bash version
+
+# if bash version > 3
+
+. ~/.bash_completion.d/svn_completion
+. ~/.bash_completion.d/git_completion

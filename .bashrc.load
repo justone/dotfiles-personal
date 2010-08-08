@@ -4,3 +4,7 @@
 
 ####
 # put any bash customizations in here
+
+. $HOME/.bashrc.d/safe # includes aliases, shell, path
+. $HOME/.bashrc.d/wintitle
+#. $HOME/.bashrc.d/completion  # not quite safe yet

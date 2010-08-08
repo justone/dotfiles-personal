@@ -1,0 +1,35 @@
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profiles
+# sources /etc/bash.bashrc).
+#if [ -f /etc/bash_completion ]; then
+#    . /etc/bash_completion
+#fi
+
+# make sure bash checks for window size changes (why is this not the default?!?)
+shopt -s checkwinsize
+
+# so my mac terminal delete works
+stty erase 
+
+# when tab completing, don't show dotfiles
+bind 'set match-hidden-files off'
+
+# capture more history
+export HISTSIZE=5000
+export HISTFILESIZE=5000
+
+export EDITOR=vim
+
+# if we're running on a mac, use macvim for commit messages
+if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
+then
+    export SVN_EDITOR="mvim -f"
+    export GIT_EDITOR="mvim -f"
+fi
+
+# symlink the ssh auth sock to a known location for screen
+# from: http://www.reasonablyopinionated.com/2009/03/automatically-reconnecting-to-ssh-agent.html
+if [ "$TERM" != "screen" ]
+then
+    test $SSH_AUTH_SOCK && ln -sf "$SSH_AUTH_SOCK" "/tmp/ssh-agent-$USER-screen"
+fi

@@ -1,0 +1,3 @@
+. $HOME/.bashrc.d/path
+. $HOME/.bashrc.d/aliases
+. $HOME/.bashrc.d/shell

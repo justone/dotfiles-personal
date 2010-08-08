@@ -1,0 +1,46 @@
+# set a fancy prompt (non-color, unless we know we "want" color)
+##case "$TERM" in
+##xterm-color)
+##    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+##    ;;
+##*)
+##    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+##    ;;
+##esac
+
+# Comment in the above and uncomment this below for a color prompt
+#PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+if [ -e /usr/local/git/contrib/completion/git-completion.bash ]; then
+    #echo "file exists"
+    . /usr/local/git/contrib/completion/git-completion.bash
+else 
+    #echo "file does not exist"
+    __git_ps1 ()
+    {
+        printf ""
+    }
+fi 
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+xterm-color)
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\]$(__git_ps1 "[%s] ")\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    ;;
+*)
+    PS1='${debian_chroot:+($debian_chroot)}$(__git_ps1 "[%s] ")\u@\h:\w\$ '
+    ;;
+esac
+
+# Comment in the above and uncomment this below for a color prompt
+#PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+case $TERM in
+    xterm*)
+        PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"'
+        ;;
+    screen)
+        #PROMPT_COMMAND='echo -ne "\033k[${MTPROJ}] ${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\134\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"'
+        PROMPT_COMMAND='echo -ne "\033k[${MTPROJ}] ${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"'
+        ;;
+esac

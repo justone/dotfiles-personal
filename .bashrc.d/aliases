@@ -1,0 +1,36 @@
+# some more ls aliases
+alias ll='ls -l'
+alias la='ls -A'
+alias l='ls -CF'
+
+# let's not grep the svn dir
+alias grep='grep --exclude="*.svn*" '
+
+# no vi please
+alias vi=vim
+
+# svn aliases
+alias svnst='svn st --ignore-externals | grep -v "^X"'
+alias svnkey='svn propset svn:keywords "Id Date LastChangedDate HeadURL URL Author LastChangedBy Rev Revision;" '
+
+# perltidy
+alias pt="perltidy -pbp -b -nse -nst"
+alias pta="for i in \`ack -f --perl\`; do echo \$i; perltidy -pbp -b -nse -nst \$i; done"
+alias ptarm="find . -name \"*.bak\" | xargs rm -f {} \;"
+
+# testing aliases
+alias ta='./Build test'
+alias tav='./Build test --verbose 1'
+alias t='./Build test --test-files '
+alias tv='./Build test --verbose 1 --test-files '
+alias tc='./Build testcover'
+
+# keychain
+alias kcf="keychain --inherit any --quiet"
+alias kcr=". ~/.keychain/\$HOSTNAME-sh"
+
+# cleaning up downloads folder
+alias clean_downloads="find ~/Downloads -mtime +30 -maxdepth 1 -print -exec rmtrash '{}' ';'"
+
+# make it easy to strace quickly
+alias ss="sudo strace -s 1024 -p "
