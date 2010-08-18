@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+my $install_dir = shift || ".dotfiles";
+
+# make sure git is installed
+my $git_location = `/usr/bin/which git`;
+chomp $git_location;
+
+if ( !$git_location ) {
+    print "Installing git.\n";
+    `sudo aptitude install git-core`;
+}
+
+# clone the repo into ~/$install_dir
+chdir $ENV{'HOME'};
+if ( !-d $install_dir ) {
+    my $output
+        = `git clone endot.org\@endot.org:git/dotfiles.git $install_dir`;
+}
+else {
+    print "Already cloned.\n";
+}
+
+# run install script
+my $install = "$install_dir/bin/dfinst";
+if ( -e $install ) {
+    system($install);
+}
+else {
+    print "Skipped install.\n";
+}
