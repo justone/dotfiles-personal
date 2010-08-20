@@ -26,7 +26,7 @@ else {
 }
 
 # run install script
-my $install = "$install_dir/bin/dfinst";
+my $install = "$install_dir/bin/dfm";
 if ( -e $install ) {
     system($install);
 }
