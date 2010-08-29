@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo -n "Name: "
+git config user.name
+echo -n "Email: "
+git config user.email
+echo "Branches:"
+git branch
