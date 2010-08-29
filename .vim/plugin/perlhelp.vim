@@ -47,7 +47,7 @@ else
     let s:perlhelp = 'perldoc'
 endif
 if !executable(s:perlhelp)
-  echoe 'perldoc is not installed!'
+  "echoe 'perldoc is not installed!'
   finish
 endif
 let s:perlhelp = s:perlhelp . ' -T -t '
