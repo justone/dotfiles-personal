@@ -2,7 +2,6 @@
 
 use strict;
 use warnings;
-use Data::Dumper;
 
 my $install_dir = shift || ".dotfiles";
 
@@ -12,7 +11,7 @@ chomp $git_location;
 
 if ( !$git_location ) {
     print "Installing git.\n";
-    `sudo aptitude install git-core`;
+    `sudo aptitude install git-core -y`;
 }
 
 # clone the repo into ~/$install_dir
@@ -24,7 +23,7 @@ if ( !-d $install_dir ) {
     # checkout branch
     # TODO: take the branch name from command line
     chdir $install_dir;
-    my $output = `git checkout -b personal origin/personal`;
+    $output = `git checkout -b personal origin/personal`;
     chdir $ENV{'HOME'};
 }
 else {
