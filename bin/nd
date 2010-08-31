@@ -2,8 +2,13 @@
 
 use strict;
 use warnings;
+use Getopt::Long;
 
-my $install_dir = shift || ".dotfiles";
+my %opts;
+GetOptions( \%opts, 'dir=s', 'branch=s' );
+
+my $install_dir = $opts{dir}    || ".dotfiles";
+my $branch      = $opts{branch} || 'personal';
 
 # make sure git is installed
 my $git_location = `/usr/bin/which git`;
@@ -23,7 +28,7 @@ if ( !-d $install_dir ) {
     # checkout branch
     # TODO: take the branch name from command line
     chdir $install_dir;
-    $output = `git checkout -b personal origin/personal`;
+    $output = `git checkout -b $branch origin/$branch`;
     chdir $ENV{'HOME'};
 }
 else {
