@@ -23,7 +23,7 @@ if ( !$git_location ) {
 chdir $ENV{'HOME'};
 if ( !-d $install_dir ) {
     my $output
-        = `git clone endot.org\@endot.org:git/dotfiles.git $install_dir`;
+        = `git clone endot.org\@endot.org:dotfiles.git $install_dir`;
 
     # checkout branch
     # TODO: take the branch name from command line
