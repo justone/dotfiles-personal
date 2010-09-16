@@ -3,7 +3,7 @@ if which keychain >/dev/null; then
     # figure out what keys we have available to us
     KEYS=""
 
-    for key in $HOME/.ssh/*id_?sa; do
+    for key in `ls $HOME/.ssh/*id_?sa 2> /dev/null`; do
         KEYS="$KEYS $key"
     done
 
