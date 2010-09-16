@@ -3,19 +3,21 @@ if which keychain >/dev/null; then
     # figure out what keys we have available to us
     KEYS=""
 
-    for key in $HOME/.ssh/id_dsa $HOME/.ssh/id_rsa; do
-        if [ -e $key ]; then
-            KEYS="$KEYS $key"
-        fi
+    for key in $HOME/.ssh/*id_?sa; do
+        KEYS="$KEYS $key"
     done
 
-    echo $KEYS
+    if [ ! -n "$KEYS" ]; then
+        echo "no keys found, not loading keychain"
+    else
+        echo "Keys: $KEYS"
 
-    # Load them up with keychain
-    keychain --agents ssh $KEYS
+        # Load them up with keychain
+        keychain --agents ssh $KEYS
 
-    # and populate the environment
-    eval `keychain --eval --quiet`
+        # and populate the environment
+        eval `keychain --eval --quiet`
+    fi
 else
     echo "keychain command not found, not loaded"
 fi
