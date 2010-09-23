@@ -188,3 +188,10 @@ nmap <Leader>fm :call FindMod()<cr>
 " fuzzy finder textmate
 noremap <leader>ff :FuzzyFinderTextMate<CR>
 noremap <leader>fr :FuzzyFinderMruFile<CR>
+
+" sessionman.vim mappings
+noremap <leader>sa :SessionSaveAs<CR>
+noremap <leader>ss :SessionSave<CR>
+noremap <leader>so :SessionOpen 
+noremap <leader>sl :SessionList<CR>
+noremap <leader>sc :SessionClose<CR>
