@@ -93,24 +93,12 @@ map <F5> :BufExplorer<CR>
 map <F6> :NERDTreeToggle<CR>
 map <F7> :call ToggleSyntax()<CR>
 map <F8> :set paste!<CR>
-map <F9> :call PerlTidy()<CR>
 map <F10> :diffu<CR>
 map <F11> :echo 'Current change: ' . changenr()<CR>
 map <F12> :noh<CR>
 
 " Testing aliases
 map ,tv :!./Build test --verbose 1 --test-files %<CR>
-
-" function to perl tidy
-function PerlTidy()
-    let ptline = line('.')
-    if filereadable('/usr/bin/perltidy') || filereadable('/Users/nate/perl5/bin/perltidy')
-        %! perltidy -pbp
-    else
-        %! lwp-request -m POST http://perlster.com/tools/perltidy/service.pl
-    endif
-    exe ptline
-endfunction
 
 function! ToggleSyntax()
    if exists("g:syntax_on")
@@ -144,46 +132,9 @@ au BufNewFile,BufRead *.t set filetype=perl
 au BufNewFile,BufRead *.tt set filetype=tt2html
 au BufNewFile,BufRead *.mt set filetype=tt2html
 
-map ,pt :call PerlTidy()<CR>
 map ,cp :%w ! pbcopy<CR>
 
 " older versions of this file contain helpers for HTML, JSP and Java
-
-" originally (aka inspired by) http://www.slideshare.net/c9s/perlhacksonvim
-fun! GetCursorModName()
-  let cw=substitute( expand("<cWORD>"), '.\{-}\(\(\w\+\)\(::\w\+\)*\).*$', '\1', '')
-  return cw
-endfunction
-
-fun! TranslateModName(n)
-  return substitute( a:n, '::', '/', 'g') . '.pm'
-endfunction
-
-fun! GetPerlIncs()
-  let out = system( "perl -e 'print join \"\\n\", @INC'" )
-  let paths = split( out, "\n" )
-  return paths
-endfunction
-
-fun! FindMod()
-  let paths = GetPerlIncs()
-  let fname = TranslateModName( GetCursorModName() )
-
-  if filereadable('lib/' . fname)
-    split 'lib/' . fname
-    return
-  endif
-
-  for p in paths
-    let fullpath = p . '/' . fname
-    if filereadable(fullpath)
-      exec 'split ' . fullpath
-      return
-    endif
-  endfor
-endfunction
-
-nmap <Leader>fm :call FindMod()<cr>
 
 " fuzzy finder textmate
 noremap <leader>ff :FuzzyFinderTextMate<CR>
