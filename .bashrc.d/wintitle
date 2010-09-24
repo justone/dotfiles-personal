@@ -22,15 +22,13 @@ else
     }
 fi 
 
-# set a fancy prompt (non-color, unless we know we "want" color)
-case "$TERM" in
-xterm-color)
+# set a fancy prompt (non-color, unless we can handle color)
+COLORS=$(tput colors 2> /dev/null)
+if [ $? = 0 ] && [ $COLORS -gt 2 ]; then
     PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\]$(__git_ps1 "[%s] ")\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    ;;
-*)
+else
     PS1='${debian_chroot:+($debian_chroot)}$(__git_ps1 "[%s] ")\u@\h:\w\$ '
-    ;;
-esac
+fi
 
 # Comment in the above and uncomment this below for a color prompt
 #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
