@@ -6,6 +6,10 @@
 if exists('g:loaded_fugitive') || &cp
   finish
 endif
+if v:version < 700
+    "echoerr "fugitive: this plugin requires vim >= 7."
+    finish
+endif
 let g:loaded_fugitive = 1
 
 if !exists('g:fugitive_git_executable')
