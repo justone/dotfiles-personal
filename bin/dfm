@@ -246,7 +246,12 @@ sub configure_bash_loader {
     }
 
     # check if the loader is in
-    if ( $bashrc_contents !~ /\.bashrc\.load/ ) {
+    # previous incarnations used .bashrc.nate
+    if ( $bashrc_contents =~ /\.bashrc\.nate/ ) {
+        INFO("Correcting loader in .bashrc");
+        $bashrc_contents =~ s/\.bashrc\.nate/\.bashrc\.load/;
+    }
+    elsif ( $bashrc_contents !~ /\.bashrc\.load/ ) {
         INFO("Appending loader to .bashrc");
         $bashrc_contents .= "\n. \$HOME/.bashrc.load\n";
     }
