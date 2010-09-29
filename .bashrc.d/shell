@@ -9,7 +9,10 @@
 shopt -s checkwinsize
 
 # so my mac terminal delete works
-stty erase 
+if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
+then
+    stty erase 
+fi
 
 # when tab completing, don't show dotfiles
 bind 'set match-hidden-files off'
