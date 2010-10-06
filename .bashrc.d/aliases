@@ -12,6 +12,7 @@ alias vi=vim
 # svn aliases
 alias svnst='svn st --ignore-externals | grep -v "^X"'
 alias svnkey='svn propset svn:keywords "Id Date LastChangedDate HeadURL URL Author LastChangedBy Rev Revision;" '
+alias desvn='rm -rf `find . -name .svn -type d`'
 
 # perltidy
 alias pt="perltidy -pbp -b -nse -nst"
