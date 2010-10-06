@@ -40,7 +40,7 @@ nmap <C-c><C-c> :!perl -Wc %<CR>
 
 " http://stackoverflow.com/questions/54255/in-vim-is-there-a-way-to-delete-without-putting-text-in-the-register
 " replaces whatever is visually highlighted with what's in the paste buffer
-vmap r "_dP
+"vmap r "_dP
 
 " custom surroundings for confluence editing
 " 'l' for literal
