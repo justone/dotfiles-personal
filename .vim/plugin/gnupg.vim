@@ -127,7 +127,6 @@ let g:loaded_gnupg = "$Revision: 3026 $"
 
 " check for correct vim version {{{2
 if (v:version < 700)
-  echohl ErrorMsg | echo 'plugin gnupg.vim requires Vim version >= 7.0' | echohl None
   finish
 endif
 
