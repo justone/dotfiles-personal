@@ -85,6 +85,12 @@ noremap <leader>es :sp <C-R>=expand("%:p:h") . "/" <CR>
 noremap <leader>ev :vsp <C-R>=expand("%:p:h") . "/" <CR>
 noremap <leader>et :tabe <C-R>=expand("%:p:h") . "/" <CR>
 
+" enable pathogen
+filetype off 
+call pathogen#helptags()
+call pathogen#runtime_append_all_bundles()
+
+" turn filetype goodness back on
 filetype on
 filetype plugin on
 filetype indent on
