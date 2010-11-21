@@ -8,12 +8,6 @@
 # make sure bash checks for window size changes (why is this not the default?!?)
 shopt -s checkwinsize
 
-# so my mac terminal delete works
-if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
-then
-    stty erase 
-fi
-
 # when tab completing, don't show dotfiles
 bind 'set match-hidden-files off'
 
