@@ -1,5 +1,8 @@
 # some more ls aliases
-alias ls='ls --color=auto'
+if [ "$TERM_PROGRAM" != "Apple_Terminal" ]
+then
+    alias ls='ls --color=auto'
+fi
 alias ll='ls -l'
 alias la='ls -A'
 alias l='ls -CF'
