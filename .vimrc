@@ -153,3 +153,6 @@ noremap <leader>ss :SessionSave<CR>
 noremap <leader>so :SessionOpen 
 noremap <leader>sl :SessionList<CR>
 noremap <leader>sc :SessionClose<CR>
+
+" don't be magical about the _ character in vimR
+let vimrplugin_underscore = 0
