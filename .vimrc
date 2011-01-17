@@ -156,3 +156,6 @@ noremap <leader>sc :SessionClose<CR>
 
 " don't be magical about the _ character in vimR
 let vimrplugin_underscore = 0
+
+" use system clipboard for everything
+set cb=unnamed
