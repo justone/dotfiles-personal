@@ -159,3 +159,6 @@ let vimrplugin_underscore = 0
 
 " use system clipboard for everything
 set cb=unnamed
+
+" Always do vimdiff in vertical splits
+set diffopt+=vertical
