@@ -1,1 +1,4 @@
-export PATH=$PATH:$HOME/bin
+PATH=$PATH:$HOME/bin
+PATH=$PATH:$HOME/bin/excluded
+
+export PATH
