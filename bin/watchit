@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+use IPC::Open3;
+use AnyEvent::Handle;
+use Getopt::Long;
+
+my %options;
+my $opts_ok = GetOptions( \%options, 'file=s@', 'execute=s', 'delay=i' );
+
+if ( !$options{file} || scalar( @{ $options{file} } ) == 0 ) {
+    die "need to specify things to watch (with -f)";
+}
+if ( !$options{execute} ) {
+    die "need to specify something to do (with -e)";
+}
+
+if ( !$options{delay} ) {
+    $options{delay} = 2;
+}
+
+my ( $wtr, $rdr, $err );
+my $pid
+    = open3( $wtr, $rdr, $err, '/usr/bin/inotifywait', '-rmq', '-e', 'modify',
+    @{ $options{file} } );
+
+my $changed_files = 0;
+my $skip_changes  = 0;
+
+my $handle;
+$handle = AnyEvent::Handle->new( fh => $rdr );
+$handle->on_read(
+    sub {
+        my $line = $_[0]->rbuf;
+        if ( $line !~ /\.sw.$/ && $line !~ /IGNORED/ ) {
+            if ( !$skip_changes ) {
+                $changed_files++;
+            }
+        }
+        $_[0]->rbuf = "";
+    }
+);
+
+# at a set interval, check if any files have changed, and execute whatever is
+# desired
+my $w = AnyEvent->timer(
+    after    => $options{delay},
+    interval => $options{delay},
+    cb       => sub {
+        $skip_changes = 1;
+        if ($changed_files) {
+            system( $options{execute} );
+        }
+        $skip_changes  = 0;
+        $changed_files = 0;
+    }
+);
+
+AnyEvent->condvar->recv;
