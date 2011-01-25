@@ -1,6 +1,10 @@
 " settings for all perl files
 set equalprg=perltidy\ -pbp\ -nse\ -nst
 
+" set perl folding
+let perl_fold = 1
+let foldlevel = 1
+
 " function to perl tidy
 function! PerlTidy()
     let ptline = line('.')
