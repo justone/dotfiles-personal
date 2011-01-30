@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+# test script;
+use File::Temp qw/ tempfile /;
+use File::Slurp;
+
+my ( $fh1, $original ) = tempfile();
+my ( $fh2, $new )      = tempfile();
+
+my $ls = `ls`;
+
+write_file( $original, $ls );
+write_file( $new,      $ls );
+
+system("vimdiff $original $new");
+
+my @original_files = split( /\n/, read_file($original) );
+my @new_files      = split( /\n/, read_file($new) );
+
+if ( scalar(@original_files) != scalar(@new_files) ) {
+    die "Not the same number of files in old and new list\n";
+}
+
+for ( my $i = 0; $i < scalar(@original_files); $i++ ) {
+    my $original_name = $original_files[$i];
+    my $new_name      = $new_files[$i];
+
+    if ( $original_name ne $new_name ) {
+        print "Renaming '$original_name' to '$new_name'\n";
+        rename( $original_name, $new_name );
+    }
+}
