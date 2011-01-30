@@ -6,7 +6,7 @@
 use strict;
 use warnings;
 
-my $diff_prog = "/usr/bin/vimdiff";
+my $diff_prog    = "/usr/bin/vimdiff";
 my $temp_file_re = qr{
 	\A
 	/tmp/          # something in the temp directory
@@ -20,7 +20,7 @@ my $temp_file_re = qr{
 	\z
 }xsm;
 
-print STDERR join( ' ', @ARGV), "\n";
+print STDERR join( ' ', @ARGV ), "\n";
 
 # the left or previous file
 my $previous_file = $ARGV[5];
@@ -72,4 +72,4 @@ my @VIM_COMMANDS = (
 
 my @cmd = ( "$diff_prog", @VIM_COMMANDS, "$previous_file", "$new_file" );
 print STDERR join( ' ', @cmd ), "\n";
-system( @cmd );
+system(@cmd);
