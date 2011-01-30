@@ -11,10 +11,16 @@ use File::Slurp;
 my ( $fh1, $original ) = tempfile();
 my ( $fh2, $new )      = tempfile();
 
-my $ls = `ls`;
+my $files;
+if ( scalar(@ARGV) ) {
+    $files = join( "\n", @ARGV );
+}
+else {
+    $files = `ls`;
+}
 
-write_file( $original, $ls );
-write_file( $new,      $ls );
+write_file( $original, $files );
+write_file( $new,      $files );
 
 system(
     "vimdiff -c 'set nomodifiable' -c 'wincmd w' -c 'set foldlevel=1' $original $new"
