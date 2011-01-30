@@ -16,7 +16,9 @@ my $ls = `ls`;
 write_file( $original, $ls );
 write_file( $new,      $ls );
 
-system("vimdiff $original $new");
+system(
+    "vimdiff -c 'set nomodifiable' -c 'wincmd w' -c 'set foldlevel=1' $original $new"
+);
 
 my @original_files = split( /\n/, read_file($original) );
 my @new_files      = split( /\n/, read_file($new) );
