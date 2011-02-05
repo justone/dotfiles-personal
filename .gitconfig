@@ -21,6 +21,7 @@
 	hist = log --all --graph --pretty='[%C(cyan)%h%Creset]%C(bold cyan)%d%Creset %s'
 	showdiff = "!sh -c 'git difftool --tool=vimdiff -y $1^ $1' -"
 	lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
+    x = "!gitx"
 [merge]
 	tool = vimdiff
 [diff]
