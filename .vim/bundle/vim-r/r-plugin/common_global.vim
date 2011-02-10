@@ -1815,9 +1815,7 @@ if exists("g:ConqueTerm_Loaded") && !exists("g:vimrplugin_conqueplugin")
       let g:vimrplugin_conqueplugin = 0
     endif
   else
-    call RWarningMsg("Python interface must be enabled to run Vim-R-Plugin with Conque Shell.")
     let g:vimrplugin_conqueplugin = 0
-    sleep 2
   endif
 endif
 if exists("g:vimrplugin_conqueplugin") && g:vimrplugin_conqueplugin == 1
