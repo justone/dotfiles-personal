@@ -3,17 +3,21 @@
 use Test::More;
 use strict;
 use FindBin qw($Bin);
+use English qw( -no_match_vars );
 
 require "$Bin/helper.pl";
 
 my $file_slurp_available = load_mod("File::Slurp qw(read_file)");
+
+my $profile_filename = ( lc($OSNAME) eq 'darwin' ) ? '.profile' : '.bashrc';
 
 my @tests = (
     {   count => 9,
         code  => sub {
             my $t = 'simplest';
 
-            my ( $home, $repo ) = minimum_repo('simple');
+            my ( $home, $repo, $origin ) = minimum_home('simple');
+            my ( $home, $repo ) = minimum_home( 'simple2', $origin );
             my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
 
             ok( -d "$home/.backup", "$t - main backup dir exists" );
@@ -27,8 +31,9 @@ my @tests = (
         SKIP: {
                 skip "File::Slurp not found", 1 unless $file_slurp_available;
 
-                ok( read_file("$home/.bashrc") =~ /bashrc.load/,
-                    "$t - loader present in bashrc" );
+                ok( read_file("$home/$profile_filename") =~ /bashrc.load/,
+                    "$t - loader present in $profile_filename"
+                );
             }
 
             ok( !-e "$home/README.md", "$t - no README.md in homedir" );
@@ -39,7 +44,7 @@ my @tests = (
         code  => sub {
             my $t = 'with .ssh recurse (no .ssh dir)';
 
-            my ( $home, $repo ) = minimum_repo_with_ssh( 'ssh_no', 1 );
+            my ( $home, $repo ) = minimum_home_with_ssh( 'ssh_no', 1 );
             my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
 
             check_ssh_recurse( $t, $home );
@@ -49,7 +54,7 @@ my @tests = (
         code  => sub {
             my $t = 'with .ssh recurse (with .ssh dir)';
 
-            my ( $home, $repo ) = minimum_repo_with_ssh('ssh_with');
+            my ( $home, $repo ) = minimum_home_with_ssh('ssh_with');
             my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
 
             check_ssh_recurse( $t, $home );
@@ -78,8 +83,9 @@ sub check_ssh_recurse {
 SKIP: {
         skip "File::Slurp not found", 1 unless $file_slurp_available;
 
-        ok( read_file("$home/.bashrc") =~ /bashrc.load/,
-            "$t - loader present in bashrc" );
+        ok( read_file("$home/$profile_filename") =~ /bashrc.load/,
+            "$t - loader present in $profile_filename"
+        );
     }
 
     ok( !-e "$home/README.md", "$t - no README.md in homedir" );
