@@ -8,7 +8,7 @@ let foldlevel = 1
 " function to perl tidy
 function! PerlTidy()
     let ptline = line('.')
-    if filereadable('/usr/bin/perltidy') || filereadable('/Users/nate/perl5/bin/perltidy')
+    if executable('perltidy')
         %! perltidy -pbp
     else
         %! lwp-request -m POST http://perlster.com/tools/perltidy/service.pl
