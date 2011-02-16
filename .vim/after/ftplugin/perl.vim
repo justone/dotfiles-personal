@@ -28,6 +28,14 @@ while strlen(s:selfpath) > 1
     if match(s:selfpath, 'libs$') != -1
         break
     endif
+
+    " check if there's a directory next to an ancestor
+    " if so, include it instead
+    let s:siblingdir = glob(s:selfpath . '/' . '*libs')
+    if !empty(s:siblingdir) && isdirectory(s:siblingdir)
+        let s:selfpath = s:siblingdir
+        break
+    endif
     let s:selfpath = fnamemodify(s:selfpath, ':h')
 endwhile
 
