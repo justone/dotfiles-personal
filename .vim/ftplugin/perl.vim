@@ -1,9 +1,15 @@
-" settings for all perl files
-set equalprg=perltidy\ -pbp\ -nse\ -nst
+if exists("b:local_perlftplugin") | finish | endif
+let b:local_perlftplugin = 1
 
-" set perl folding
-let perl_fold = 1
-let foldlevel = 1
+" Make sure the continuation lines below do not cause problems in
+" compatibility mode.
+let s:save_cpo = &cpo
+
+" settings for all perl files
+setlocal equalprg=perltidy\ -pbp\ -nse\ -nst
+
+" unfold the top level by default
+setlocal foldlevel=1
 
 " function to perl tidy
 function! PerlTidy()
@@ -19,39 +25,8 @@ endfunction
 map <F9> :call PerlTidy()<CR>
 map ,pt :call PerlTidy()<CR>
 
-" originally (aka inspired by) http://www.slideshare.net/c9s/perlhacksonvim
-fun! GetCursorModName()
-  let cw=substitute( expand("<cWORD>"), '.\{-}\(\(\w\+\)\(::\w\+\)*\).*$', '\1', '')
-  return cw
-endfunction
+" perl syntax check
+nmap <C-c><C-c> :!perl -Wc %<CR>
 
-fun! TranslateModName(n)
-  return substitute( a:n, '::', '/', 'g') . '.pm'
-endfunction
-
-fun! GetPerlIncs()
-  let out = system( "perl -e 'print join \"\\n\", @INC'" )
-  let paths = split( out, "\n" )
-  return paths
-endfunction
-
-fun! FindMod()
-  let paths = GetPerlIncs()
-  let fname = TranslateModName( GetCursorModName() )
-
-  if filereadable('lib/' . fname)
-    split 'lib/' . fname
-    return
-  endif
-
-  for p in paths
-    let fullpath = p . '/' . fname
-    if filereadable(fullpath)
-      exec 'split ' . fullpath
-      return
-    endif
-  endfor
-endfunction
-
-nmap <Leader>fm :call FindMod()<cr>
-
+" Restore the saved compatibility options.
+let &cpo = s:save_cpo

@@ -23,8 +23,8 @@ set expandtab smarttab
 "
 "inoremap <Tab> <C-R>=Mosh_Tab_Or_Complete()<CR>
 
-" perl syntax check
-nmap <C-c><C-c> :!perl -Wc %<CR>
+" for some reason this has to go in .vimrc
+let perl_fold = 1
 
 " from http://github.com/adamhjk/adam-vim
 " nicer status line
