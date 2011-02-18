@@ -104,6 +104,9 @@ map <F10> :diffu<CR>
 map <F11> :echo 'Current change: ' . changenr()<CR>
 map <F12> :noh<CR>
 
+map <leader>nt :NERDTreeToggle<CR>
+map <leader>nf :NERDTreeFind<CR>
+
 " Testing aliases
 map ,tv :!./Build test --verbose 1 --test-files %<CR>
 
