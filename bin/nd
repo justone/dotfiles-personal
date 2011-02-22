@@ -16,7 +16,12 @@ chomp $git_location;
 
 if ( !$git_location ) {
     print "Installing git.\n";
-    `sudo aptitude install git-core -y`;
+    if ( -e '/etc/debian_version' ) {
+        `sudo aptitude install git-core -y`;
+    }
+    else {
+        `sudo yum install git -y`;
+    }
 }
 
 # clone the repo into ~/$install_dir
