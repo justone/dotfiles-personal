@@ -13,16 +13,6 @@ syntax enable
 set smartcase
 set expandtab smarttab
 
-" this conflicts with snipMate
-"function! Mosh_Tab_Or_Complete()
-"    if col('.')>1 && strpart( getline('.'), col('.')-2, 3 ) =~ '^\w'
-"        return "\<C-N>"
-"    else
-"        return "\<Tab>"
-"endfunction
-"
-"inoremap <Tab> <C-R>=Mosh_Tab_Or_Complete()<CR>
-
 " for some reason this has to go in .vimrc
 let perl_fold = 1
 
@@ -96,8 +86,6 @@ filetype plugin on
 filetype indent on
 
 map <F2> :map<CR>
-map <F5> :BufExplorer<CR>
-map <F6> :NERDTreeToggle<CR>
 map <F7> :call ToggleSyntax()<CR>
 map <F8> :set paste!<CR>
 map <F10> :diffu<CR>
@@ -118,8 +106,6 @@ function! ToggleSyntax()
    endif
 endfunction
 
-"let perl_fold = 1
-
 runtime macros/matchit.vim
 
 set foldmethod=marker
@@ -128,10 +114,8 @@ highlight Folded ctermbg=black ctermfg=blue
 " printing options
 set popt=paper:letter
 set printdevice=dev_np24
-function LineIt()
-	exe ":s/^/".line(".")."/"
-endfunction
 
+" ruby settings
 au BufNewFile,BufRead *.rhtml set sw=2 ts=2 bs=2 et smarttab
 au BufNewFile,BufRead *.rb set sw=2 ts=2 bs=2 et smarttab
 
