@@ -2,3 +2,14 @@ PATH=$PATH:$HOME/bin
 PATH=$PATH:$HOME/bin/excluded
 
 export PATH
+
+function vipath() {
+    TMP=`mktemp`;
+    editpath $1 2> $TMP;
+    if [ "$?" -ne 0 ]; then
+        cat $TMP;
+    else
+        source $TMP
+    fi
+    rm -f $TMP
+}

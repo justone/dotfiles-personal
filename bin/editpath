@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+use File::Slurp;
+use File::Temp qw/ tempfile /;
+
+my $pathname = shift || 'PATH';
+
+# grab path data
+my $pathdata = $ENV{$pathname};
+
+# break into lines
+if ($pathdata) {
+    $pathdata =~ s/:/\n/g;
+}
+
+# edit the data
+my ( $fh, $tempfile ) = tempfile();
+write_file( $tempfile, $pathdata );
+system("vim $tempfile");
+
+# read edited data
+my $new_pathdata = read_file($tempfile);
+chomp($new_pathdata);    # trash newline that vim adds at the end
+
+if ( !$new_pathdata ) {
+
+    # print out an unset line
+    print "unsetting $pathname\n";
+    print STDERR "unset $pathname\n";
+}
+else {
+
+    # and print out an export line
+    $new_pathdata =~ s/\n/:/g;
+    print "updating $pathname\n";
+    print STDERR "export $pathname=\"$new_pathdata\"\n";
+}
