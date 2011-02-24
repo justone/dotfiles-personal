@@ -4,7 +4,7 @@ PATH=$PATH:$HOME/bin/excluded
 export PATH
 
 function vipath() {
-    TMP=`mktemp`;
+    TMP=`mktemp -t tmp.XXXXXXXXX`;
     editpath $1 2> $TMP;
     if [ "$?" -ne 0 ]; then
         cat $TMP;
