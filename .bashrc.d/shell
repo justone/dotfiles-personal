@@ -20,8 +20,8 @@ export EDITOR=vim
 # if we're running on a mac, use macvim for commit messages
 if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
 then
-    export SVN_EDITOR="mvim -f"
-    export GIT_EDITOR="mvim -f"
+    export SVN_EDITOR='mvim -f --nomru -c "au VimLeave * !open -a Terminal"'
+    export GIT_EDITOR='mvim -f --nomru -c "au VimLeave * !open -a Terminal"'
 fi
 
 # symlink the ssh auth sock to a known location for screen
