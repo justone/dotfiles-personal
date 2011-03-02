@@ -20,7 +20,8 @@ if ($pathdata) {
 # edit the data
 my ( $fh, $tempfile ) = tempfile();
 write_file( $tempfile, $pathdata );
-system("vim $tempfile");
+system(
+    "vim -c 'set completeopt+=longest' -c 'imap <Tab> <C-x><C-f>' $tempfile");
 
 # read edited data
 my $new_pathdata = read_file($tempfile);
