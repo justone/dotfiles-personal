@@ -9,9 +9,9 @@ setlocal isfname+=:
 nmap <C-c><C-c> :!puppet --parseonly --ignoreimport %<CR>
 
 " remap gf to call our function that loads the filename under the cursor
-nmap <buffer> gf :call PuppetEditFilename()<CR>
+nmap <buffer> gf :call PuppetEditFilename(0)<CR>
 " same with C-wC-f, for opening in a split
-nmap <C-w><C-f> :call PuppetEditFilename()<CR>
+nmap <buffer> <C-w><C-f> :call PuppetEditFilename(1)<CR>
 
 " Restore the saved compatibility options.
 let &cpo = s:save_cpo

@@ -5,7 +5,7 @@ let g:loaded_puppet = 1
 
 let s:cpo_save = &cpo
 
-function! PuppetEditFilename()
+function! PuppetEditFilename(split)
     let l:fname = expand('<cfile>')
 
     if match(l:fname, '/') == -1
@@ -32,7 +32,11 @@ function! PuppetEditFilename()
         endif
     endif
 
-    exec "edit ".l:fname
+    if a:split
+        exec "split ".l:fname
+    else
+        exec "edit ".l:fname
+    endif
 endfunction
 
 let &cpo = s:cpo_save
