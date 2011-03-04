@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+use File::Basename;
+
+my $command = '';
+foreach my $arg (@ARGV) {
+    next if $arg =~ /^-/;
+    $command = $arg;
+    last;
+}
+
+# look for a subcommand script
+if ( my $subcommand_path = `which svn-$command` ) {
+    chomp($subcommand_path);
+    exec( $subcommand_path, @ARGV );
+    exit;
+}
+else {
+
+    # filter out the directory that this script is in from the path
+    # to avoid recursion
+    my $bindir = dirname($0);
+    $ENV{PATH} = join( ':',
+        grep { $_ !~ m/^$bindir\/?$/ } split( /:/, $ENV{PATH} ) );
+
+    # assume it's a builtin svn command and call accordingly
+    exec( 'svn', @ARGV );
+    exit;
+}

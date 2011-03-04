@@ -1,6 +1,6 @@
-PATH=$PATH:$HOME/bin
-PATH=$PATH:$HOME/bin/excluded
-PATH=$PATH:$HOME/bin/remotecopy
+PATH=$HOME/bin:$PATH
+PATH=$HOME/bin/excluded:$PATH
+PATH=$HOME/bin/remotecopy:$PATH
 
 export PATH
 
