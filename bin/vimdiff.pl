@@ -8,8 +8,7 @@ use warnings;
 
 my $diff_prog    = "/usr/bin/vimdiff";
 my $temp_file_re = qr{
-	\A
-	/tmp/          # something in the temp directory
+	/-?Tmp-?/          # something in the temp directory
 	(?:
 		svndiff    # svn 1.5.1
 	|
@@ -18,7 +17,7 @@ my $temp_file_re = qr{
 	(?: [.] \d+ )? # this may not be the first one created
 	[.]tmp
 	\z
-}xsm;
+}xsmi;
 
 print STDERR join( ' ', @ARGV ), "\n";
 
