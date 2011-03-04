@@ -20,13 +20,24 @@ if ( my $subcommand_path = `which svn-$command` ) {
 }
 else {
 
+    # assume it's a builtin svn command and call accordingly
+
+    # save original path
+    my $original_path = $ENV{PATH};
+
     # filter out the directory that this script is in from the path
     # to avoid recursion
     my $bindir = dirname($0);
     $ENV{PATH} = join( ':',
         grep { $_ !~ m/^$bindir\/?$/ } split( /:/, $ENV{PATH} ) );
 
-    # assume it's a builtin svn command and call accordingly
-    exec( 'svn', @ARGV );
+    # find the real svn path
+    my $real_svn_path = `which svn`;
+    chomp($real_svn_path);
+
+    # restore original path so that svn can call other things
+    $ENV{PATH} = $original_path;
+
+    exec( $real_svn_path, @ARGV );
     exit;
 }
