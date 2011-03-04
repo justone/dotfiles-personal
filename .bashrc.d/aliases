@@ -19,7 +19,9 @@ alias vi=vim
 alias psa='ps axwwfo user,pid,ppid,pcpu,pmem,vsz,rssize,tname,stat,start_time,bsdtime,command'
 
 # svn aliases
-alias svnst='svn st --ignore-externals | grep -v "^X"'
+function svnst() {
+    svn st --ignore-externals $* | grep -v "^X"
+}
 alias svnkey='svn propset svn:keywords "Id Date LastChangedDate HeadURL URL Author LastChangedBy Rev Revision;" '
 alias desvn='rm -rf `find . -name .svn -type d`'
 
