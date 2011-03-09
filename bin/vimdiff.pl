@@ -27,21 +27,6 @@ my $previous_file = $ARGV[5];
 # the right or new file
 my $new_file = $ARGV[6];
 
-# Some versions of subversion copy the modified file into tmp, thereby losing
-# any modifications you make in vimd will diffing.
-# Files get copied to tmp if they have svn:keywords.
-# http://stackoverflow.com/questions/396176/why-does-svn-diff-sometimes-copy-working-files-to-a-temp-file
-# newly created files will have both sides as a tmp file
-if ( $previous_file =~ m{$temp_file_re} ) {
-    $new_file = $ARGV[2];
-    $new_file =~ s{ \t [(] .* \z }{}xsm;
-}
-elsif ( $new_file =~ m{$temp_file_re} ) {
-    $new_file = $previous_file;
-    $new_file =~ s{ [.]svn/text-base/   }{}xsm;
-    $new_file =~ s{ [.]svn-base       \z}{}xsm;
-}
-
 # get the description of the left/previous buffer and replace tab with space
 my $previous_file_desc = $ARGV[2];
 $previous_file_desc =~ s/\t/ /g;
@@ -49,6 +34,23 @@ $previous_file_desc =~ s/\t/ /g;
 # same for the right/new buffer description
 my $new_file_desc = $ARGV[4];
 $new_file_desc =~ s/\t/ /g;
+
+# Some versions of subversion copy the modified file into tmp, thereby losing
+# any modifications you make in vimd will diffing.
+# Files get copied to tmp if they have svn:keywords.
+# http://stackoverflow.com/questions/396176/why-does-svn-diff-sometimes-copy-working-files-to-a-temp-file
+# newly created files will have both sides as a tmp file
+if ( $previous_file =~ m{$temp_file_re} ) {
+    if ( $new_file_desc !~ m{revision \d+} ) {
+        $new_file = $new_file_desc;
+        $new_file =~ s{ \t [(] .* \z }{}xsm;
+    }
+}
+elsif ( $new_file =~ m{$temp_file_re} ) {
+    $new_file = $previous_file;
+    $new_file =~ s{ [.]svn/text-base/   }{}xsm;
+    $new_file =~ s{ [.]svn-base       \z}{}xsm;
+}
 
 # These commands make it so the names of the buffers in vimdiff make sense
 # first, we set the name we want in a buffer variable (b:name)
