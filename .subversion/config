@@ -92,7 +92,7 @@ diff-cmd = vimdiff.pl
 ### which Subversion will ignore in its 'status' output, and
 ### while importing or adding files and directories.
 ### '*' matches leading dots, e.g. '*.rej' matches '.foo.rej'.
-global-ignores = *.o *.lo *.la #*# .*.rej *.rej .*~ *~ .*.swp .#* .DS_Store
+global-ignores = *.o *.lo *.la #*# .*.rej *.rej .*~ *~ .*.swp .#* .DS_Store tags
 # global-ignores = *.o *.lo *.la *.al .libs *.so *.so.[0-9]* *.a *.pyc *.pyo
 #   *.rej *~ #*# .#* .*.swp .DS_Store
 ### Set log-encoding to the default encoding for log messages
