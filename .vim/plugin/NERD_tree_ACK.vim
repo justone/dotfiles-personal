@@ -16,6 +16,9 @@
 if exists("g:loaded_nerdtree_ack")
     finish
 endif
+if v:version < 700
+    finish
+endif
 
 let g:loaded_nerdtree_ack = 1
 
