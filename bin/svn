@@ -13,7 +13,7 @@ foreach my $arg (@ARGV) {
 }
 
 # look for a subcommand script
-if ( my $subcommand_path = `which svn-$command` ) {
+if ( my $subcommand_path = `which svn-$command 2>/dev/null` ) {
     chomp($subcommand_path);
     exec( $subcommand_path, @ARGV );
     exit;
