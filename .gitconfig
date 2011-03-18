@@ -31,3 +31,5 @@
 	prompt = false
 [push]
 	default = matching
+[core]
+	excludesfile = ~/.gitignore.global
