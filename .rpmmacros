@@ -1,0 +1,2 @@
+# show the architecture on packages
+%_query_all_fmt %%{name}-%%{version}-%%{release}.%%{arch}
