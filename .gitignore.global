@@ -1,3 +1,4 @@
 .svn
 .DS_Store
 *.sw?
+.AppleDouble
