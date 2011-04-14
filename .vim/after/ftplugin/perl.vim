@@ -1,4 +1,4 @@
-if exists("b:local_afterperlftplugin") | finish | endif
+if exists("b:local_afterperlftplugin") || v:version < 700 | finish | endif
 let b:local_afterperlftplugin = 1
 
 let s:save_cpo = &cpo
