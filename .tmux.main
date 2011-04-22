@@ -1,0 +1,27 @@
+# main client conf
+
+source-file ~/.tmux.shared
+
+# change bind key to C-v
+set-option -g prefix C-v
+bind-key C-v send-prefix
+bind-key C-v last-window
+
+# reload
+bind r source-file ~/.tmux.main
+
+# VI for splitting
+bind S split-window -v
+bind V split-window -h
+
+# VI for switching between
+bind H select-pane -L
+bind J select-pane -D
+bind K select-pane -U
+bind L select-pane -R
+
+# window navigation
+bind-key -n M-C-h prev
+bind-key -n M-C-l next
+bind-key -n M-C-j select-pane -t :.-
+bind-key -n M-C-k select-pane -t :.+

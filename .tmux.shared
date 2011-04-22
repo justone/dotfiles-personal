@@ -1,0 +1,35 @@
+# shared amongst all tmux
+
+# use the canonical ssh auth sock location setup by shell
+setenv SSH_AUTH_SOCK "/tmp/ssh-agent-$USER-screen"
+
+# VI keybindings please
+setw -g mode-keys vi
+
+# make it so that I can hold down control for these
+bind-key C-d detach
+bind-key C-n next-window
+bind-key C-p previous-window
+
+# switch " over to selecting windows
+unbind '"'
+bind-key '"' choose-window
+
+## setting up status bar
+## mostly horked from http://www.linuxized.com/2010/05/switching-from-gnu-screen-to-tmux/
+
+set-option -g status-utf8 on
+# set-option -g status-justify centre
+set-option -g status-justify left
+set-option -g status-bg black
+set-option -g status-fg white
+set-option -g status-left-length 40
+
+setw -g window-status-bg black
+setw -g window-status-current-fg green
+setw -g window-status-alert-attr default
+setw -g window-status-alert-fg yellow
+
+set -g status-left '#[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
+#set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
+set -g status-right '#[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
