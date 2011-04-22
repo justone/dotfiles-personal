@@ -6,6 +6,16 @@ setenv SSH_AUTH_SOCK "/tmp/ssh-agent-$USER-screen"
 # VI keybindings please
 setw -g mode-keys vi
 
+# VI for splitting
+bind s split-window -v
+bind v split-window -h
+
+# VI for switching between
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
 # make it so that I can hold down control for these
 bind-key C-d detach
 bind-key C-n next-window
