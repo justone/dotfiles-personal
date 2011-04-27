@@ -5,8 +5,8 @@ let b:local_perlftplugin = 1
 " compatibility mode.
 let s:save_cpo = &cpo
 
-" settings for all perl files
-setlocal equalprg=perltidy\ -pbp\ -nse\ -nst
+" keywords have colons
+set isk+=:
 
 " unfold the top level by default
 setlocal foldlevel=1
