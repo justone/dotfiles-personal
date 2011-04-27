@@ -149,3 +149,6 @@ set cb=unnamed
 
 " Always do vimdiff in vertical splits
 set diffopt+=vertical
+
+" look for tags
+set tags=./tags;
