@@ -2,10 +2,11 @@
 
 source-file ~/.tmux.shared
 
-# change bind key to C-v
-set-option -g prefix C-v
-bind-key C-v send-prefix
-bind-key C-v last-window
+# change bind key to M-C-b
+set-option -g prefix M-C-b
+
+# prefix again goes to last window
+bind-key M-C-b last-window
 
 # reload
 bind r source-file ~/.tmux.main
@@ -13,5 +14,5 @@ bind r source-file ~/.tmux.main
 # window navigation
 bind-key -n M-C-h prev
 bind-key -n M-C-l next
-bind-key -n M-C-j select-pane -t :.-
-bind-key -n M-C-k select-pane -t :.+
+bind-key -n M-C-n select-pane -t :.-
+bind-key -n M-C-p select-pane -t :.+
