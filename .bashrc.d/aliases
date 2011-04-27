@@ -1,5 +1,7 @@
 # some more ls aliases
-if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
+OS=`uname -s`
+
+if [ "$OS" == "Darwin" ]
 then
     alias ls='ls -G'
 else
@@ -13,7 +15,12 @@ alias l='ls -CF'
 alias grep='grep --exclude="*.svn*" '
 
 # no vi please
-alias vi=vim
+if [ "$OS" == "Darwin" ]
+then
+    alias vi='mvim -v'
+else
+    alias vi=vim
+fi
 
 # add PPID to ps
 alias psa='ps axwwfo user,pid,ppid,pcpu,pmem,vsz,rssize,tname,stat,start_time,bsdtime,command'
