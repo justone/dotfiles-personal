@@ -145,7 +145,9 @@ noremap <leader>sc :SessionClose<CR>
 let vimrplugin_underscore = 0
 
 " use system clipboard for everything
-set cb=unnamed
+if has("gui_running")
+    set cb=unnamed
+endif
 
 " Always do vimdiff in vertical splits
 set diffopt+=vertical

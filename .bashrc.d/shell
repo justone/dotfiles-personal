@@ -17,11 +17,12 @@ export HISTFILESIZE=5000
 
 export EDITOR=vim
 
+OS=`uname -s`
+
 # if we're running on a mac, use macvim for commit messages
-if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
+if [ "$OS" == "Darwin" ]
 then
-    export SVN_EDITOR='mvim -f --nomru -c "au VimLeave * !open -a Terminal"'
-    export GIT_EDITOR='mvim -f --nomru -c "au VimLeave * !open -a Terminal"'
+    export EDITOR='mvim -v'
 fi
 
 # symlink the ssh auth sock to a known location for screen
