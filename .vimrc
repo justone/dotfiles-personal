@@ -152,3 +152,8 @@ set diffopt+=vertical
 
 " look for tags
 set tags=./tags;
+
+" use brew's ctags instead of the system one
+if filereadable('/usr/local/bin/ctags')
+    let Tlist_Ctags_Cmd = '/usr/local/bin/ctags'
+endif
