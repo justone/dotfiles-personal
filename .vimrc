@@ -132,15 +132,16 @@ map ,cp :%w ! pbcopy<CR>
 
 " older versions of this file contain helpers for HTML, JSP and Java
 
-" fuzzy finder textmate
-let g:FuzzyFinderOptions = { 'Base':{}, 'Buffer':{}, 'File':{}, 'Dir':{},
-      \                      'MruFile':{}, 'MruCmd':{}, 'Bookmark':{},
-      \                      'Tag':{}, 'TaggedFile':{},
-      \                      'GivenFile':{}, 'GivenDir':{},
-      \                      'CallbackFile':{}, 'CallbackItem':{}, }
-let g:FuzzyFinderOptions.Base.max_menu_width = 150
-noremap <leader>ff :FuzzyFinderTextMate<CR>
-noremap <leader>fr :FuzzyFinderMruFile<CR>
+" fuzzy finder
+let g:fuf_modesDisable = [ 'mrucmd', ]
+let g:fuf_coveragefile_exclude = '\v\~$|blib|\.(o|exe|dll|bak|orig|swp)$|(^|[/\\])\.(hg|git|bzr)($|[/\\])'
+let g:fuf_mrufile_exclude = '\v\~$|\.(o|exe|dll|bak|orig|sw[po])$|^(\/\/|\\\\|\/mnt\/|\/media\/)|svn-base$'
+let g:fuf_maxMenuWidth = 150
+"let g:fuf_previewHeight = 20
+noremap <leader>ff :FufCoverageFile<CR>
+noremap <leader>fr :FufMruFile<CR>
+noremap <leader>ft :FufTag<CR>
+noremap <leader>fb :FufBuffer<CR>
 
 " sessionman.vim mappings
 noremap <leader>sa :SessionSaveAs<CR>
