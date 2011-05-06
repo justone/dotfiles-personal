@@ -3,6 +3,11 @@
 " Version:      1.2
 " GetLatestVimScripts: 2975 1 :AutoInstall: fugitive.vim
 
+" skip on < 7.0
+if v:version < 700
+    finish
+endif
+
 if exists('g:loaded_fugitive') || &cp
   finish
 endif
