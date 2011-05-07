@@ -13,6 +13,8 @@ syntax enable
 set smartcase
 set expandtab smarttab
 
+colorscheme ir_black
+
 " for some reason this has to go in .vimrc
 let perl_fold = 1
 
