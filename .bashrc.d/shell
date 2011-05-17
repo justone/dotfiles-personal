@@ -25,9 +25,11 @@ then
     export EDITOR='mvim -v'
 fi
 
-# symlink the ssh auth sock to a known location for screen
-# from: http://www.reasonablyopinionated.com/2009/03/automatically-reconnecting-to-ssh-agent.html
-if [ "$TERM" != "screen" ]
-then
-    test $SSH_AUTH_SOCK && ln -sf "$SSH_AUTH_SOCK" "/tmp/ssh-agent-$USER-screen"
-fi
+function reconnect_ssh_agent() {   
+    if [[ -n $TMUX ]]; then
+        NEW_SSH_AUTH_SOCK=`tmux showenv|grep ^SSH_AUTH_SOCK|cut -d = -f 2`
+        if [[ -n $NEW_SSH_AUTH_SOCK ]] && [[ -S $NEW_SSH_AUTH_SOCK ]]; then 
+            SSH_AUTH_SOCK=$NEW_SSH_AUTH_SOCK  
+        fi
+    fi
+}
