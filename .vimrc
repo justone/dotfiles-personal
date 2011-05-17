@@ -133,6 +133,12 @@ map ,cp :%w ! pbcopy<CR>
 " older versions of this file contain helpers for HTML, JSP and Java
 
 " fuzzy finder textmate
+let g:FuzzyFinderOptions = { 'Base':{}, 'Buffer':{}, 'File':{}, 'Dir':{},
+      \                      'MruFile':{}, 'MruCmd':{}, 'Bookmark':{},
+      \                      'Tag':{}, 'TaggedFile':{},
+      \                      'GivenFile':{}, 'GivenDir':{},
+      \                      'CallbackFile':{}, 'CallbackItem':{}, }
+let g:FuzzyFinderOptions.Base.max_menu_width = 150
 noremap <leader>ff :FuzzyFinderTextMate<CR>
 noremap <leader>fr :FuzzyFinderMruFile<CR>
 
