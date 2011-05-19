@@ -734,6 +734,9 @@ function! s:Commit(args) abort
     else
       silent execute '!'.command.' > '.outfile.' 2> '.errorfile
     endif
+    if !has('gui_running')
+      redraw!
+    endif
     if !v:shell_error
       if filereadable(outfile)
         for line in readfile(outfile)
@@ -1609,7 +1612,6 @@ endfunction
 function! s:ReplaceCmd(cmd,...) abort
   let fn = bufname('')
   let tmp = tempname()
-  let aw = &autowrite
   let prefix = ''
   try
     if a:0 && a:1 != ''
@@ -1620,10 +1622,8 @@ function! s:ReplaceCmd(cmd,...) abort
         let prefix = 'env GIT_INDEX_FILE='.s:shellesc(a:1).' '
       endif
     endif
-    set noautowrite
-    silent exe '!'.escape(prefix.a:cmd,'%#').' > '.tmp
+    call writefile(split(system(prefix.a:cmd), "\n", 1), tmp)
   finally
-    let &autowrite = aw
     if exists('old_index')
       let $GIT_INDEX_FILE = old_index
     endif
