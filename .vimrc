@@ -167,3 +167,11 @@ set tags=./tags;
 if filereadable('/usr/local/bin/ctags')
     let Tlist_Ctags_Cmd = '/usr/local/bin/ctags'
 endif
+
+" tabular mappings (http://vimcasts.org/episodes/aligning-text-with-tabular-vim/)
+nmap <Leader>a= :Tabularize /=<CR>
+vmap <Leader>a= :Tabularize /=<CR>
+nmap <Leader>a: :Tabularize /:\zs<CR>
+vmap <Leader>a: :Tabularize /:\zs<CR>
+nmap <Leader>a> :Tabularize /=><CR>
+vmap <Leader>a> :Tabularize /=><CR>
