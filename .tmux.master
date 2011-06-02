@@ -9,7 +9,7 @@ set-option -g prefix M-C-b
 bind-key M-C-b last-window
 
 # reload
-bind r source-file ~/.tmux.main
+bind r source-file ~/.tmux.master
 
 # window navigation
 bind-key -n M-C-h prev
