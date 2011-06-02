@@ -16,6 +16,10 @@ bind j select-pane -D
 bind k select-pane -U
 bind l select-pane -R
 
+# easily toggle synchronization (mnemonic: e is for echo)
+bind e setw synchronize-panes on
+bind E setw synchronize-panes off
+
 # make it so that I can hold down control for these
 bind-key C-d detach
 bind-key C-n next-window
