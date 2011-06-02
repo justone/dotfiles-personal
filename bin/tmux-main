@@ -1,0 +1,6 @@
+#!/bin/sh
+
+SESS=main
+
+tmux att -t $SESS -d ||
+tmux new -s $SESS

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+SESS=home
+
+tmux -f ~/.tmux.master att -t $SESS -d ||
+tmux -f ~/.tmux.master new -s $SESS
