@@ -175,3 +175,11 @@ nmap <Leader>a: :Tabularize /:\zs<CR>
 vmap <Leader>a: :Tabularize /:\zs<CR>
 nmap <Leader>a> :Tabularize /=><CR>
 vmap <Leader>a> :Tabularize /=><CR>
+
+" enable persistent undo
+if v:version >= 703
+    set undodir=~/.vimundo
+    set undofile
+    set undolevels=1000
+    set undoreload=10000
+endif
