@@ -178,6 +178,12 @@ vmap <Leader>a> :Tabularize /=><CR>
 
 " enable persistent undo
 if v:version >= 703
+
+    " ensure undo directory exists
+    if !isdirectory("~/.vimundo")
+        call system("mkdir ~/.vimundo")
+    endif
+
     set undodir=~/.vimundo
     set undofile
     set undolevels=1000
