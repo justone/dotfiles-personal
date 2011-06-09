@@ -189,3 +189,8 @@ if v:version >= 703
     set undolevels=1000
     set undoreload=10000
 endif
+
+" make searches the most magical
+"nnoremap / /\v
+"vnoremap / /\v
+"noremap :s :s/\v
