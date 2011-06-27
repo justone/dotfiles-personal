@@ -1,6 +1,7 @@
 PATH=$HOME/bin:$PATH
 PATH=$HOME/bin/excluded:$PATH
 PATH=$HOME/bin/remotecopy:$PATH
+PATH=$HOME/bin/git-subtree:$PATH
 
 export PATH
 
