@@ -79,8 +79,8 @@ noremap <leader>et :tabe <C-R>=expand("%:p:h") . "/" <CR>
 
 " enable pathogen
 filetype off 
-call pathogen#helptags()
 call pathogen#runtime_append_all_bundles()
+call pathogen#helptags()
 
 " turn filetype goodness back on
 filetype on
