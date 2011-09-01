@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+if ( $0 =~ /_pp/ ) {
+    eval {
+        require XML::Twig;
+        require XML::Parser;
+    };
+    if ($@) {
+        print STDERR "XML::Twig and/or XML::Parser not found, try again.\n";
+    }
+    else {
+        my $xml = XML::Twig->new( pretty_print => 'indented' );
+
+        $xml->parse( \*STDIN );
+
+        $xml->print();
+    }
+}
+elsif ( $0 =~ /_si/ ) {
+    eval { require XML::Simple };
+    if ($@) {
+        print STDERR "XML::Simple not found, try again.\n";
+    }
+    else {
+        my $simple = XML::Simple::XMLin('-');
+        print Dumper($simple);
+    }
+}
