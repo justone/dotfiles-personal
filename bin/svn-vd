@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# toss the subcommand
+shift
+
+# use vimdiff instead of regular diff
+svn diff --diff-cmd=vimdiff.pl
