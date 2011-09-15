@@ -4,4 +4,4 @@
 shift
 
 # use vimdiff instead of regular diff
-svn diff --diff-cmd=vimdiff.pl
+svn diff --diff-cmd=vimdiff.pl $*
