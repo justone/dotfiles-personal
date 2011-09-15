@@ -1,0 +1,2 @@
+" prevent syntastic from loading
+let g:loaded_syntastic_plugin = 1

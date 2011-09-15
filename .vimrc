@@ -199,3 +199,7 @@ endif
 "nnoremap / /\v
 "vnoremap / /\v
 "noremap :s :s/\v
+
+if filereadable(expand("~/.vimrc.local"))
+    source ~/.vimrc.local
+endif
