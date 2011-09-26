@@ -1,18 +1,7 @@
-
-if which keychain >/dev/null; then
-    # figure out what keys we have available to us
-    KEYS=""
-
-    for key in `ls $HOME/.ssh/*id_?sa 2> /dev/null`; do
-        KEYS="$KEYS $key"
-    done
-
-    if [ ! -n "$KEYS" ]; then
-        echo "no keys found, not loading keychain"
-    else
-        # and populate the environment
-        eval `keychain --eval --quiet --agents ssh $KEYS`
+# load all keys
+for key in `ls .ssh/*id_?sa 2> /dev/null`; do
+    ssh-add -l | grep $key &> /dev/null
+    if [ $? != 0 ]; then
+        ssh-add $key
     fi
-else
-    echo "keychain command not found, not loaded"
-fi
+done
