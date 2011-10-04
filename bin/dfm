@@ -9,6 +9,8 @@ use Getopt::Long;
 use Cwd qw(realpath);
 use File::Spec;
 
+our $VERSION = '0.5';
+
 # save path to this dfm program, for use in recursive calls
 my $self_dfm = $0;
 
@@ -30,15 +32,30 @@ $repo_dir =~ s/\/bin//;
 
 DEBUG("Repo dir: $repo_dir");
 
+my $profile_filename = '.bashrc';
+
+if ( lc($OSNAME) eq 'darwin' ) {
+    $profile_filename = '.profile';
+}
+
 my %opts;
+
+# parse global options first
+Getopt::Long::Configure('pass_through');
+GetOptions( \%opts, 'verbose', 'quiet', 'dry-run', 'help', 'version' );
+Getopt::Long::Configure('no_pass_through');
+
+if ( $opts{'help'} ) {
+    show_usage();
+    exit;
+}
+
+if ( $opts{'version'} ) {
+    show_version();
+    exit;
+}
+
 if ( $command eq 'install' ) {
-    GetOptions( \%opts, 'verbose', 'quiet', 'dry-run', 'help' );
-
-    if ( $opts{'help'} ) {
-        show_usage();
-        exit;
-    }
-
     INFO(
         "Installing dotfiles..." . ( $opts{'dry-run'} ? ' (dry run)' : '' ) );
 
@@ -51,66 +68,32 @@ if ( $command eq 'install' ) {
     configure_bash_loader();
 }
 elsif ( $command eq 'updates' ) {
-    GetOptions( \%opts, 'verbose', 'quiet', 'dry-run', 'no-fetch', 'help' );
+    GetOptions( \%opts, 'no-fetch' );
 
-    if ( $opts{'help'} ) {
-        show_usage();
-        exit;
-    }
-
-    chdir( $home . '/' . $repo_dir );
-
-    if ( !$opts{'no-fetch'} ) {
-        DEBUG('fetching changes');
-        system("git fetch") if !$opts{'dry-run'};
-    }
-
-    my $current_branch = get_current_branch();
-
-    print get_changes("$current_branch..origin/$current_branch"), "\n";
+    fetch_updates( \%opts );
 }
 elsif ( $command eq 'mi' || $command eq 'mergeandinstall' ) {
-    GetOptions( \%opts, 'verbose', 'quiet', 'dry-run', 'help', 'merge',
-        'rebase' );
+    GetOptions( \%opts, 'merge', 'rebase' );
 
-    if ( $opts{'help'} ) {
-        show_usage();
-        exit;
-    }
+    merge_and_install( \%opts );
+}
+elsif ( $command eq 'umi' || $command eq 'updatemergeandinstall' ) {
+    GetOptions( \%opts, 'merge', 'no-fetch' );
 
-    chdir( $home . '/' . $repo_dir );
+    fetch_updates( \%opts );
+    merge_and_install( \%opts );
+}
+elsif ( $command eq 'un' || $command eq 'uninstall' ) {
+    INFO( "Uninstalling dotfiles..."
+            . ( $opts{'dry-run'} ? ' (dry run)' : '' ) );
 
-    my $current_branch = get_current_branch();
+    DEBUG("Running in [$Bin] and installing in [$home]");
 
-    my $sync_command = $opts{'rebase'} ? 'rebase' : 'merge';
+    # uninstall files
+    uninstall_files( $home . '/' . $repo_dir, $home );
 
-    if ( get_changes("$current_branch..origin/$current_branch") ) {
-
-        # check for local commits
-        if ( my $local_changes
-            = get_changes("origin/$current_branch..$current_branch") )
-        {
-
-            # if a decision wasn't made about how to deal with local commits
-            if ( !$opts{'merge'} && !$opts{'rebase'} ) {
-                WARN(
-                    "local changes detected, run with either --merge or --rebase"
-                );
-                print $local_changes, "\n";
-                exit;
-            }
-        }
-
-        INFO("using $sync_command to bring in changes");
-        system("git $sync_command origin/$current_branch")
-            if !$opts{'dry-run'};
-
-        INFO("re-installing dotfiles");
-        system("HOME=$home $self_dfm install") if !$opts{'dry-run'};
-    }
-    else {
-        INFO("no changes to merge");
-    }
+    # remove the bash loader
+    unconfigure_bash_loader();
 }
 else {
 
@@ -153,41 +136,94 @@ sub DEBUG {
     printf "DEBUG: %s\n", shift if $opts{verbose};
 }
 
+sub fetch_updates {
+    my $opts = shift;
+
+    chdir( $home . '/' . $repo_dir );
+
+    if ( !$opts->{'no-fetch'} ) {
+        DEBUG('fetching changes');
+        system("git fetch") if !$opts->{'dry-run'};
+    }
+
+    my $current_branch = get_current_branch();
+
+    print get_changes("$current_branch..origin/$current_branch"), "\n";
+}
+
+sub merge_and_install {
+    my $opts = shift;
+
+    chdir( $home . '/' . $repo_dir );
+
+    my $current_branch = get_current_branch();
+
+    my $sync_command = $opts->{'rebase'} ? 'rebase' : 'merge';
+
+    if ( get_changes("$current_branch..origin/$current_branch") ) {
+
+        # check for local commits
+        if ( my $local_changes
+            = get_changes("origin/$current_branch..$current_branch") )
+        {
+
+            # if a decision wasn't made about how to deal with local commits
+            if ( !$opts->{'merge'} && !$opts->{'rebase'} ) {
+                WARN(
+                    "local changes detected, run with either --merge or --rebase"
+                );
+                print $local_changes, "\n";
+                exit;
+            }
+        }
+
+        INFO("using $sync_command to bring in changes");
+        system("git $sync_command origin/$current_branch")
+            if !$opts->{'dry-run'};
+
+        INFO("re-installing dotfiles");
+        system("HOME=$home $self_dfm install") if !$opts->{'dry-run'};
+    }
+    else {
+        INFO("no changes to merge");
+    }
+}
+
 # function to install files
 sub install_files {
-    my ( $from_dir, $to_dir, $initial_skips ) = @_;
+    my ( $source_dir, $target_dir, $initial_skips ) = @_;
     $initial_skips ||= [];
 
-    DEBUG("Installing from $from_dir into $to_dir");
+    DEBUG("Installing from $source_dir into $target_dir");
 
     my $symlink_base;
 
     # if the paths have no first element in common
-    if ( ( File::Spec->splitdir($from_dir) )[1] ne
-        ( File::Spec->splitdir($to_dir) )[1] )
+    if ( ( File::Spec->splitdir($source_dir) )[1] ne
+        ( File::Spec->splitdir($target_dir) )[1] )
     {
-        $symlink_base = $from_dir;    # use absolute path
+        $symlink_base = $source_dir;    # use absolute path
     }
     else {
 
         # otherwise, calculate the relative path between the two directories
-        $symlink_base = File::Spec->abs2rel( $from_dir, $to_dir );
+        $symlink_base = File::Spec->abs2rel( $source_dir, $target_dir );
     }
 
-    my $backup_dir = $to_dir . '/.backup';
+    my $backup_dir = $target_dir . '/.backup';
     DEBUG("Backup dir: $backup_dir");
 
-    chdir($to_dir);
+    chdir($target_dir);
 
     # build up skip list
     my $skip_files = { map { $_ => 1 } @$initial_skips };
     my $recurse_files = [];
-    if ( -e "$from_dir/.dfminstall" ) {
-        open( my $skip_fh, '<', "$from_dir/.dfminstall" );
+    if ( -e "$source_dir/.dfminstall" ) {
+        open( my $skip_fh, '<', "$source_dir/.dfminstall" );
         foreach my $line (<$skip_fh>) {
             chomp($line);
-            if ( length ( $line ) ) {
-                my ( $filename, $option ) = split( / /, $line );
+            if ( length($line) ) {
+                my ( $filename, $option ) = split( q{ }, $line );
                 $skip_files->{$filename} = 1;
                 if ( !defined $option || $option ne 'skip' ) {
                     push( @$recurse_files, $filename );
@@ -206,7 +242,7 @@ sub install_files {
     }
 
     my $dirh;
-    opendir $dirh, $from_dir;
+    opendir $dirh, $source_dir;
     foreach my $direntry ( readdir($dirh) ) {
 
         # skip current and parent
@@ -241,14 +277,16 @@ sub install_files {
         }
     }
 
+    cleanup_dangling_symlinks( $source_dir, $target_dir );
+
     foreach my $recurse (@$recurse_files) {
-        if ( -d "$from_dir/$recurse" ) {
+        if ( -d "$source_dir/$recurse" ) {
             DEBUG("recursing into $recurse");
             if ( !-d $recurse ) {
                 DEBUG("making directory $recurse");
                 mkdir($recurse);
             }
-            install_files( "$from_dir/$recurse", "$to_dir/$recurse" );
+            install_files( "$source_dir/$recurse", "$target_dir/$recurse" );
         }
         else {
             WARN("couldn't recurse into $recurse, not a directory");
@@ -259,12 +297,139 @@ sub install_files {
 sub configure_bash_loader {
     chdir($home);
 
-    my $profile_filename = '.bashrc';
+    my $bashrc_contents = _read_bashrc_contents();
 
-    if ( lc($OSNAME) eq 'darwin' ) {
-        $profile_filename = '.profile';
+    # check if the loader is in
+    if ( $bashrc_contents =~ /\.bashrc\.nate/ ) {
+        INFO("Correcting loader in $profile_filename");
+        $bashrc_contents =~ s/\.bashrc\.nate/\.bashrc\.load/;
+    }
+    elsif ( $bashrc_contents !~ /\.bashrc\.load/ ) {
+        INFO("Appending loader to $profile_filename");
+        $bashrc_contents .= "\n. \$HOME/.bashrc.load\n";
     }
 
+    _write_bashrc_contents($bashrc_contents);
+}
+
+sub uninstall_files {
+    my ( $source_dir, $target_dir ) = @_;
+
+    DEBUG("Uninstalling from $target_dir");
+
+    my $backup_dir = $target_dir . '/.backup';
+    DEBUG("Backup dir: $backup_dir");
+
+    chdir($target_dir);
+
+    # build up recurse list
+    my $recurse_files = [];
+    if ( -e "$source_dir/.dfminstall" ) {
+        open( my $dfminstall_fh, '<', "$source_dir/.dfminstall" );
+        foreach my $line (<$dfminstall_fh>) {
+            chomp($line);
+            if ( length($line) ) {
+                my ( $filename, $option ) = split( q{ }, $line );
+                if ( !defined $option || $option ne 'skip' ) {
+                    push( @$recurse_files, $filename );
+                }
+            }
+        }
+        close($dfminstall_fh);
+    }
+
+    my $dirh;
+    opendir $dirh, $target_dir;
+    foreach my $direntry ( readdir($dirh) ) {
+
+        DEBUG(" Working on $direntry");
+
+        if ( -l $direntry ) {
+            my $link_target = readlink($direntry);
+            DEBUG("$direntry points a $link_target");
+            my ( $volume, @elements ) = File::Spec->splitpath($link_target);
+            my $element = pop @elements;
+
+            my $target_base = realpath(
+                File::Spec->rel2abs( File::Spec->catpath( '', @elements ) ) );
+
+            DEBUG("target_base $target_base $source_dir");
+            if ( $target_base eq $source_dir ) {
+                INFO("  Removing $direntry ($link_target).");
+                unlink($direntry) if !$opts{'dry-run'};
+            }
+
+            my $backup_path = File::Spec->catpath( '', '.backup', $element );
+            if ( -e $backup_path ) {
+                INFO("  Restoring $direntry from backup.");
+                rename( $backup_path, $element ) if !$opts{'dry-run'};
+            }
+        }
+    }
+
+    foreach my $recurse (@$recurse_files) {
+        if ( -d "$target_dir/$recurse" ) {
+            DEBUG("recursing into $recurse");
+            uninstall_files( "$source_dir/$recurse", "$target_dir/$recurse" );
+        }
+        else {
+            WARN("couldn't recurse into $recurse, not a directory");
+        }
+    }
+}
+
+sub cleanup_dangling_symlinks {
+    my ( $source_dir, $target_dir ) = @_;
+
+    DEBUG(" Cleaning up dangling symlinks in $target_dir");
+
+    my $dirh;
+    opendir $dirh, $target_dir;
+    foreach my $direntry ( readdir($dirh) ) {
+
+        DEBUG(" Working on $direntry");
+        if ( -l $direntry && !-e $direntry ) {
+            my $link_target = readlink($direntry);
+            DEBUG("$direntry points at $link_target");
+            my ( $volume, @elements ) = File::Spec->splitpath($link_target);
+            my $element = pop @elements;
+
+            my $target_base = realpath(
+                File::Spec->rel2abs( File::Spec->catpath( '', @elements ) ) );
+
+            DEBUG("target_base $target_base $source_dir");
+            if ( $target_base eq $source_dir ) {
+                INFO(
+                    "  Cleaning up dangling symlink $direntry ($link_target)."
+                );
+                unlink($direntry) if !$opts{'dry-run'};
+            }
+        }
+    }
+}
+
+sub unconfigure_bash_loader {
+    chdir($home);
+
+    my $bashrc_contents = _read_bashrc_contents();
+
+    # remove bash loader if found
+    $bashrc_contents =~ s{\n. \$HOME/.bashrc.load\n}{}gs;
+
+    _write_bashrc_contents($bashrc_contents);
+}
+
+sub _write_bashrc_contents {
+    my $bashrc_contents = shift;
+
+    if ( !$opts{'dry-run'} ) {
+        open( my $bashrc_out, '>', $profile_filename );
+        print $bashrc_out $bashrc_contents;
+        close $bashrc_out;
+    }
+}
+
+sub _read_bashrc_contents {
     my $bashrc_contents;
     {
         local $INPUT_RECORD_SEPARATOR = undef;
@@ -276,35 +441,27 @@ sub configure_bash_loader {
             $bashrc_contents = '';
         }
     }
-
-    # check if the loader is in
-    # previous incarnations used .bashrc.nate
-    if ( $bashrc_contents =~ /\.bashrc\.nate/ ) {
-        INFO("Correcting loader in $profile_filename");
-        $bashrc_contents =~ s/\.bashrc\.nate/\.bashrc\.load/;
-    }
-    elsif ( $bashrc_contents !~ /\.bashrc\.load/ ) {
-        INFO("Appending loader to $profile_filename");
-        $bashrc_contents .= "\n. \$HOME/.bashrc.load\n";
-    }
-
-    if ( !$opts{'dry-run'} ) {
-        open( my $bashrc_out, '>', $profile_filename );
-        print $bashrc_out $bashrc_contents;
-        close $bashrc_out;
-    }
+    return $bashrc_contents;
 }
 
 sub show_usage {
+    show_version();
     print <<END;
+
 Usage:
     dfm install [--verbose|--quiet] [--dry-run]
+    dfm uninstall [--verbose|--quiet] [--dry-run]
     dfm updates [--verbose|--quiet] [--dry-run] [--no-fetch]
     dfm mergeandinstall [--verbose|--quiet] [--dry-run] [--merge|--rebase]
+    dfm updatemergeandinstall [--verbose|--quiet] [--dry-run] [--merge|--rebase] [--no-fetch]
     dfm [git subcommand] [git options]
 
 For full documentation, run "perldoc ~/$repo_dir/bin/dfm".
 END
+}
+
+sub show_version {
+    print "dfm version $VERSION\n";
 }
 
 __END__
@@ -316,6 +473,10 @@ __END__
 =head1 SYNOPSIS
 
     dfm install [--verbose|--quiet] [--dry-run]
+
+    dfm uninstall [--verbose|--quiet] [--dry-run]
+     - or -
+    dfm un [--verbose|--quiet] [--dry-run]
 
     dfm updates [--verbose|--quiet] [--dry-run] [--no-fetch]
 
@@ -337,10 +498,16 @@ All the subcommands implemented by dfm have the following options:
   --verbose     Show extra information about what dfm is doing
   --quiet       Show as little info as possible.
   --dry-run     Don't do anything.
+  --version     Print version information.
 
 =head1 COMMANDS
 
 =over
+
+=item dfm uninstall
+
+This removes all traces of dfm and the dotfiles.  It basically is the reverse
+of 'dfm install'.
 
 =item dfm install
 
@@ -371,6 +538,10 @@ to skip the fetch and just show what's new.
 
 This merges or rebases the upstream changes in and re-installs dotfiiles.  A
 convenient alias is 'mi'.
+
+=item dfm updatemergeandinstall [--merge|--rebase] [--no-fetch]
+
+This combines 'updates' and 'mergeandinstall'.  A convenient alias is 'umi'.
 
 =item dfm [git subcommand] [git options]
 

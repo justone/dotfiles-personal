@@ -23,7 +23,7 @@ sub simple_repo {
     chdir($repo);
     `git init`;
     `git add .`;
-    `git ci -m 'initial commit'`;
+    `git commit -m 'initial commit'`;
     chdir($Bin);
     `git clone --bare $repo $repo.git`;
     `rm -rf $repo`;
@@ -60,6 +60,7 @@ sub minimum_home_with_ssh {
     # create repo and copy in dfm
     `echo ".ssh" >> $repo/.dfminstall`;
     `mkdir -p $repo/.ssh`;
+    `mkdir -p $repo/.ssh/config`;
     `echo "sshignore" > $repo/.ssh/.gitignore`;
 
     return ( $home, $repo );
