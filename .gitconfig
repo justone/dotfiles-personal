@@ -17,6 +17,7 @@
 	w = whatchanged
 	vimdiff = difftool --tool=vimdiff -y
 	vd = difftool --tool=vimdiff -y
+	od = difftool --tool=opendiff -y
 	unstage = reset HEAD
 	lol = log --oneline --graph --decorate
 	hist = log --all --graph --pretty='[%C(cyan)%h%Creset]%C(bold cyan)%d%Creset %s'
