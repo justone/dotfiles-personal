@@ -168,9 +168,15 @@ set diffopt+=vertical
 " look for tags
 set tags=./tags;
 
+" configure taglist.vim
+let Tlist_GainFocus_On_ToggleOpen = 1
+let Tlist_Close_On_Select = 1
+noremap <leader>tl :TlistToggle<CR>
+
 " use brew's ctags instead of the system one
 if filereadable('/usr/local/bin/ctags')
     let Tlist_Ctags_Cmd = '/usr/local/bin/ctags'
+    let g:autotagCtagsCmd = '/usr/local/bin/ctags'
 endif
 
 " tabular mappings (http://vimcasts.org/episodes/aligning-text-with-tabular-vim/)
