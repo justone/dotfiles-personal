@@ -160,6 +160,7 @@ let vimrplugin_underscore = 0
 " use system clipboard for everything
 if has("gui_running")
     set cb=unnamed
+    set guioptions-=T
 endif
 
 " Always do vimdiff in vertical splits
