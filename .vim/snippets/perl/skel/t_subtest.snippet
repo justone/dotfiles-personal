@@ -1,0 +1,15 @@
+#!perl
+
+use Test::More;
+use strict;
+
+use ${1};
+
+#use FindBin qw($Bin);
+#require "$Bin/helper.pl";
+
+subtest 'subtest' => sub {
+	ok( 1, "sub test" );
+}
+
+done_testing;
