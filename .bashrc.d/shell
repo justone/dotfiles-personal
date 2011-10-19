@@ -8,6 +8,9 @@
 # make sure bash checks for window size changes (why is this not the default?!?)
 shopt -s checkwinsize
 
+# don't blindly execute history expansions, but edit instead
+shopt -s histverify
+
 # when tab completing, don't show dotfiles
 bind 'set match-hidden-files off'
 
