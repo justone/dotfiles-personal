@@ -224,3 +224,6 @@ function! s:PasteEscaped()
     return substitute(escaped_register, '\n', '\\n', 'g')
   endif
 endfunction
+
+" use space bar to open/close folds
+nnoremap <space> za
