@@ -75,7 +75,10 @@ class AutoTag:
       self.tags = {}
       self.excludesuffix = [ "." + s for s in vim.eval("g:autotagExcludeSuffixes").split(".") ]
       verbosity = long(vim.eval("g:autotagVerbosityLevel"))
-      self.verbosity = verbosity if verbosity > 0 else 0
+      if verbosity > 0:
+          self.verbosity = verbosity
+      else:
+          self.verbosity = 0
       self.sep_used_by_ctags = '/'
       self.ctags_cmd = vim.eval("g:autotagCtagsCmd")
       self.tags_file = str(vim.eval("g:autotagTagsFile"))
