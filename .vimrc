@@ -115,7 +115,6 @@ endfunction
 runtime macros/matchit.vim
 
 set foldmethod=marker
-highlight Folded ctermbg=black ctermfg=blue
 
 " printing options
 set popt=paper:letter
