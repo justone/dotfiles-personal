@@ -2,3 +2,6 @@
 .DS_Store
 *.sw?
 .AppleDouble
+Build
+_build
+blib
