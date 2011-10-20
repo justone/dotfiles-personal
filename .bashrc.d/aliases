@@ -31,9 +31,6 @@ fi
 # add PPID to ps
 alias psa='ps axwwfo user,pid,ppid,pcpu,pmem,vsz,rssize,tname,stat,start_time,bsdtime,command'
 
-# generating ctags
-alias gentags='ctags -f tags --recurse --exclude=blib --exclude=.svn --exclude="*~"'
-
 # svn aliases
 function svnst() {
     svn st --ignore-externals $* | grep -v "^X"
