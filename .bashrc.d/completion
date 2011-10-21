@@ -4,3 +4,4 @@
 
 . ~/.bash_completion.d/svn_completion
 . ~/.bash_completion.d/git_completion
+. ~/.bash_completion.d/dfm_completion

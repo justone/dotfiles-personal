@@ -1,0 +1,145 @@
+#!bash
+#
+# bash/zsh completion support for dfm.
+#
+# Copyright (C) 2011 Nate Jones <nate@endot.org>
+# An extension on git_completion, from Shawn O. Pearce <spearce@spearce.org>
+# Distributed under the GNU General Public License, version 2.0.
+# 
+
+__dfm_commands ()
+{
+    echo "umi updatemergeandinstall updates mergeandinstall mi install uninstall";
+}
+
+__dfm_common_options="
+    --dry-run --version --verbose --quiet --help
+"
+
+_dfm_uninstall ()
+{
+    _dfm_install
+}
+_dfm_install ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    case "$cur" in
+    --*)
+        __gitcomp "$__dfm_common_options"
+        return
+        ;;
+    esac
+}
+
+_dfm_updatemergeandinstall ()
+{
+    _dfm_umi
+}
+
+_dfm_umi ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    case "$cur" in
+    --*)
+        __gitcomp "$__dfm_common_options --merge --rebase --no-fetch"
+        return
+        ;;
+    esac
+}
+
+_dfm_updates ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    case "$cur" in
+    --*)
+        __gitcomp "$__dfm_common_options --no-fetch"
+        return
+        ;;
+    esac
+}
+
+_dfm_mergeandinstall ()
+{
+    _dfm_mi
+}
+
+_dfm_mi ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    case "$cur" in
+    --*)
+        __gitcomp "$__dfm_common_options --merge --rebase"
+        return
+        ;;
+    esac
+}
+
+# This is basically the _git() completion function from git_completion
+# with a few tweaks to make it work with dfm
+#
+# * remove any setting of __git_dir, and set it to the dfm repo's .git dir.
+# * if the expanded git subcommand isn't found (i.e., it's a dfm subcommand),
+#   then call the appropriate function
+_dfm ()
+{
+    local i c=1 command __git_dir
+
+    __git_dir="$HOME/.dotfiles/.git"
+
+    if [[ -n ${ZSH_VERSION-} ]]; then
+        emulate -L bash
+        setopt KSH_TYPESET
+
+        # workaround zsh's bug that leaves 'words' as a special
+        # variable in versions < 4.3.12
+        typeset -h words
+    fi
+
+    local cur words cword prev
+    _get_comp_words_by_ref -n =: cur words cword prev
+    while [ $c -lt $cword ]; do
+        i="${words[c]}"
+        case "$i" in
+        --version|-p|--paginate) ;;
+        --help) command="help"; break ;;
+        *) command="$i"; break ;;
+        esac
+        c=$((++c))
+    done
+
+    if [ -z "$command" ]; then
+        case "$cur" in
+        --*)   __gitcomp "
+            --paginate
+            --no-pager
+            --git-dir=
+            --bare
+            --version
+            --exec-path
+            --html-path
+            --work-tree=
+            --namespace=
+            --help
+            "
+            ;;
+        *)     __git_compute_porcelain_commands
+               __gitcomp "$__git_porcelain_commands $(__git_aliases) $(__dfm_commands)" ;;
+        esac
+        return
+    fi
+
+    local completion_func="_git_${command//-/_}"
+    declare -f $completion_func >/dev/null && $completion_func && return
+
+    local expansion=$(__git_aliased_command "$command")
+    if [ -n "$expansion" ]; then
+        completion_func="_git_${expansion//-/_}"
+        declare -f $completion_func >/dev/null && $completion_func
+    else
+        completion_func="_dfm_${command//-/_}"
+        declare -f $completion_func >/dev/null && $completion_func
+    fi
+}
+
+complete -o bashdefault -o default -o nospace -F _dfm dfm 2>/dev/null \
+    || complete -o default -o nospace -F _dfm dfm
