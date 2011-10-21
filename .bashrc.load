@@ -12,7 +12,8 @@ export PATH=$PATH:$HOME/bin
 . $HOME/.bashrc.d/z/z.sh
 
 # if we're on a mac, include more
-if [ "$TERM_PROGRAM" == "Apple_Terminal" ]
+OS=`uname -s`
+if [ "$OS" == "Darwin" ]
 then
     . $HOME/.bashrc.d/completion
     . $HOME/.bashrc.d/keychain
