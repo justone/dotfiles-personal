@@ -1,8 +1,10 @@
 # increase recursion limit
-$DB::deep=1000 ;
+$DB::deep = 1000;
 
 # always show where we are
-sub afterinit { push @$DB::pretype, 'v' unless grep { /v/ } @$DB::pretype; } ;
+sub afterinit {
+    push @$DB::pretype, 'v' unless grep {/v/} @$DB::pretype;
+}
 
 # limit dump depth in case we hit any ORM objects
-parse_options('dumpDepth=2') ;
+parse_options('dumpDepth=2');
