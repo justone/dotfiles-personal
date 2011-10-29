@@ -45,19 +45,17 @@ let g:surround_108 = "{{\r}}"
 " 'n' for noformat
 let g:surround_110 = "{noformat}\r{noformat}"
 
-" use command-[jk$0^] to move thorough wrapped lines
-" http://vimcasts.org/episodes/soft-wrapping-text/
-" vmap for visual, nmap for normal mode
-vmap <D-j> gj
-vmap <D-k> gk
-vmap <D-4> g$
-vmap <D-6> g^
-vmap <D-0> g^
-nmap <D-j> gj
-nmap <D-k> gk
-nmap <D-4> g$
-nmap <D-6> g^
-nmap <D-0> g^
+" Navigate wrapped lines
+nnoremap j gj
+nnoremap k gk
+nnoremap $ g$
+nnoremap ^ g^
+nnoremap 0 g0
+vnoremap j gj
+vnoremap k gk
+vnoremap $ g$
+vnoremap ^ g^
+vnoremap 0 g0
 
 " always show 5 lines of context
 set scrolloff=5
@@ -227,3 +225,22 @@ endfunction
 
 " use space bar to open/close folds
 nnoremap <space> za
+
+" http://vim.wikia.com/wiki/Search_for_visually_selected_text
+vnoremap <silent> * :<C-U>
+  \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+  \gvy/<C-R><C-R>=substitute(
+  \escape(@", '/\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+  \gV:call setreg('"', old_reg, old_regtype)<CR>
+vnoremap <silent> # :<C-U>
+  \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+  \gvy?<C-R><C-R>=substitute(
+  \escape(@", '?\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+  \gV:call setreg('"', old_reg, old_regtype)<CR>
+
+" clear highlight quick
+nnoremap <leader><Space> :nohls<CR>
+
+" easy tab navigation
+nnoremap <silent> <C-N> :tabnext<CR>
+nnoremap <silent> <C-P> :tabprev<CR>
