@@ -143,6 +143,7 @@ let g:fuf_maxMenuWidth = 150
 "let g:fuf_previewHeight = 20
 noremap <leader>ff :FufCoverageFile<CR>
 noremap <leader>fr :FufMruFile<CR>
+noremap <leader>fl :FufMruFileInCwd<CR>
 noremap <leader>ft :FufTag<CR>
 noremap <leader>fb :FufBuffer<CR>
 
