@@ -5,6 +5,9 @@ let s:save_cpo = &cpo
 " mark colons as part of the filename
 setlocal isfname+=:
 
+" keywords have colons
+set isk+=:
+
 " puppet syntax check
 nmap <C-c><C-c> :!puppet --parseonly --ignoreimport %<CR>
 
