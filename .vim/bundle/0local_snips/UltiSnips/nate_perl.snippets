@@ -1,0 +1,75 @@
+snippet skel "Oneoff"
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# test script;
+use ${1};
+endsnippet
+
+snippet skel "Test Group"
+#!perl
+
+use Test::More;
+use strict;
+
+use ${1};
+
+#use FindBin qw($Bin);
+#require "$Bin/helper.pl";
+
+my @tests = (
+    {   count => 1,
+        code  => sub {
+            my $t = 'test group';
+
+            ok( 1, "$t - subtest" );
+            }
+
+    },
+);
+
+our $tests += $_->{count} for @tests;
+
+plan tests => $tests;
+
+$_->{code}->() for @tests;
+endsnippet
+
+snippet skel "Simple Test"
+#!perl
+
+use strict;
+use warnings;
+
+use Test::More;
+use ${1};
+
+
+done_testing;
+endsnippet
+
+snippet skel "Subtests"
+#!perl
+
+use Test::More;
+use strict;
+
+use ${1};
+
+#use FindBin qw($Bin);
+#require "$Bin/helper.pl";
+
+subtest 'subtest' => sub {
+	ok( 1, "sub test" );
+}
+
+done_testing;
+endsnippet
+
+snippet st "Subtest"
+subtest '${1}' => sub {
+	${2}
+};
+endsnippet

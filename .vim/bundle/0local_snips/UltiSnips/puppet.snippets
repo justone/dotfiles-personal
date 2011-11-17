@@ -1,0 +1,30 @@
+snippet /^class/ "Class declaration" !r
+class ${1:`!p
+path_elements = vim.current.buffer.name.split('/')
+
+class_elements = []
+found_manifests = False
+for eachElement in reversed(path_elements):
+    if eachElement == 'manifests':
+        found_manifests = True
+        continue
+
+    class_elements.append(eachElement)
+    if found_manifests:
+        break
+
+if found_manifests:
+    class_name = "::".join(reversed(class_elements))
+else:
+    class_name = class_elements[0]
+
+# take the .pp off the end
+class_name = class_name.replace('.pp', '')
+# if the end has ::init, we're in init.pp
+class_name = class_name.replace('::init', '')
+
+snip.rv = class_name
+`} {
+    ${0:# body}
+}
+endsnippet
