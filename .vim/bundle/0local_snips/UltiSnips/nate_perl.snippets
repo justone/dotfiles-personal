@@ -73,3 +73,15 @@ subtest '${1}' => sub {
 	${2}
 };
 endsnippet
+
+snippet ddump "Dump a data structure in a test"
+diag(Dumper(${1})); use Data::Dumper;
+endsnippet
+
+snippet dump "Dump a data structure"
+print STDERR Dumper(${1}); use Data::Dumper;
+endsnippet
+
+snippet findbin "import FindBin"
+use FindBin qw($Bin);
+endsnippet
