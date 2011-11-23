@@ -60,6 +60,9 @@ alias clean_downloads="find ~/Downloads -mtime +30 -maxdepth 1 -print -exec rmtr
 # make it easy to strace quickly
 alias ss="sudo strace -s 1024 -p "
 
+# iptables with more info (thanks Sharif)
+alias ipt='sudo iptables -nvL'
+
 # forget history for this session
 alias nvm="export HISTFILE=/dev/null"
 
