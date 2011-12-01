@@ -34,3 +34,5 @@
 	default = matching
 [core]
 	excludesfile = ~/.gitignore.global
+[github]
+	user = justone
