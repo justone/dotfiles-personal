@@ -1,4 +1,4 @@
-# main client conf
+# master client conf
 
 source-file ~/.tmux.shared
 
