@@ -16,20 +16,9 @@ bind j select-pane -D
 bind k select-pane -U
 bind l select-pane -R
 
-# keybindings to make resizing easier
-bind -r C-h resize-pane -L
-bind -r C-j resize-pane -D
-bind -r C-k resize-pane -U
-bind -r C-l resize-pane -R
-
 # easily toggle synchronization (mnemonic: e is for echo)
 bind e setw synchronize-panes on
 bind E setw synchronize-panes off
-
-# make it so that I can hold down control for these
-bind-key C-d detach
-bind-key C-n next-window
-bind-key C-p previous-window
 
 # switch " over to selecting windows
 unbind '"'

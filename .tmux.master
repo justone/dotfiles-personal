@@ -11,6 +11,17 @@ bind-key M-C-b last-window
 # reload
 bind r source-file ~/.tmux.master
 
+# keybindings to make resizing easier
+bind -r M-C-h resize-pane -L
+bind -r M-C-j resize-pane -D
+bind -r M-C-k resize-pane -U
+bind -r M-C-l resize-pane -R
+
+# make it so that I can hold down prefix key for these
+bind-key M-C-d detach
+bind-key M-C-n next-window
+bind-key M-C-p previous-window
+
 # window navigation
 bind-key -n M-C-h prev
 bind-key -n M-C-l next
