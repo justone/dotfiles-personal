@@ -79,6 +79,9 @@ noremap <leader>es :sp <C-R>=expand("%:p:h") . "/" <CR>
 noremap <leader>ev :vsp <C-R>=expand("%:p:h") . "/" <CR>
 noremap <leader>et :tabe <C-R>=expand("%:p:h") . "/" <CR>
 
+" use the octopress syntax for markdown files
+au BufNewFile,BufRead *.markdown setfiletype octopress
+
 " enable pathogen
 filetype off 
 call pathogen#runtime_append_all_bundles()
