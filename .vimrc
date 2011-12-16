@@ -22,6 +22,10 @@ let perl_fold = 1
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
 
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsJumpForwardTrigger="<tab>"
+let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
+
 " from http://github.com/adamhjk/adam-vim
 " nicer status line
 "set laststatus=2
