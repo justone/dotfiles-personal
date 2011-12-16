@@ -9,6 +9,8 @@
 	ui = true
 	pager = true
 [alias]
+	a = add
+	br = branch
 	st = status
 	ss = status --short
 	ci = commit
