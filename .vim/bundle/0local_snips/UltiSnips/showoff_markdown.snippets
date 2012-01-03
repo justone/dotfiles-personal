@@ -1,0 +1,157 @@
+# slides
+
+snippet /^slide/ "Subsection" r
+!SLIDE subsection
+
+# ${1:title} #
+endsnippet
+
+snippet /^slide/ "Bullets (incremental)" r
+!SLIDE bullets incremental
+
+# ${1:title} #
+
+* ${2:first}
+endsnippet
+
+snippet /^slide/ "Image" r
+!SLIDE center
+
+![${1:name}](${2:filename})
+endsnippet
+
+snippet /^slide/ "Commandline" r
+!SLIDE commandline incremental
+
+    $ ${1:command}
+endsnippet
+
+snippet /^slide/ "Execute" r
+!SLIDE execute
+
+# ${1:title} #
+
+    @@@ ${2:javascript/ruby/coffeescript}
+    ${3:code}
+endsnippet
+
+# notes
+
+snippet /^note/ "Notes" r
+.notes ${1:content}
+endsnippet
+
+# all known transitions
+
+snippet tr "Fade"
+transition=fade
+endsnippet
+
+snippet tr "blindX"
+transition=blindX
+endsnippet
+
+snippet tr "blindY"
+transition=blindY
+endsnippet
+
+snippet tr "blindZ"
+transition=blindZ
+endsnippet
+
+snippet tr "cover"
+transition=cover
+endsnippet
+
+snippet tr "curtainX"
+transition=curtainX
+endsnippet
+
+snippet tr "curtainY"
+transition=curtainY
+endsnippet
+
+snippet tr "fade"
+transition=fade
+endsnippet
+
+snippet tr "fadeZoom"
+transition=fadeZoom
+endsnippet
+
+snippet tr "growX"
+transition=growX
+endsnippet
+
+snippet tr "growY"
+transition=growY
+endsnippet
+
+snippet tr "scrollUp"
+transition=scrollUp
+endsnippet
+
+snippet tr "scrollDown"
+transition=scrollDown
+endsnippet
+
+snippet tr "scrollLeft"
+transition=scrollLeft
+endsnippet
+
+snippet tr "scrollRight"
+transition=scrollRight
+endsnippet
+
+snippet tr "scrollHorz"
+transition=scrollHorz
+endsnippet
+
+snippet tr "scrollVert"
+transition=scrollVert
+endsnippet
+
+snippet tr "shuffle"
+transition=shuffle
+endsnippet
+
+snippet tr "slideX"
+transition=slideX
+endsnippet
+
+snippet tr "slideY"
+transition=slideY
+endsnippet
+
+snippet tr "toss"
+transition=toss
+endsnippet
+
+snippet tr "turnUp"
+transition=turnUp
+endsnippet
+
+snippet tr "turnDown"
+transition=turnDown
+endsnippet
+
+snippet tr "turnLeft"
+transition=turnLeft
+endsnippet
+
+snippet tr "turnRight"
+transition=turnRight
+endsnippet
+
+snippet tr "uncover"
+transition=uncover
+endsnippet
+
+snippet tr "wipe"
+transition=wipe
+endsnippet
+
+snippet tr "zoom"
+transition=zoom
+endsnippet
+
