@@ -1,4 +1,4 @@
-.ssh
+.ssh recurse
 README.md skip
 CHANGELOG.md skip
 t skip
