@@ -3,18 +3,20 @@
 use strict;
 use warnings;
 use FindBin qw($Bin);
+use Test::More;
 
 sub simple_repo {
-    my $name = shift;
+    my ( $name, $dfminstall_contents ) = @_;
 
     my $repo = "$Bin/${name}_repo";
+    $dfminstall_contents ||= '';
 
     # clean up
     `rm -rf $repo`;
     `rm -rf $repo.git`;
 
     `mkdir -p $repo/bin`;
-    `echo "README.md skip\nt skip" > $repo/.dfminstall`;
+    `echo "$dfminstall_contents\nREADME.md skip\nt skip" > $repo/.dfminstall`;
     `mkdir -p $repo/t`;
     `echo "ignore" > $repo/.gitignore`;
     `echo "readme contents" > $repo/README.md`;
@@ -32,8 +34,9 @@ sub simple_repo {
 }
 
 sub minimum_home {
-    my $name = shift;
-    my $origin_repo_path = shift || simple_repo($name);
+    my ( $name, $options ) = @_;
+    my $origin_repo_path = $options->{origin}
+        || simple_repo( $name, $options->{dfminstall_contents} );
 
     my $home = "$Bin/$name";
     my $repo = "$home/.dotfiles";
@@ -71,5 +74,11 @@ sub load_mod {
 
     eval "use $module_name_and_args";
     return !$@;
+}
+
+sub check_minimum_test_more_version {
+    if ( $Test::More::VERSION < 0.98 ) {
+        plan skip_all => 'Test::More version 0.98 required';
+    }
 }
 1;

@@ -9,11 +9,14 @@ require "$Bin/helper.pl";
 
 my $file_slurp_available = load_mod('File::Slurp qw(read_file)');
 
+check_minimum_test_more_version();
+
 my $profile_filename = ( lc($OSNAME) eq 'darwin' ) ? '.profile' : '.bashrc';
 
 subtest 'simplest' => sub {
-    my ( $home, $repo, $origin ) = minimum_home('simple');
-    my ( $home, $repo ) = minimum_home( 'simple2', $origin );
+    my ( $home, $repo, $origin );
+    ( $home, $repo, $origin ) = minimum_home('simple');
+    ( $home, $repo ) = minimum_home( 'simple2', { origin => $origin } );
     my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
 
     ok( -d "$home/.backup",      'main backup dir exists' );
@@ -60,6 +63,56 @@ subtest 'with .ssh recurse (with .ssh dir)' => sub {
     my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
 
     check_ssh_recurse($home);
+};
+
+subtest 'with bin recurse' => sub {
+    my ( $home, $repo, $origin );
+    ( $home, $repo, $origin )
+        = minimum_home( 'bin_recurse', { dfminstall_contents => 'bin' } );
+
+    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+
+    `mkdir -p $home/bin`;
+    `echo "another bin" > $home/bin/another`;
+
+    ok( -d "$home/.backup", 'main backup dir exists' );
+    ok( -d "$home/bin",     'bin is a directory' );
+    ok( -l "$home/bin/dfm", 'dfm is a symlink' );
+    ok( -e "$home/bin/another" && !-l "$home/bin/another",
+        'existing binary still intact' );
+};
+
+subtest 'check deprecated recursion' => sub {
+    my ( $home, $repo );
+
+    ( $home, $repo )
+        = minimum_home( 'deprecated_recurse',
+        { dfminstall_contents => 'bin' } );
+
+    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+    like(
+        $output,
+        qr(using implied recursion in .dfminstall is deprecated),
+        'warning present'
+    );
+    like( $output, qr($repo/.dfminstall), '.dfminstall path present' );
+    like(
+        $output,
+        qr('bin recurse'),
+        'proper .dfminstall contents mentioned'
+    );
+
+    ( $home, $repo )
+        = minimum_home( 'deprecated_recurse',
+        { dfminstall_contents => 'bin recurse' } );
+
+    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+    unlike(
+        $output,
+        qr(using implied recursion in .dfminstall is deprecated),
+        'warning present when keyword used'
+    );
+
 };
 
 done_testing;

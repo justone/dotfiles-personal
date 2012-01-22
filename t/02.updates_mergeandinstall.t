@@ -9,11 +9,13 @@ require "$Bin/helper.pl";
 
 my $file_slurp_available = load_mod('File::Slurp qw(read_file)');
 
+check_minimum_test_more_version();
+
 my $profile_filename = ( lc($OSNAME) eq 'darwin' ) ? '.profile' : '.bashrc';
 
 subtest 'updates and mergeandinstall' => sub {
     my ( $home, $repo, $origin ) = minimum_home('host1');
-    my ( $home2, $repo2 ) = minimum_home( 'host2', $origin );
+    my ( $home2, $repo2 ) = minimum_home( 'host2', { origin => $origin } );
 
     add_file_and_push( $home, $repo );
 
@@ -40,7 +42,8 @@ subtest 'updates and mergeandinstall' => sub {
 
 subtest 'modifications in two repos, rebase' => sub {
     my ( $home, $repo, $origin ) = minimum_home('host1_rebase');
-    my ( $home2, $repo2 ) = minimum_home( 'host2_rebase', $origin );
+    my ( $home2, $repo2 )
+        = minimum_home( 'host2_rebase', { origin => $origin } );
 
     add_file_and_push( $home, $repo );
     add_file( $home2, $repo2, '.otherfile' );
@@ -75,7 +78,8 @@ subtest 'modifications in two repos, rebase' => sub {
 
 subtest 'modifications in two repos, merge' => sub {
     my ( $home, $repo, $origin ) = minimum_home('host1_merge');
-    my ( $home2, $repo2 ) = minimum_home( 'host2_merge', $origin );
+    my ( $home2, $repo2 )
+        = minimum_home( 'host2_merge', { origin => $origin } );
 
     add_file_and_push( $home, $repo );
     add_file( $home2, $repo2, '.otherfile' );
@@ -103,14 +107,14 @@ subtest 'modifications in two repos, merge' => sub {
     $output = `HOME=$home2 perl $repo2/bin/dfm log 2> /dev/null`;
     like(
         $output,
-        qr/Merge remote-tracking branch 'origin\/master'/,
+        qr/Merge remote(-tracking)? branch 'origin\/master'/,
         'git merge log message seen'
     );
 };
 
 subtest 'umi' => sub {
     my ( $home, $repo, $origin ) = minimum_home('host1');
-    my ( $home2, $repo2 ) = minimum_home( 'host2', $origin );
+    my ( $home2, $repo2 ) = minimum_home( 'host2', { origin => $origin } );
 
     add_file_and_push( $home, $repo );
 
