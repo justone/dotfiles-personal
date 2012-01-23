@@ -70,10 +70,10 @@ subtest 'with bin recurse' => sub {
     ( $home, $repo, $origin )
         = minimum_home( 'bin_recurse', { dfminstall_contents => 'bin' } );
 
-    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
-
     `mkdir -p $home/bin`;
     `echo "another bin" > $home/bin/another`;
+
+    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
 
     ok( -d "$home/.backup", 'main backup dir exists' );
     ok( -d "$home/bin",     'bin is a directory' );
@@ -113,6 +113,26 @@ subtest 'check deprecated recursion' => sub {
         'warning present when keyword used'
     );
 
+};
+
+subtest 'switch to recursion' => sub {
+    my ( $home, $repo, $origin );
+    ( $home, $repo, $origin ) = minimum_home('switch_recurse');
+
+    my $output;
+
+    $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+
+    ok( -d "$home/.backup", 'main backup dir exists' );
+    ok( -l "$home/bin",     'bin is a symlink' );
+
+    `echo "bin recurse" >> $repo/.dfminstall`;
+
+    $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+
+    ok( -d "$home/.backup", 'main backup dir exists' );
+    ok( -d "$home/bin",     'bin is a directory' );
+    ok( -l "$home/bin/dfm", 'dfm is a symlink' );
 };
 
 done_testing;
