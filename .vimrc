@@ -212,6 +212,13 @@ endif
 "vnoremap / /\v
 "noremap :s :s/\v
 
+if &diff
+    " silence syntastic
+    let g:loaded_syntastic_plugin = 1
+else
+    " nothing yet
+endif
+
 if filereadable(expand("~/.vimrc.local"))
     source ~/.vimrc.local
 endif
