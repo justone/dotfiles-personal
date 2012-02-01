@@ -30,7 +30,7 @@
 [merge]
 	tool = vimdiff
 [diff]
-	tool = opendiff
+	tool = vimdiff
 [difftool]
 	prompt = false
 [push]
