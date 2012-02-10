@@ -1,0 +1,4 @@
+[subtree "bin/git-subtree"]
+	url = https://github.com/apenwarr/git-subtree.git
+	path = bin/git-subtree
+	branch = master
