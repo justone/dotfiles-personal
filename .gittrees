@@ -1,4 +1,4 @@
 [subtree "bin/git-subtree"]
-	url = https://github.com/apenwarr/git-subtree.git
+	url = https://github.com/justone/git-subtree.git
 	path = bin/git-subtree
 	branch = master
