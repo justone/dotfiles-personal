@@ -2,3 +2,99 @@
 	url = https://github.com/justone/git-subtree.git
 	path = bin/git-subtree
 	branch = master
+[subtree "bin/remotecopy"]
+	url = git@github.com:justone/remotecopy.git
+	path = bin/remotecopy
+	branch = master
+[subtree ".bashrc.d/resty"]
+	url = https://github.com/micha/resty.git
+	path = .bashrc.d/resty
+	branch = master
+[subtree ".bashrc.d/z"]
+	url = https://github.com/rupa/z.git
+	path = .bashrc.d/z
+	branch = master
+[subtree ".vim/bundle/AutoTag"]
+	url = https://github.com/vim-scripts/AutoTag.git
+	path = .vim/bundle/AutoTag
+	branch = master
+[subtree ".vim/bundle/FuzzyFinder"]
+	url = https://github.com/vim-scripts/FuzzyFinder.git
+	path = .vim/bundle/FuzzyFinder
+	branch = master
+[subtree ".vim/bundle/L9"]
+	url = https://github.com/vim-scripts/L9.git
+	path = .vim/bundle/L9
+	branch = master
+[subtree ".vim/bundle/ack"]
+	url = https://github.com/mileszs/ack.vim.git
+	path = .vim/bundle/ack
+	branch = master
+[subtree ".vim/bundle/bufexplorer"]
+	url = https://github.com/vim-scripts/bufexplorer.zip.git
+	path = .vim/bundle/bufexplorer
+	branch = master
+[subtree ".vim/bundle/bufkill"]
+	url = https://github.com/vim-scripts/bufkill.vim.git
+	path = .vim/bundle/bufkill
+	branch = master
+[subtree ".vim/bundle/conque-shell"]
+	url = https://github.com/vim-scripts/Conque-Shell.git
+	path = .vim/bundle/conque-shell
+	branch = master
+[subtree ".vim/bundle/gundo"]
+	url = https://github.com/sjl/gundo.vim.git
+	path = .vim/bundle/gundo
+	branch = master
+[subtree ".vim/bundle/regbuf"]
+	url = https://github.com/tyru/regbuf.vim.git
+	path = .vim/bundle/regbuf
+	branch = master
+[subtree ".vim/bundle/syntastic"]
+	url = https://github.com/scrooloose/syntastic.git
+	path = .vim/bundle/syntastic
+	branch = master
+[subtree ".vim/bundle/tabular"]
+	url = https://github.com/godlygeek/tabular.git
+	path = .vim/bundle/tabular
+	branch = master
+[subtree ".vim/bundle/taglist"]
+	url = https://github.com/vim-scripts/taglist.vim.git
+	path = .vim/bundle/taglist
+	branch = master
+[subtree ".vim/bundle/ultisnips"]
+	url = https://github.com/SirVer/ultisnips.git
+	path = .vim/bundle/ultisnips
+	branch = master
+[subtree ".vim/bundle/vcscommand"]
+	url = git://repo.or.cz/vcscommand.git
+	path = .vim/bundle/vcscommand
+	branch = master
+[subtree ".vim/bundle/vim-colors-solarized"]
+	url = https://github.com/altercation/vim-colors-solarized.git
+	path = .vim/bundle/vim-colors-solarized
+	branch = master
+[subtree ".vim/bundle/vim-fugitive"]
+	url = https://github.com/tpope/vim-fugitive.git
+	path = .vim/bundle/vim-fugitive
+	branch = master
+[subtree ".vim/bundle/vim-markdown-preview"]
+	url = https://github.com/robgleeson/hammer.vim.git
+	path = .vim/bundle/vim-markdown-preview
+	branch = master
+[subtree ".vim/bundle/vim-octopress"]
+	url = https://github.com/tangledhelix/vim-octopress.git
+	path = .vim/bundle/vim-octopress
+	branch = master
+[subtree ".vim/bundle/vim-r"]
+	url = https://github.com/jcfaria/Vim-R-plugin.git
+	path = .vim/bundle/vim-r
+	branch = master
+[subtree ".vim/bundle/vim-speeddating"]
+	url = https://github.com/tpope/vim-speeddating.git
+	path = .vim/bundle/vim-speeddating
+	branch = master
+[subtree ".vim/bundle/vim-unimpaired"]
+	url = https://github.com/tpope/vim-unimpaired.git
+	path = .vim/bundle/vim-unimpaired
+	branch = master
