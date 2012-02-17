@@ -26,6 +26,17 @@ let g:UltiSnipsExpandTrigger="<tab>"
 let g:UltiSnipsJumpForwardTrigger="<tab>"
 let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
 
+" detect if we're on redhat/centos < 6 and skip ultisnips
+" older versions don't have a new enough version of python
+if filereadable("/etc/redhat-release")
+    let line = readfile("/etc/redhat-release")[0]
+    let s:majorver = matchlist(line, '\(\d\)\(.\d*\)\? *(\(.*\))')[1]
+    if s:majorver < 6
+        let did_UltiSnips_vim=1
+        let did_UltiSnips_vim_after=1
+    endif
+endif
+
 " from http://github.com/adamhjk/adam-vim
 " nicer status line
 "set laststatus=2
