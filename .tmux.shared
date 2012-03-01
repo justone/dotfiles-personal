@@ -24,6 +24,9 @@ bind E setw synchronize-panes off
 unbind '"'
 bind-key '"' choose-window
 
+# use ' to switch between sessions
+bind-key "'" choose-session
+
 ## setting up status bar
 ## mostly horked from http://www.linuxized.com/2010/05/switching-from-gnu-screen-to-tmux/
 
