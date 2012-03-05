@@ -98,3 +98,7 @@
 	url = https://github.com/tpope/vim-unimpaired.git
 	path = .vim/bundle/vim-unimpaired
 	branch = master
+[subtree ".vim/bundle/YAIFA"]
+	url = https://github.com/Raimondi/YAIFA.git
+	path = .vim/bundle/YAIFA
+	branch = master
