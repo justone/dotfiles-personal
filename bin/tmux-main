@@ -2,5 +2,9 @@
 
 SESS=main
 
+HN=`hostname -f`
+# TODO: this outputs '-ne' on OS X and debian
+echo -ne "\033k$HN\033\\"
+
 tmux att -t $SESS -d ||
 tmux new -s $SESS
