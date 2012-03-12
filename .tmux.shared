@@ -44,7 +44,6 @@ setw -g window-status-alert-fg yellow
 
 # monitor activity
 setw -g monitor-activity on
-set -g visual-activity on
 
 set -g status-left '#[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
 #set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
