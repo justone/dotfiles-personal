@@ -102,3 +102,7 @@
 	url = https://github.com/Raimondi/YAIFA.git
 	path = .vim/bundle/YAIFA
 	branch = master
+[subtree "bin/moreutils"]
+	url = git://git.kitenet.net/moreutils
+	path = bin/moreutils
+	branch = master
