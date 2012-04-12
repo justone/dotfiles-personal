@@ -106,3 +106,7 @@
 	url = git://git.kitenet.net/moreutils
 	path = bin/moreutils
 	branch = master
+[subtree ".vim/bundle/vimux"]
+	url = https://github.com/benmills/vimux.git
+	path = .vim/bundle/vimux
+	branch = master
