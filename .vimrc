@@ -269,3 +269,10 @@ nnoremap <leader><Space> :nohls<CR>
 " easy tab navigation
 nnoremap <silent> <C-N> :tabnext<CR>
 nnoremap <silent> <C-P> :tabprev<CR>
+
+" vimux config
+noremap <Leader>tp :PromptVimTmuxCommand<CR>
+noremap <Leader>tr :RunLastVimTmuxCommand<CR>
+noremap <Leader>ti :InspectVimTmuxRunner<CR>
+noremap <Leader>tx :CloseVimTmuxPanes<CR>
+noremap <Leader>tc :InterruptVimTmuxRunner<CR> 
