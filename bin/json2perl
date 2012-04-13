@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# test script;
+use JSON;
+use Data::Dumper;
+
+my $json_data = join('', <STDIN>);
+my $data = from_json($json_data, { allow_nonref => 1 } );
+
+print Dumper($data);
