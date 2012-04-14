@@ -27,6 +27,12 @@ bind-key '"' choose-window
 # use ' to switch between sessions
 bind-key "'" choose-session
 
+# number windows from 1
+set -g base-index 1
+
+# don't wait after escape
+set -s escape-time 0
+
 ## setting up status bar
 ## mostly horked from http://www.linuxized.com/2010/05/switching-from-gnu-screen-to-tmux/
 
