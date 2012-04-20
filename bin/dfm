@@ -123,6 +123,19 @@ sub get_current_branch {
     return $current_branch;
 }
 
+sub get_branch_remote {
+    my $branch        = shift;
+    my $branch_remote = `git config branch.$branch.remote`;
+    chomp $branch_remote;
+
+    DEBUG("remote for branch $branch: $branch_remote");
+
+    if ( $branch_remote eq "" ) {
+        WARN("no remote found for branch $branch");
+        exit(-1);
+    }
+}
+
 # a few log4perl-alikes
 sub WARN {
     printf "WARN: %s\n", shift;
@@ -147,8 +160,9 @@ sub fetch_updates {
     }
 
     my $current_branch = get_current_branch();
+    check_remote_branch($current_branch);
 
-    print get_changes("$current_branch..origin/$current_branch"), "\n";
+    print get_changes("$current_branch..$current_branch\@{u}"), "\n";
 }
 
 sub merge_and_install {
@@ -157,14 +171,15 @@ sub merge_and_install {
     chdir( $home . '/' . $repo_dir );
 
     my $current_branch = get_current_branch();
+    check_remote_branch($current_branch);
 
     my $sync_command = $opts->{'rebase'} ? 'rebase' : 'merge';
 
-    if ( get_changes("$current_branch..origin/$current_branch") ) {
+    if ( get_changes("$current_branch..$current_branch\@{u}") ) {
 
         # check for local commits
         if ( my $local_changes
-            = get_changes("origin/$current_branch..$current_branch") )
+            = get_changes("$current_branch\@{u}..$current_branch") )
         {
 
             # if a decision wasn't made about how to deal with local commits
@@ -178,7 +193,7 @@ sub merge_and_install {
         }
 
         INFO("using $sync_command to bring in changes");
-        system("git $sync_command origin/$current_branch")
+        system("git $sync_command $current_branch\@{u}")
             if !$opts->{'dry-run'};
 
         INFO("re-installing dotfiles");
@@ -303,7 +318,8 @@ sub install_files {
             install_files( "$source_dir/$recurse", "$target_dir/$recurse" );
         }
         else {
-            WARN("couldn't recurse into $source_dir/$recurse, not a directory");
+            WARN("couldn't recurse into $source_dir/$recurse, not a directory"
+            );
         }
     }
 }
@@ -387,7 +403,8 @@ sub uninstall_files {
             uninstall_files( "$source_dir/$recurse", "$target_dir/$recurse" );
         }
         else {
-            WARN("couldn't recurse into $target_dir/$recurse, not a directory");
+            WARN("couldn't recurse into $target_dir/$recurse, not a directory"
+            );
         }
     }
 }
@@ -544,7 +561,7 @@ this in .dfminstall:
 
 =item dfm updates [--no-fetch]
 
-This fetches any changes from the origin remote and then shows a shortlog of
+This fetches any changes from the upstream remote and then shows a shortlog of
 what updates would come in if merged into the current branch.  Use '--no-fetch'
 to skip the fetch and just show what's new.
 
