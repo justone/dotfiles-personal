@@ -123,7 +123,7 @@ sub get_current_branch {
     return $current_branch;
 }
 
-sub get_branch_remote {
+sub check_remote_branch {
     my $branch        = shift;
     my $branch_remote = `git config branch.$branch.remote`;
     chomp $branch_remote;
@@ -318,7 +318,8 @@ sub install_files {
             install_files( "$source_dir/$recurse", "$target_dir/$recurse" );
         }
         else {
-            WARN("couldn't recurse into $source_dir/$recurse, not a directory"
+            WARN(
+                "couldn't recurse into $source_dir/$recurse, not a directory"
             );
         }
     }
@@ -403,7 +404,8 @@ sub uninstall_files {
             uninstall_files( "$source_dir/$recurse", "$target_dir/$recurse" );
         }
         else {
-            WARN("couldn't recurse into $target_dir/$recurse, not a directory"
+            WARN(
+                "couldn't recurse into $target_dir/$recurse, not a directory"
             );
         }
     }
