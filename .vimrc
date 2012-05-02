@@ -162,6 +162,7 @@ noremap <leader>fr :FufMruFile<CR>
 noremap <leader>fl :FufMruFileInCwd<CR>
 noremap <leader>ft :FufTag<CR>
 noremap <leader>fb :FufBuffer<CR>
+noremap <leader>fc :FufRenewCache<CR>
 
 " sessionman.vim mappings
 noremap <leader>sa :SessionSaveAs<CR>
