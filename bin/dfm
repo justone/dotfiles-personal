@@ -139,6 +139,10 @@ sub check_remote_branch {
 }
 
 # a few log4perl-alikes
+sub ERROR {
+    printf "ERROR: %s\n", shift;
+}
+
 sub WARN {
     printf "WARN: %s\n", shift;
 }
@@ -199,7 +203,7 @@ sub merge_and_install {
             if !$opts->{'dry-run'};
 
         INFO("re-installing dotfiles");
-        system("HOME=$home $self_dfm install") if !$opts->{'dry-run'};
+        system("HOME='$home' '$self_dfm' install") if !$opts->{'dry-run'};
     }
     else {
         INFO("no changes to merge");
@@ -237,6 +241,7 @@ sub install_files {
     my $skip_files    = { map { $_ => 1 } @$initial_skips };
     my $recurse_files = [];
     my $execute_files = [];
+    my $chmod_files   = {};
 
     if ( -e "$source_dir/.dfminstall" ) {
         open( my $skip_fh, '<', "$source_dir/.dfminstall" );
@@ -261,6 +266,21 @@ sub install_files {
                 }
                 elsif ( $options[0] eq 'exec' ) {
                     push( @$execute_files, $filename );
+                }
+                elsif ( $options[0] eq 'chmod' ) {
+                    if ( !$options[1] ) {
+                        ERROR(
+                            "chmod option requires a mode (e.g. 0600) in $source_dir/.dfminstall"
+                        );
+                        exit 1;
+                    }
+                    if ( $options[1] !~ /^[0-7]{4}$/ ) {
+                        ERROR(
+                            "bad mode '$options[1]' (should be 4 digit octal, like 0600) in $source_dir/.dfminstall"
+                        );
+                        exit 1;
+                    }
+                    $chmod_files->{$filename} = $options[1];
                 }
             }
         }
@@ -302,7 +322,7 @@ sub install_files {
         if ( !-l $direntry ) {
             if ( -e $direntry ) {
                 INFO("  Backing up $direntry.");
-                system("mv $direntry $backup_dir/$direntry")
+                system("mv '$direntry' '$backup_dir/$direntry'")
                     if !$opts{'dry-run'};
             }
             INFO("  Symlinking $direntry ($symlink_base/$direntry).");
@@ -311,7 +331,7 @@ sub install_files {
         }
     }
 
-    cleanup_dangling_symlinks( $source_dir, $target_dir );
+    cleanup_dangling_symlinks( $source_dir, $target_dir, $skip_files );
 
     foreach my $recurse (@$recurse_files) {
         if ( -d "$source_dir/$recurse" ) {
@@ -338,14 +358,21 @@ sub install_files {
 
         if ( -x "$source_dir/$execute" ) {
             DEBUG("Executing $source_dir/$execute in $cwd");
-            system("$source_dir/$execute");
+            system("'$source_dir/$execute'");
         }
         elsif ( -o "$source_dir/$execute" ) {
-            system("chmod +x $source_dir/$execute");
+            system("chmod +x '$source_dir/$execute'");
 
             DEBUG("Executing $source_dir/$execute in $cwd");
-            system("$source_dir/$execute");
+            system("'$source_dir/$execute'");
         }
+    }
+
+    foreach my $chmod_file ( keys %$chmod_files ) {
+        my $new_perms = $chmod_files->{$chmod_file};
+
+        # TODO maybe skip if perms are already ok
+        chmod oct($new_perms), $chmod_file;
     }
 
     # restore previous working directory
@@ -439,7 +466,8 @@ sub uninstall_files {
 }
 
 sub cleanup_dangling_symlinks {
-    my ( $source_dir, $target_dir ) = @_;
+    my ( $source_dir, $target_dir, $skip_files ) = @_;
+    $skip_files ||= {};
 
     DEBUG(" Cleaning up dangling symlinks in $target_dir");
 
@@ -448,7 +476,9 @@ sub cleanup_dangling_symlinks {
     foreach my $direntry ( readdir($dirh) ) {
 
         DEBUG(" Working on $direntry");
-        if ( -l $direntry && !-e $direntry ) {
+
+        # if symlink is dangling or is now skipped
+        if ( -l $direntry && ( !-e $direntry || $skip_files->{$direntry} ) ) {
             my $link_target = readlink($direntry);
             DEBUG("$direntry points at $link_target");
             my ( $volume, @elements ) = File::Spec->splitpath($link_target);

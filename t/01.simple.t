@@ -4,6 +4,7 @@ use Test::More;
 use strict;
 use FindBin qw($Bin);
 use English qw( -no_match_vars );
+use Fcntl ':mode';
 
 require "$Bin/helper.pl";
 
@@ -177,22 +178,22 @@ subtest 'exec option' => sub {
 
     my ( $home, $repo, $origin );
     ( $home, $repo, $origin ) = minimum_home(
-        'exec_option',
+        'exec option',
         {   dfminstall_contents =>
                 "script1.sh exec\nscript1.sh skip\ntest2 recurse"
         }
     );
 
     # set up non-recurse script that needs to be set executable
-    `echo "#!/bin/sh\n\necho 'message1';\ntouch testfile" > $repo/script1.sh`;
+    `echo "#!/bin/sh\n\necho 'message1';\ntouch testfile" > '$repo/script1.sh'`;
 
     # set up recurse script that is already executable
-    `mkdir -p $repo/test2`;
-    `echo "script2.sh exec" > $repo/test2/.dfminstall`;
-    `echo "#!/bin/sh\n\necho 'message2';\ntouch testfile2" > $repo/test2/script2.sh`;
-    `chmod +x $repo/test2/script2.sh`;
+    `mkdir -p '$repo/test2'`;
+    `echo "script2.sh exec" > '$repo/test2/.dfminstall'`;
+    `echo "#!/bin/sh\n\necho 'message2';\ntouch testfile2" > '$repo/test2/script2.sh'`;
+    `chmod +x '$repo/test2/script2.sh'`;
 
-    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+    my $output = `HOME='$home' perl '$repo/bin/dfm' --verbose`;
 
     like( $output, qr/message1/, 'output contains output from script1' );
     ok( -e "$home/testfile",    'file created by script1 exists' );
@@ -202,6 +203,86 @@ subtest 'exec option' => sub {
     like( $output, qr/message2/, 'output contains output from script2' );
     ok( -e "$home/test2/testfile2",  'file created by script2 exists' );
     ok( -x "$repo/test2/script2.sh", 'script2 file is executable' );
+};
+
+subtest 'switch to skip' => sub {
+    focus('switch_to_skip');
+
+    my ( $home, $repo, $origin );
+    ( $home, $repo, $origin ) = minimum_home('switch_to_skip');
+
+    my $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+    ok( -l "$home/bin", 'bin is symlinked' );
+
+    # now add skip
+    `echo "bin skip" >> $repo/.dfminstall`;
+
+    $output = `HOME=$home perl $repo/bin/dfm --verbose`;
+    ok( !-e "$home/bin", 'bin directory is not symlinked' );
+};
+
+subtest 'spaces in username' => sub {
+    focus('spaces_in_username');
+
+    my ( $home, $repo, $origin );
+    ( $home, $repo, $origin ) = minimum_home('user name');
+
+    `mkdir '$home/bin'`;
+    `touch '$home/bin/old'`;
+
+    my $output = `HOME='$home' perl '$repo/bin/dfm' --verbose`;
+
+    ok( -l "$home/bin",             'bin is symlinked' );
+    ok( -e "$home/.backup/bin/old", 'old files are in backup' );
+};
+
+subtest 'chmod option' => sub {
+    focus('chmod_option');
+
+    my ( $home, $repo, $origin );
+    ( $home, $repo, $origin ) = minimum_home('chmod_option');
+
+    `echo ".ssh recurse" >> $repo/.dfminstall`;
+    `mkdir -p $repo/.ssh`;
+    `touch $repo/.ssh/config`;
+    `chmod 0644 $repo/.ssh/config`;
+    `echo "config chmod 0600" > $repo/.ssh/.dfminstall`;
+
+    is( ( sprintf "%04o", S_IMODE( ( stat("$repo/.ssh/config") )[2] ) ),
+        '0644', 'permissions before are correct' );
+
+    my $output = `HOME='$home' perl '$repo/bin/dfm' --verbose`;
+
+    is( ( sprintf "%04o", S_IMODE( ( stat("$repo/.ssh/config") )[2] ) ),
+        '0600', 'permissions after are correct' );
+
+    subtest 'no mode' => sub {
+        `chmod 0644 $repo/.ssh/config`;
+
+        `echo "config chmod" > $repo/.ssh/.dfminstall`;
+
+        my $output = `HOME='$home' perl '$repo/bin/dfm' --verbose`;
+
+        like(
+            $output,
+            qr/chmod option requires a mode/,
+            'error message in output'
+        );
+        is( ( sprintf "%04o", S_IMODE( ( stat("$repo/.ssh/config") )[2] ) ),
+            '0644', 'permissions are untouched' );
+    };
+
+    subtest 'bad mode' => sub {
+        `chmod 0644 $repo/.ssh/config`;
+
+        `echo "config chmod himom" > $repo/.ssh/.dfminstall`;
+
+        my $output = `HOME='$home' perl '$repo/bin/dfm' --verbose`;
+
+        like( $output, qr/bad mode 'himom'/, 'error message in output' );
+        is( ( sprintf "%04o", S_IMODE( ( stat("$repo/.ssh/config") )[2] ) ),
+            '0644', 'permissions are untouched' );
+    };
 };
 
 done_testing;
