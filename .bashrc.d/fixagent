@@ -1,0 +1,3 @@
+if [[ -z $TMUX ]]; then
+	fixagent
+fi
