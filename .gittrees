@@ -114,3 +114,7 @@
 	url = git@github.com:justone/vim-perl.git
 	path = .vim/bundle/vim-perl
 	branch = fold_sub_sugar
+[subtree ".vim/bundle/vim-scala"]
+	url = https://github.com/derekwyatt/vim-scala.git
+	path = .vim/bundle/vim-scala
+	branch = master
