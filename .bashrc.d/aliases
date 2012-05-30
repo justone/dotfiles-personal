@@ -14,7 +14,7 @@ alias l='ls -CF'
 # clears a key out of the known_hosts file
 function clearkey() {
     ssh-keygen -R $1
-    ssh-keygen -R `host $1 | awk '{ print $4 }'`
+    ssh-keygen -R `host $1 | awk '{ print $4 }' | head -n 1`
 }
 
 # let's not grep the svn dir
