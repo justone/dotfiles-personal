@@ -63,14 +63,8 @@ let g:surround_110 = "{noformat}\r{noformat}"
 " Navigate wrapped lines
 nnoremap j gj
 nnoremap k gk
-nnoremap $ g$
-nnoremap ^ g^
-nnoremap 0 g0
 vnoremap j gj
 vnoremap k gk
-vnoremap $ g$
-vnoremap ^ g^
-vnoremap 0 g0
 
 " always show 5 lines of context
 set scrolloff=5
