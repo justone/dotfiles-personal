@@ -1,0 +1,9 @@
+# Bootstrap script
+
+REPO=$( dirname "${BASH_SOURCE[0]}" )
+
+$REPO/bin/dfm checkout personal
+$REPO/bin/dfm
+
+bind -f ~/.inputrc
+. ~/.bashrc
