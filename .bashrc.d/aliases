@@ -78,3 +78,6 @@ function resty() {
     . $HOME/.bashrc.d/resty/resty
     resty $*
 }
+
+# Short form for remotecopy
+alias rc="remotecopy -c"
