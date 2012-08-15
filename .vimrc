@@ -13,6 +13,9 @@ syntax enable
 set smartcase
 set expandtab smarttab
 
+" the famous leader character
+let mapleader = ','
+
 colorscheme ir_black
 
 " for some reason this has to go in .vimrc
@@ -21,6 +24,9 @@ let perl_fold = 1
 " configure syntastic
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
+let g:syntastic_mode_map = { 'mode': 'active',
+            \ 'passive_filetypes': ['puppet'] }
+nmap <leader>st :SyntasticCheck<CR>
 
 let g:UltiSnipsExpandTrigger="<tab>"
 let g:UltiSnipsJumpForwardTrigger="<tab>"
@@ -68,9 +74,6 @@ vnoremap k gk
 
 " always show 5 lines of context
 set scrolloff=5
-
-" the famous leader character
-let mapleader = ','
 
 set wildmenu
 
