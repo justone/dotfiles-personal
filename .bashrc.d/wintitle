@@ -52,9 +52,9 @@ fi
 
 case $TERM in
     xterm*)
-        PROMPT_COMMAND='LAST_EXIT=$?;echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; reconnect_ssh_agent;'
+        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;${WIN_TITLE}\007"; else echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; fi; reconnect_ssh_agent;'
         ;;
     screen)
-        PROMPT_COMMAND='LAST_EXIT=$?;echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; reconnect_ssh_agent;'
+        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k${WIN_TITLE}\033\\"; else echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; fi; reconnect_ssh_agent;'
         ;;
 esac
