@@ -18,3 +18,36 @@ then
     . $HOME/.bashrc.d/completion
     . $HOME/.bashrc.d/keychain
 fi
+
+# load up host specific files, either
+# ~/.bashrc.d/host.d/hostname.com
+#  -- or --
+# ~/.bashrc.d/host.d/hostname.com/*
+#
+# and look for successively longer names, i.e.:
+# domain.com, bar.domain.com, foo.bar.domain.com
+HN=$( hostname -f )
+HOST_DIR=$HOME/.bashrc.d/host.d
+
+# split hostname
+HN_PARTS=($(echo $HN | tr "." "\n"))
+
+TEST_DOMAIN_NAME=
+for (( c = ${#HN_PARTS[@]}; c--; c == 0 )); do
+    if [[ -z $TEST_DOMAIN_NAME ]]; then
+        TEST_DOMAIN_NAME="${HN_PARTS[$c]}"
+    else
+        TEST_DOMAIN_NAME="${HN_PARTS[$c]}.$TEST_DOMAIN_NAME"
+    fi
+
+    if [[ -f $HOST_DIR/$TEST_DOMAIN_NAME ]]; then
+        source $HOST_DIR/$TEST_DOMAIN_NAME
+    elif [[ -d $HOST_DIR/$TEST_DOMAIN_NAME ]]; then
+        for file in $HOST_DIR/$TEST_DOMAIN_NAME/*; do
+            source $file
+        done
+    fi
+done
+
+# cleanup
+unset TEST_DOMAIN_NAME HN HOST_DIR HN_PARTS c file
