@@ -1,11 +1,14 @@
-PATH=$HOME/bin:$PATH
-PATH=$HOME/bin/excluded:$PATH
-PATH=$HOME/bin/remotecopy:$PATH
-PATH=$HOME/bin/git-subtree:$PATH
-PATH=$HOME/bin/moreutils:$PATH
-PATH=$HOME/.bashrc.d/resty:$PATH
+if [[ -z $SET_PATH ]]; then
+    PATH=$HOME/bin:$PATH
+    PATH=$HOME/bin/excluded:$PATH
+    PATH=$HOME/bin/remotecopy:$PATH
+    PATH=$HOME/bin/git-subtree:$PATH
+    PATH=$HOME/bin/moreutils:$PATH
+    PATH=$HOME/.bashrc.d/resty:$PATH
 
-export PATH
+    export PATH
+    export SET_PATH=1
+fi
 
 function vipath() {
     TMP=`mktemp -t tmp.XXXXXXXXX`;
