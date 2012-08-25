@@ -2,5 +2,6 @@
 README.md skip
 CHANGELOG.md skip
 t skip
+.travis.yml skip
 .gittrees skip
 .nd skip
