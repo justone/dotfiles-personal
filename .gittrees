@@ -122,3 +122,7 @@
 	url = https://github.com/AndrewRadev/sideways.vim.git
 	path = .vim/bundle/sideways.vim
 	branch = master
+[subtree ".vim/bundle/linediff.vim"]
+	url = https://github.com/AndrewRadev/linediff.vim.git
+	path = .vim/bundle/linediff.vim
+	branch = master
