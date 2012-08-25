@@ -229,7 +229,7 @@ else
 endif
 
 " allow writing files as root
-command! W w !sudo tee % > /dev/null
+command! W silent w !sudo tee % > /dev/null
 
 if filereadable(expand("~/.vimrc.local"))
     source ~/.vimrc.local
