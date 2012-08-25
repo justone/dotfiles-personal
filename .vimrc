@@ -277,3 +277,7 @@ noremap <Leader>tr :RunLastVimTmuxCommand<CR>
 noremap <Leader>ti :InspectVimTmuxRunner<CR>
 noremap <Leader>tx :CloseVimTmuxPanes<CR>
 noremap <Leader>tc :InterruptVimTmuxRunner<CR> 
+
+" sideways.vim
+nnoremap <c-h> :SidewaysLeft<cr>
+nnoremap <c-l> :SidewaysRight<cr>
