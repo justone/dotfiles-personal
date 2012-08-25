@@ -118,3 +118,7 @@
 	url = https://github.com/derekwyatt/vim-scala.git
 	path = .vim/bundle/vim-scala
 	branch = master
+[subtree ".vim/bundle/sideways.vim"]
+	url = https://github.com/AndrewRadev/sideways.vim.git
+	path = .vim/bundle/sideways.vim
+	branch = master
