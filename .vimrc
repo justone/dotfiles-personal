@@ -179,6 +179,8 @@ endif
 
 " Always do vimdiff in vertical splits
 set diffopt+=vertical
+" and ignore whitespace
+set diffopt+=iwhite
 
 " look for tags
 set tags=./tags;
