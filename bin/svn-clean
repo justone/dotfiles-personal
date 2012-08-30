@@ -7,7 +7,7 @@ from os import remove, path
 import sys
 import argparse
 
-class StatusParser(object):
+class SubversionCleaner(object):
     def __init__(self, dry_run=False):
         self.currentPath = ""
         self.dry_run = dry_run
@@ -18,8 +18,7 @@ class StatusParser(object):
         elif name == 'wc-status':
             if attrs['item'] == 'ignored' or attrs['item'] == 'unversioned':
 
-                prefix = 'would remove' if self.dry_run else 'removing'
-                print prefix + ': ' + self.current_path
+                print ('would remove: ' if self.dry_run else 'removing: ') + self.current_path
 
                 if not self.dry_run:
                     if path.isfile(self.current_path) or path.islink(self.current_path):
@@ -27,11 +26,14 @@ class StatusParser(object):
                     elif path.isdir(self.current_path):
                         rmtree(self.current_path)
 
-    def Parse(self, xmlfile):
+    def Clean(self):
+        pstatus = Popen('svn status --no-ignore --xml', shell=True, stdout=PIPE, stderr=STDOUT)
+
         xmlparser = ParserCreate()
         xmlparser.StartElementHandler = self.StartTag
-        xmlparser.ParseFile(xmlfile)
+        xmlparser.ParseFile(pstatus.stdout)
 
+        retval = pstatus.wait()
 
 
 parser = argparse.ArgumentParser()
@@ -40,9 +42,5 @@ parser.add_argument('-n', '--dryrun',
         action='store_true')
 args = parser.parse_args()
 
-pstatus = Popen('svn status --no-ignore --xml', shell=True, stdout=PIPE, stderr=STDOUT)
-
-sp = StatusParser(dry_run=args.dryrun)
-sp.Parse(pstatus.stdout)
-
-retval = pstatus.wait()
+sp = SubversionCleaner(dry_run=args.dryrun)
+sp.Clean()
