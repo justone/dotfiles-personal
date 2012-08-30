@@ -1,0 +1,17 @@
+#!/bin/bash
+
+FILE=$1
+
+if [ -z "$FILE" ]; then
+    echo "usage: svn fm conflictedfile"
+    exit -1
+fi
+
+vimdiff $FILE.working $FILE $FILE.merge-right*
+
+if grep '=======' $FILE > /dev/null || grep '<<<<<<<' $FILE > /dev/null || grep '>>>>>>>' $FILE > /dev/null; then
+    echo "still conflicted, not marking as resolved"
+else
+    echo "marking $FILE as resolved"
+    svn resolved $FILE
+fi
