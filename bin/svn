@@ -1,43 +1,14 @@
-#!/usr/bin/perl
+#!/usr/bin/env bash
 
-use strict;
-use warnings;
-use Data::Dumper;
-use File::Basename;
+## If there is a svn-${COMMAND}, try that.
+## Otherwise, assume it is a svn builtin and use the real svn.
 
-my $command = '';
-foreach my $arg (@ARGV) {
-    next if $arg =~ /^-/;
-    $command = $arg;
-    last;
-}
+COMMAND=$1
+shift
 
-# look for a subcommand script
-if ( my $subcommand_path = `which svn-$command 2>/dev/null` ) {
-    chomp($subcommand_path);
-    exec( $subcommand_path, @ARGV );
-    exit;
-}
-else {
-
-    # assume it's a builtin svn command and call accordingly
-
-    # save original path
-    my $original_path = $ENV{PATH};
-
-    # filter out the directory that this script is in from the path
-    # to avoid recursion
-    my $bindir = dirname($0);
-    $ENV{PATH} = join( ':',
-        grep { $_ !~ m/^$bindir\/?$/ } split( /:/, $ENV{PATH} ) );
-
-    # find the real svn path
-    my $real_svn_path = `which svn`;
-    chomp($real_svn_path);
-
-    # restore original path so that svn can call other things
-    $ENV{PATH} = $original_path;
-
-    exec( $real_svn_path, @ARGV );
-    exit;
-}
+SUB_COMMAND=$(type -path svn-${COMMAND})
+if [ -n "$SUB_COMMAND" -a -x "$SUB_COMMAND" -a "${COMMAND}" != "upgrade" ]; then
+    exec $SUB_COMMAND "$@"
+else
+    command -p svn $COMMAND "$@"
+fi
