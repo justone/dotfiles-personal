@@ -1,7 +1,4 @@
-.ssh recurse
 README.md skip
-CHANGELOG.md skip
-t skip
-.travis.yml skip
+.ssh recurse
 .gittrees skip
 .nd skip
