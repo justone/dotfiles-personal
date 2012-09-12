@@ -5,12 +5,11 @@ from subprocess import Popen,PIPE,STDOUT
 from shutil import rmtree
 from os import remove, path
 import sys
-import argparse
 
 class SubversionCleaner(object):
-    def __init__(self, dry_run=False):
+    def __init__(self, force=False):
         self.currentPath = ""
-        self.dry_run = dry_run
+        self.force = force
 
     def StartTag(self, name, attrs):
         if name == 'entry':
@@ -18,9 +17,9 @@ class SubversionCleaner(object):
         elif name == 'wc-status':
             if attrs['item'] == 'ignored' or attrs['item'] == 'unversioned':
 
-                print ('would remove: ' if self.dry_run else 'removing: ') + self.current_path
+                print ('removing: ' if self.force else 'would remove: ') + self.current_path
 
-                if not self.dry_run:
+                if self.force:
                     if path.isfile(self.current_path) or path.islink(self.current_path):
                         remove(self.current_path)
                     elif path.isdir(self.current_path):
@@ -35,12 +34,14 @@ class SubversionCleaner(object):
 
         retval = pstatus.wait()
 
+force = False
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--dryrun',
-        help="don't remove anything, just show what would have been removed",
-        action='store_true')
-args = parser.parse_args()
+# no argparse on < 2.7, so do it manually
+if len(sys.argv) == 2:
+    if sys.argv[1] in ['-f', '--force']:
+        force = True
+    if sys.argv[1] in ['-h', '--help']:
+        print "svn clean [-n|--dry-run] [-h|--help]\n";
 
-sp = SubversionCleaner(dry_run=args.dryrun)
+sp = SubversionCleaner(force=force)
 sp.Clean()
