@@ -41,7 +41,8 @@ if len(sys.argv) == 2:
     if sys.argv[1] in ['-f', '--force']:
         force = True
     if sys.argv[1] in ['-h', '--help']:
-        print "svn clean [-n|--dry-run] [-h|--help]\n";
+        print "svn clean [-f|--force] [-h|--help]";
+        sys.exit(-1);
 
 sp = SubversionCleaner(force=force)
 sp.Clean()
