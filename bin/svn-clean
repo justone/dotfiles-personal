@@ -17,7 +17,11 @@ class SubversionCleaner(object):
         elif name == 'wc-status':
             if attrs['item'] == 'ignored' or attrs['item'] == 'unversioned':
 
-                print ('removing: ' if self.force else 'would remove: ') + self.current_path
+                if self.force:
+                    prefix_string = 'removing: '
+                else:
+                    prefix_string = 'would remove: '
+                print prefix_string + self.current_path
 
                 if self.force:
                     if path.isfile(self.current_path) or path.islink(self.current_path):
