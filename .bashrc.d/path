@@ -17,13 +17,11 @@ del_path () {
     sed -e "s;:$1:;:;g" -e "s;^:;;" -e "s;:\$;;"`
 }
 
-del_path $HOME/bin
-pre_path $HOME/bin
-pre_path $HOME/bin/excluded
-pre_path $HOME/bin/remotecopy
-pre_path $HOME/bin/git-subtree
-pre_path $HOME/bin/moreutils
-pre_path $HOME/.bashrc.d/resty
+# make sure these paths are before the system paths
+for path in $HOME/bin $HOME/bin/excluded $HOME/bin/remotecopy $HOME/bin/git-subtree $HOME/bin/moreutils $HOME/.bashrc.d/resty; do
+    del_path $path
+    pre_path $path
+done
 
 export PATH
 
