@@ -126,3 +126,7 @@
 	url = https://github.com/AndrewRadev/linediff.vim.git
 	path = .vim/bundle/linediff.vim
 	branch = master
+[subtree ".vim/bundle/vdebug"]
+	url = https://github.com/joonty/vdebug.git
+	path = .vim/bundle/vdebug
+	branch = master
