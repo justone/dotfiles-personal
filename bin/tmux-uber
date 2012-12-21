@@ -1,0 +1,6 @@
+#!/bin/sh
+
+SESS=uber
+
+tmux -f ~/.tmux.uber att -t $SESS -d ||
+tmux -f ~/.tmux.uber new -s $SESS
