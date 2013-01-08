@@ -5,11 +5,11 @@ source-file ~/.tmux.shared
 # turn off status bar
 set -g status off
 
-# change bind key to C-a
-set-option -g prefix C-a
+# change bind key to C-q
+set-option -g prefix C-q
 
 # prefix again goes to last window
-bind-key C-a last-window
+bind-key C-q last-window
 
 # reload
 bind r source-file ~/.tmux.uber
