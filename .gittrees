@@ -126,3 +126,7 @@
 	url = https://github.com/joonty/vdebug.git
 	path = .vim/bundle/vdebug
 	branch = master
+[subtree ".vim/bundle/vim-perl"]
+	url = https://github.com/vim-perl/vim-perl.git
+	path = .vim/bundle/vim-perl
+	branch = master
