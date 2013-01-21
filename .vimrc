@@ -15,6 +15,7 @@ let mapleader = ','
 
 " for some reason this has to go in .vimrc
 let perl_fold = 1
+let perl_fold_anonymous_subs = 1
 
 " configure syntastic
 let g:syntastic_enable_signs = 1
