@@ -28,6 +28,7 @@
     x = "!gitx"
 	wl = walklog
 	isunclean = "![ -n \"`git ls-files --modified --deleted --others --exclude-standard`\" ]"
+	serve = daemon --verbose --export-all --base-path=.git --reuseaddr --strict-paths .git/
 [merge]
 	tool = vimdiff
 [diff]
