@@ -7,6 +7,9 @@ export PATH=$PATH:$HOME/bin
 ####
 # put any bash customizations in here
 
+# skip it all if non-interactive
+[ -z "$PS1" ] && return
+
 . $HOME/.bashrc.d/safe # includes aliases, shell, path
 . $HOME/.bashrc.d/z/z.sh
 . $HOME/.bashrc.d/wintitle
