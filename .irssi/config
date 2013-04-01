@@ -273,3 +273,4 @@ ignores = (
   { level = "JOINS QUITS MODES"; channels = ( "&bitlbee" ); }
 );
 logs = { };
+keyboard = ( { key = "meta-x"; id = "command"; data = "window last"; } );
