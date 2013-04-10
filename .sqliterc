@@ -1,2 +1,3 @@
 .header on
 .mode line
+-- .mode column
