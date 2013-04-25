@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 for sha in `git log --format="%H" $*`; do
-    git log -1 $sha;
+    git log --stat -1 $sha;
     read ans;
     if [[ "$ans" == 'n'  ||  "$ans" == 'no' ]]; then
         echo "skipping $sha"
