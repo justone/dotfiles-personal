@@ -1,0 +1,28 @@
+#!/bin/bash
+
+PARSEDARGS=$(getopt --long ip -o i -n $0 -- "$@")
+
+if [ $? != 0 ]; then 
+    echo ""
+    echo "usage: $0 [-i|--ip]"
+    echo "    -i, --ip              use IP address instead of hostname"
+    exit 1 
+fi
+
+eval set -- "$PARSEDARGS"
+
+TARGETTYPE=host
+while true ; do
+    case "$1" in
+        -i|--image) TARGETTYPE=ip; shift ;;
+        --) shift ; break ;;
+    esac
+done
+
+if [[ $TARGETTYPE = 'host' ]]; then
+    TARGET=$(hostname -f)
+else
+    TARGET=$(getip)
+fi
+
+echo $TARGET:$PWD/$*

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+IP=$(/sbin/ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | grep -v '^10.' | grep -v '^192.168.' | grep -v '^172.' | head -n 1)
+PIP=$(/sbin/ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | head -n 1)
+
+if [[ -n "$IP" ]]; then
+    echo $IP
+else
+    echo $PIP
+fi
