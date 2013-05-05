@@ -6,5 +6,5 @@ HN=`hostname -f`
 # TODO: this outputs '-ne' on OS X and debian
 echo -ne "\033k$HN\033\\"
 
-tmux att -t $SESS -d ||
-tmux new -s $SESS
+tmux -L main att -t $SESS -d ||
+tmux -L main new -s $SESS

@@ -2,5 +2,5 @@
 
 SESS=uber
 
-tmux -f ~/.tmux.uber att -t $SESS -d ||
-tmux -f ~/.tmux.uber new -s $SESS
+tmux -L uber -f ~/.tmux.uber att -t $SESS -d ||
+tmux -L uber -f ~/.tmux.uber new -s $SESS
