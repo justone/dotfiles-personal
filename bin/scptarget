@@ -1,20 +1,23 @@
 #!/bin/bash
 
-PARSEDARGS=$(getopt --long ip -o i -n $0 -- "$@")
+PARSEDARGS=$(getopt --long ip,vim -o iv -n $0 -- "$@")
 
 if [ $? != 0 ]; then 
     echo ""
     echo "usage: $0 [-i|--ip]"
     echo "    -i, --ip              use IP address instead of hostname"
+    echo "    -v, --vim             output in VIM compatible format"
     exit 1 
 fi
 
 eval set -- "$PARSEDARGS"
 
 TARGETTYPE=host
+OUTPUTTYPE=scp
 while true ; do
     case "$1" in
-        -i|--image) TARGETTYPE=ip; shift ;;
+        -i|--ip) TARGETTYPE=ip; shift ;;
+        -v|--vim) OUTPUTTYPE=vim; shift ;;
         --) shift ; break ;;
     esac
 done
@@ -25,4 +28,20 @@ else
     TARGET=$(getip)
 fi
 
-echo $TARGET:$PWD/$*
+if [[ $# == 1 ]]; then
+    ARG=$1
+    if [ "${ARG:0:1}" == "/" ]; then
+        SUBPATH=$*
+    else
+        SUBPATH=$PWD/$*
+    fi
+else
+    SUBPATH=$PWD
+fi
+
+if [[ $OUTPUTTYPE = 'scp' ]]; then
+    echo $TARGET:$SUBPATH
+else
+    echo scp://$TARGET/$SUBPATH
+fi
+
