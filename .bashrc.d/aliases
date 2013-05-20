@@ -81,3 +81,6 @@ function resty() {
 
 # Short form for remotecopy
 alias rc="remotecopy -c"
+
+# strip ansi color codes
+alias nocolor="perl -pe 's/\e\[?.*?[\@-~]//g'"
