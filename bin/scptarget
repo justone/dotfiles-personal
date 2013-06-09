@@ -1,13 +1,17 @@
 #!/bin/bash
 
-PARSEDARGS=$(getopt --long ip,vim -o iv -n $0 -- "$@")
-
-if [ $? != 0 ]; then 
-    echo ""
-    echo "usage: $0 [-i|--ip]"
+function printhelp {
+    echo "usage: $0 [-i|--ip] [-v|--vim]"
     echo "    -i, --ip              use IP address instead of hostname"
     echo "    -v, --vim             output in VIM compatible format"
+    echo "    -h, --help            output this help message"
     exit 1 
+}
+
+PARSEDARGS=$(getopt --long ip,vim,help -o ivh -n $0 -- "$@")
+
+if [ $? != 0 ]; then 
+    printhelp
 fi
 
 eval set -- "$PARSEDARGS"
@@ -18,6 +22,7 @@ while true ; do
     case "$1" in
         -i|--ip) TARGETTYPE=ip; shift ;;
         -v|--vim) OUTPUTTYPE=vim; shift ;;
+        -h|--help) printhelp; shift ;;
         --) shift ; break ;;
     esac
 done
