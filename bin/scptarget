@@ -30,6 +30,10 @@ done
 if [[ $TARGETTYPE = 'host' ]]; then
     TARGET=$(hostname -f)
 else
+    command -v getip &>/dev/null || {
+        echo "Unable to find the 'getip' script.  Can't figure out IP.";
+        exit 1;
+    }
     TARGET=$(getip)
 fi
 
