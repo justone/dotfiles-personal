@@ -1,0 +1,387 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Cwd qw(getcwd);
+use DirHandle;
+use Getopt::Long;
+use Pod::Usage;
+use File::Path qw(mkpath rmtree);
+use File::Spec;
+use IPC::Run3;
+
+my $BASE_CONFIG = { basedir => "$ENV{HOME}/.outputdiff" };
+
+run_outputdiff( \@ARGV, $BASE_CONFIG ) unless defined caller;
+
+my %options;
+
+sub run_outputdiff {
+    my ( $argv, $config ) = @_;
+
+    # reset options to nothing so that multiple testing runs are ok
+    %options = ();
+
+    Getopt::Long::Configure("no_auto_abbrev");
+
+    my $opts_ok = GetOptionsFromArray(
+        $argv,     \%options,     'help|?|h', 'man',
+        'new|n:s', 'compare|c:s', 'last|l:s', 'output|o:s',
+        'log:s',   'list',        'clean:s',  'verbose|v',
+        'quiet|q', 'vimdiff',     'no-diff'
+    );
+
+    pod2usage(2) if !$opts_ok;
+    pod2usage(1) if exists $options{help};
+    pod2usage( -exitstatus => 0, -verbose => 2 ) if exists $options{man};
+
+    if ( defined( $options{new} ) ) {
+
+        bootstrap($config);
+
+        my $repo_name = $options{new};
+        if ( !$repo_name ) {
+            my @chars = ( 'a' .. 'z', 'A' .. 'Z' );
+            $repo_name = "";
+            $repo_name .= $chars[ rand @chars ] for 1 .. 8;
+        }
+
+        DEBUG("creating new output repo $repo_name");
+
+        my $full_repo_path
+            = File::Spec->catfile( $config->{basedir}, $repo_name );
+
+        DEBUG("full repo path: $full_repo_path");
+
+        # check for duplicate dir
+        if ( -d $full_repo_path ) {
+            ERROR("'$repo_name' already exists, please specify another name");
+            exit(1);
+        }
+
+        # make the directory
+        mkpath($full_repo_path);
+
+        # initialize git repo
+        run_git( { wd => $full_repo_path }, qw(init) );
+        run_git( { wd => $full_repo_path },
+            qw(commit --message empty --allow-empty) );
+
+        grab_input_and_commit($full_repo_path);
+
+        # record the name of the repo so that
+        # future comparisons will just work
+        record_current( $config, $repo_name );
+
+        INFO("Initialized new capture.");
+    }
+    elsif ( defined( $options{compare} ) ) {
+        my $repo_name = read_current($config);
+
+        my $full_repo_path
+            = File::Spec->catfile( $config->{basedir}, $repo_name );
+
+        my $output_has_changes = grab_input_and_commit($full_repo_path);
+
+        # record the name of the repo so that
+        # future comparisons will just work
+        record_current( $config, $repo_name );
+
+        if ( !$options{'no-diff'} && $output_has_changes ) {
+            run_git( { wd => $full_repo_path, expose => 1 },
+                qw(diff HEAD^ HEAD) );
+        }
+    }
+    elsif ( defined( $options{'last'} ) ) {
+        my $repo_name = read_current($config);
+
+        # TODO: check for fewer than 2 revisions
+
+        my $full_repo_path
+            = File::Spec->catfile( $config->{basedir}, $repo_name );
+
+        my @diff_command = qw(diff HEAD^ HEAD);
+        if ( $options{vimdiff} ) {
+            @diff_command = qw(difftool --tool=vimdiff -y HEAD^ HEAD);
+        }
+        run_git( { wd => $full_repo_path, expose => 1 }, @diff_command );
+    }
+    elsif ( defined( $options{'list'} ) ) {
+        my $dirhandle = DirHandle->new( $config->{basedir} );
+        if ( defined($dirhandle) ) {
+            my $dir;
+            while ( defined( $dir = $dirhandle->read ) ) {
+                next if $dir eq '.';
+                next if $dir eq '..';
+                next if $dir eq 'CURRENT';
+
+                # TODO: provide more information here than just the
+                # directory name, like the time it was created and
+                # how many outputs there are
+                INFO("$dir");
+            }
+        }
+    }
+    elsif ( defined( $options{'clean'} ) ) {
+        my $dirhandle = DirHandle->new( $config->{basedir} );
+        if ( defined($dirhandle) ) {
+            my $dir;
+            while ( defined( $dir = $dirhandle->read ) ) {
+                next if $dir eq '.';
+                next if $dir eq '..';
+                if ( !$options{'clean'} || $options{'clean'} eq $dir ) {
+                    INFO("removing $dir");
+                    rmtree( File::Spec->catfile( $config->{basedir}, $dir ) );
+                }
+            }
+        }
+    }
+    elsif ( defined( $options{'log'} ) ) {
+        my $repo_name = read_current($config);
+
+        # TODO: check for no current repo
+
+        my $full_repo_path
+            = File::Spec->catfile( $config->{basedir}, $repo_name );
+
+        run_git(
+            { wd => $full_repo_path, expose => 1 },
+            qw(log --graph --abbrev-commit --date=relative),
+            '--pretty=format:%h - %s (%cr)'
+        );
+    }
+    elsif ( defined( $options{'output'} ) ) {
+        my $repo_name = read_current($config);
+
+        # TODO: check for no current repo
+
+        my $full_repo_path
+            = File::Spec->catfile( $config->{basedir}, $repo_name );
+
+        # check for duplicate dir
+        if ( -d $full_repo_path ) {
+            open my $read_fh, "<",
+                File::Spec->catfile( $full_repo_path, "output" )
+                or die "unable to read output file: $!";
+            while ( my $line = <$read_fh> ) {
+                print $line;
+            }
+            close $read_fh
+                or warn "unable to close output file: $!";
+        }
+    }
+    else {
+        die "You didn't specify anything\n";
+    }
+}
+
+sub record_current {
+    my ( $config, $name ) = @_;
+
+    open my $current_fh, ">",
+        File::Spec->catfile( $config->{basedir}, "CURRENT" )
+        or die "unable to create current file: $!";
+    print $current_fh $name;
+    close $current_fh
+        or warn "unable to close current file: $!";
+}
+
+sub read_current {
+    my ($config) = @_;
+
+    my $current_file = File::Spec->catfile( $config->{basedir}, "CURRENT" );
+    if ( -e $current_file ) {
+
+        open my $current_fh, "<", $current_file
+            or die "unable to read current file: $!";
+
+        my $current = <$current_fh>;
+
+        close $current_fh
+            or warn "unable to close current file: $!";
+
+        return $current;
+    }
+}
+
+sub run_git {
+    my ( $options, @git_args ) = @_;
+
+    my $cwd_before_git = getcwd();
+
+    DEBUG( 'running git ' . join( ' ', @git_args ) . " in $options->{wd}" );
+    chdir( $options->{wd} );
+
+    my $return;
+
+    if ( $options->{expose} ) {
+        system( 'git', @git_args );
+    }
+    else {
+        my ( $output, $error );
+        run3( [ 'git', @git_args ], \undef, \$output, \$error );
+
+        if ( $? >> 8 != 0 ) {
+            ERROR(
+                "Failed to run git @git_args\nstdout:\n$output\nstderr:\n$error"
+            );
+            exit(1);
+        }
+        $return = { output => $output, error => $error };
+    }
+
+    chdir($cwd_before_git);
+
+    return $return;
+}
+
+sub grab_input_and_commit {
+    my $full_repo_path = shift;
+
+    my $data;
+    {
+        local $/ = undef;
+        $data = <STDIN>;
+    }
+
+    DEBUG("Writing to $full_repo_path/output");
+    open my $output_fh, ">", File::Spec->catfile( $full_repo_path, "output" )
+        or die "unable to create output file: $!";
+    print $output_fh $data;
+    close $output_fh
+        or warn "unable to close output file: $!";
+
+    my $result = run_git( { wd => $full_repo_path }, qw(status --porcelain) );
+
+    # if the output file has actually changed
+    if ( $result->{output} =~ /output/ ) {
+
+        # figure out how many commits there are and add one (for the message)
+        my $result
+            = run_git( { wd => $full_repo_path }, qw(log --format=oneline) );
+        my @lines = split( /\n/, $result->{output} );
+        my $count = scalar(@lines);
+
+        run_git( { wd => $full_repo_path }, qw(add output) );
+        run_git( { wd => $full_repo_path }, qw(commit -m), "result $count" );
+
+        return 1;
+    }
+    else {
+        INFO("No change (output was identical)");
+    }
+
+    return 0;
+}
+
+sub bootstrap {
+    my $config = shift;
+
+    if ( !-d $config->{basedir} ) {
+        DEBUG("Making base dir $config->{basedir}");
+        mkpath( $config->{basedir} );
+    }
+}
+
+# a few log4perl-alikes
+sub ERROR {
+    printf "ERROR: %s\n", shift;
+}
+
+sub WARN {
+    printf "WARN: %s\n", shift;
+}
+
+sub INFO {
+    printf "INFO: %s\n", shift if !$options{quiet};
+}
+
+sub DEBUG {
+    printf "DEBUG: %s\n", shift if $options{verbose};
+}
+
+# work-alike for function from perl 5.8.9 and later
+# added for compatibility with CentOS 5, which is stuck on 5.8.8
+sub GetOptionsFromArray {
+    my ( $argv, $opts, @options ) = @_;
+
+    local @ARGV = @$argv;
+    my $opts_ok = GetOptions( $opts, @options );
+
+    # update the passed argv array
+    @$argv = @ARGV;
+
+    return $opts_ok;
+}
+
+# For testing
+1;
+
+__END__
+
+=head1 NAME
+
+outputdiff - Diff output from multiple command runs.
+
+=head1 SYNOPSIS
+
+ $ command --with --output | outputdiff [options]
+
+ Options:
+  -n --new <name>           Create the initial version that future output will
+                            be compared against.  The name is optional, if none
+                            is specified, an autogenerated name will be used.
+  -m --message <message>    (optional) Specify a message describing the current
+                            output.
+  -c --compare <name>       Compare new output against the previous output.
+  -l --last <name>          Show most recent diff again.
+     --log <name>           Show log of captured output.
+     --clean <name>         Remove a comparison.  If no comparison specified, remove all.
+     --list                 List all comparisons.
+     --vimdiff              Use vimdiff to show differences.  Only works with
+                            --last, not --compare.
+     --no-diff              Don't show a diff.  Used with --compare to suppress output.
+
+ Documentation options:
+  -v --verbose              Print more details about what the script is doing.
+  -t --test                 Don't actually do anything.  Useful when combined
+                            with --verbose.
+  -h --help -?              brief help message
+     --man                  full documentation
+
+=head1 REQUIRED ARGUMENTS
+
+Either -n (for new) or -c (for compare) is required, nothing else.
+
+=head1 DESCRIPTION
+
+This script implements a simple output comparison system.
+
+TODO write the rest of this
+
+=head1 EXAMPLES
+
+Capturing the output of iptables and comparing the output after some
+modification:
+
+  $ iptables -L -n | outputdiff -n
+  $ # do something to change ip tables rules
+  $ iptables -L -n | outputdiff -c
+  # diff output
+  # ...
+
+=head1 AUTHOR
+
+Nate Jones E<lt>nate@endot.orgE<gt>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2013 by Nate Jones E<lt>nate@endot.orgE<gt>.
+
+This program is free software; you can use, modify, and redistribute it under
+the Artistic License, version 2.0.
+
+See http://www.opensource.org/licenses/artistic-license-2.0.php
+
+=cut
