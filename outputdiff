@@ -36,6 +36,8 @@ sub run_outputdiff {
     pod2usage(1) if exists $options{help};
     pod2usage( -exitstatus => 0, -verbose => 2 ) if exists $options{man};
 
+    my $exit_code = 0;
+
     if ( defined( $options{new} ) ) {
 
         bootstrap($config);
@@ -92,6 +94,8 @@ sub run_outputdiff {
             run_git( { wd => $full_repo_path, expose => 1 },
                 qw(diff HEAD^ HEAD) );
         }
+
+        $exit_code = $output_has_changes ? 0 : 1;
     }
     elsif ( defined( $options{'last'} ) ) {
         my $repo_name = read_current($config);
@@ -174,6 +178,8 @@ sub run_outputdiff {
     else {
         die "You didn't specify anything\n";
     }
+
+    exit $exit_code;
 }
 
 sub record_current {
