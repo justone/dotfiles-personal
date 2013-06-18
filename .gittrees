@@ -130,3 +130,7 @@
 	url = https://github.com/vim-perl/vim-perl.git
 	path = .vim/bundle/vim-perl
 	branch = master
+[subtree "bin/outputdiff"]
+	url = git@github.com:justone/outputdiff.git
+	path = bin/outputdiff
+	branch = master
