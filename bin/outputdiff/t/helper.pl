@@ -16,12 +16,12 @@ BEGIN {
 ok defined &OD::run_outputdiff, 'OD::run_outputdiff is defined';
 
 sub run_outputdiff {
-    my ( $args ) = @_;
+    my ($args) = @_;
 
     my $basedir = "$Bin/diffs";
     mkpath($basedir);
 
-    my $config = {basedir => $basedir};
+    my $config = { basedir => $basedir };
     trap {
         OD::run_outputdiff( $args, $config );
     };
