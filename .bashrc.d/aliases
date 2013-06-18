@@ -84,3 +84,8 @@ alias rc="remotecopy -c"
 
 # strip ansi color codes
 alias nocolor="perl -pe 's/\e\[?.*?[\@-~]//g'"
+
+# outputdiff (https://github.com/justone/outputdiff) aliases
+alias odn="outputdiff --new"
+alias odc="outputdiff --compare"
+alias odv="outputdiff --compare --no-diff && outputdiff --last --vimdiff"
