@@ -79,10 +79,8 @@ sub run_outputdiff {
         INFO("Initialized new capture.");
     }
     elsif ( defined( $options{compare} ) ) {
-        my $repo_name = read_current($config);
-
-        my $full_repo_path
-            = File::Spec->catfile( $config->{basedir}, $repo_name );
+        my ( $repo_name, $full_repo_path )
+            = get_repo_name_and_path( $config, $options{compare} );
 
         my $output_has_changes = grab_input_and_commit($full_repo_path);
 
@@ -98,12 +96,10 @@ sub run_outputdiff {
         $exit_code = $output_has_changes ? 0 : 1;
     }
     elsif ( defined( $options{'last'} ) ) {
-        my $repo_name = read_current($config);
+        my ( $repo_name, $full_repo_path )
+            = get_repo_name_and_path( $config, $options{'last'} );
 
         # TODO: check for fewer than 2 revisions
-
-        my $full_repo_path
-            = File::Spec->catfile( $config->{basedir}, $repo_name );
 
         my @diff_command = qw(diff HEAD^ HEAD);
         if ( $options{vimdiff} ) {
@@ -142,12 +138,8 @@ sub run_outputdiff {
         }
     }
     elsif ( defined( $options{'log'} ) ) {
-        my $repo_name = read_current($config);
-
-        # TODO: check for no current repo
-
-        my $full_repo_path
-            = File::Spec->catfile( $config->{basedir}, $repo_name );
+        my ( $repo_name, $full_repo_path )
+            = get_repo_name_and_path( $config, $options{'log'} );
 
         run_git(
             { wd => $full_repo_path, expose => 1 },
@@ -156,12 +148,8 @@ sub run_outputdiff {
         );
     }
     elsif ( defined( $options{'output'} ) ) {
-        my $repo_name = read_current($config);
-
-        # TODO: check for no current repo
-
-        my $full_repo_path
-            = File::Spec->catfile( $config->{basedir}, $repo_name );
+        my ( $repo_name, $full_repo_path )
+            = get_repo_name_and_path( $config, $options{'output'} );
 
         # check for duplicate dir
         if ( -d $full_repo_path ) {
@@ -290,21 +278,41 @@ sub bootstrap {
     }
 }
 
+sub get_repo_name_and_path {
+    my ( $config, $possible_name ) = @_;
+
+    my $repo_name 
+        = $possible_name
+        || read_current($config)
+        || ERROR('No previous comparison found, start one with --new')
+        && exit 1;
+
+    my $full_repo_path
+        = File::Spec->catfile( $config->{basedir}, $repo_name );
+
+    if ( !-e $full_repo_path ) {
+        ERROR("There is no comparison called '$repo_name'");
+        exit 1;
+    }
+
+    return ( $repo_name, $full_repo_path );
+}
+
 # a few log4perl-alikes
 sub ERROR {
-    printf "ERROR: %s\n", shift;
+    printf STDERR "ERROR: %s\n", shift;
 }
 
 sub WARN {
-    printf "WARN: %s\n", shift;
+    printf STDERR "WARN: %s\n", shift;
 }
 
 sub INFO {
-    printf "INFO: %s\n", shift if !$options{quiet};
+    printf STDERR "INFO: %s\n", shift if !$options{quiet};
 }
 
 sub DEBUG {
-    printf "DEBUG: %s\n", shift if $options{verbose};
+    printf STDERR "DEBUG: %s\n", shift if $options{verbose};
 }
 
 # work-alike for function from perl 5.8.9 and later
