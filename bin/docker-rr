@@ -1,0 +1,5 @@
+#!/bin/bash
+
+REPO=$1
+
+docker images | grep $REPO | awk '{ print $2 }' | xargs -n 1 -I_ docker rmi $REPO:_
