@@ -1,0 +1,21 @@
+#!/bin/bash
+
+NEW_SCRIPT=$1
+
+if [[ $NEW_SCRIPT = "" ]]; then
+    echo "Pass in the name of the new script."
+    exit 1
+fi
+
+if [[ $NEW_SCRIPT =~ "/" ]]; then
+    NEW_SCRIPT_DIR=${NEW_SCRIPT%/*}
+
+    if [[ ! -e $NEW_SCRIPT_DIR ]]; then
+        echo "Creating $NEW_SCRIPT_DIR"
+        mkdir -p $NEW_SCRIPT_DIR
+    fi
+fi
+
+touch $NEW_SCRIPT
+chmod +x $NEW_SCRIPT
+vi $NEW_SCRIPT
