@@ -45,6 +45,8 @@ endif
 " step 3: Type the pattern you wish to find and hit enter
 " bonus: Visual highlight a new area and just hit 'n' to search again
 vmap <leader>/ <Esc>/\%V
+" TODO: this one conflicts with mark.vim
+"map <leader>/ /\%V
 
 " from http://github.com/adamhjk/adam-vim
 " nicer status line
