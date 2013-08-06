@@ -39,6 +39,13 @@ if filereadable("/etc/redhat-release")
     endif
 endif
 
+" Easy searching within a range:
+" step 1: Visual highlight the lines to search
+" step 2: Type ,/
+" step 3: Type the pattern you wish to find and hit enter
+" bonus: Visual highlight a new area and just hit 'n' to search again
+vmap <leader>/ <Esc>/\%V
+
 " from http://github.com/adamhjk/adam-vim
 " nicer status line
 "set laststatus=2
