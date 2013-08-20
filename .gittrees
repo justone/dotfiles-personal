@@ -78,10 +78,6 @@
 	url = https://github.com/tpope/vim-fugitive.git
 	path = .vim/bundle/vim-fugitive
 	branch = master
-[subtree ".vim/bundle/vim-markdown-preview"]
-	url = https://github.com/robgleeson/hammer.vim.git
-	path = .vim/bundle/vim-markdown-preview
-	branch = master
 [subtree ".vim/bundle/vim-octopress"]
 	url = https://github.com/tangledhelix/vim-octopress.git
 	path = .vim/bundle/vim-octopress
