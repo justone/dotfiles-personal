@@ -134,3 +134,7 @@
 	url = git@github.com:justone/outputdiff.git
 	path = bin/outputdiff
 	branch = master
+[subtree ".vim/bundle/vim-pandoc"]
+	url = https://github.com/vim-pandoc/vim-pandoc.git
+	path = .vim/bundle/vim-pandoc
+	branch = master
