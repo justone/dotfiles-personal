@@ -1,0 +1,56 @@
+Plugin:      vim-pandoc, a vim plugin for writing in pandoc's 
+             extended markdown
+
+Maintainers: David Sanson <dsanson@gmail.com>
+             Felipe Morales <hel.sheep@gmail.com>
+
+URL:         https://github.com/vim-pandoc/vim-pandoc
+
+Version 2.0
+===========
+
+Changes:
+
++	Architecture:
+	+	Proper distinctions between autoload, plugin, and ftplugin code
+	+	Making code more modular
+
++   Citation completion:
+	+	Support for multiple bibliography files
+	+	Support for dictionary style completions
+	+   Support for completions based on keyword (bibtex only; depends on bibtool)
+
++   Executors:
+	+   More flexible format for defining external calls to pandoc
+	+   Defined executors listed in "Pandoc" menu
+
++   Better support for Supertab completions
+
++   Better selection of snippets
+
++   Lots more. See the [commits](https://github.com/vim-pandoc/vim-pandoc/commits/master) on github.
+
+Version 1.0
+===========
+
+First official release.
+
+Known issues:
+
++    Syntax file:
+    +    does not support tables
+	+    doesn't match reference link ids with spaces
++    Supertab completion of citations won't work until after
+     you've invoked omnicompletion of citations at least once
+	 using CTRL-X CTRL-O
+
+To be added:
+
++    Support for multiple bibliography files
++    Dictionary style completion of citations (show author/title)
+     in popup.
++    Complete citations based on keyword, not just citekey (e.g., 
+     type something like `@word` to match any bib entry that
+	 contains 'word'.)
++    Support for using Zotero (both locally and via zotero.org)
+     instead of a local static bibliography file.
