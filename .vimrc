@@ -99,6 +99,26 @@ noremap <leader>et :tabe <C-R>=expand("%:p:h") . "/" <CR>
 " use the octopress syntax for markdown files
 au BufNewFile,BufRead *.markdown setfiletype octopress
 
+" no default input
+let g:ctrlp_default_input = 0
+" set working dir starting at vim's working dir, not the current file
+let g:ctrlp_working_path_mode = 'rw'
+let g:ctrlp_mruf_relative = 1
+let g:ctrlp_match_window = 'top,order:ttb,min:1,max:10,results:100'
+let g:ctrlp_prompt_mappings = { 
+  \ 'ToggleMRURelative()': ['<c-w>'],
+  \ 'PrtDeleteWord()':     ['<F2>']
+  \ }
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\v[\/](local)$'
+  \ }
+let g:ctrlp_map = '<leader>ff'
+noremap <leader>fr :CtrlPMRU<CR>
+noremap <leader>fl :CtrlPMRU<CR>
+noremap <leader>ft :CtrlPTag<CR>
+noremap <leader>fb :CtrlPBuffer<CR>
+noremap <leader>fc :CtrlPClearCache<CR>
+
 " enable pathogen
 filetype off 
 call pathogen#runtime_append_all_bundles()
@@ -159,19 +179,6 @@ au BufNewFile,BufRead *.mt set filetype=tt2html
 map ,cp :%w ! pbcopy<CR>
 
 " older versions of this file contain helpers for HTML, JSP and Java
-
-" fuzzy finder
-let g:fuf_modesDisable = [ 'mrucmd', ]
-let g:fuf_coveragefile_exclude = '\v\~$|blib|\.(o|exe|dll|bak|orig|swp)$|(^|[/\\])\.(hg|git|bzr)($|[/\\])'
-let g:fuf_mrufile_exclude = '\v\~$|\.(o|exe|dll|bak|orig|sw[po])$|^(\/\/|\\\\|\/mnt\/|\/media\/)|svn-base$'
-let g:fuf_maxMenuWidth = 150
-"let g:fuf_previewHeight = 20
-noremap <leader>ff :FufCoverageFile<CR>
-noremap <leader>fr :FufMruFile<CR>
-noremap <leader>fl :FufMruFileInCwd<CR>
-noremap <leader>ft :FufTag<CR>
-noremap <leader>fb :FufBuffer<CR>
-noremap <leader>fc :FufRenewCache<CR>
 
 " sessionman.vim mappings
 noremap <leader>sa :SessionSaveAs<CR>
