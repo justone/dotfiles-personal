@@ -134,3 +134,7 @@
 	url = https://github.com/vim-pandoc/vim-pandoc.git
 	path = .vim/bundle/vim-pandoc
 	branch = master
+[subtree ".vim/bundle/ctrlp.vim"]
+	url = https://github.com/kien/ctrlp.vim.git
+	path = .vim/bundle/ctrlp.vim
+	branch = master
