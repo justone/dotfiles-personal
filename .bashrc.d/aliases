@@ -42,8 +42,8 @@ alias svnkey='svn propset svn:keywords "Id Date LastChangedDate HeadURL URL Auth
 alias desvn='rm -rf `find . -name .svn -type d`'
 
 # perltidy
-alias pt="perltidy -pbp -b -nse -nst"
-alias pta="for i in \`ack -f --perl\`; do echo \$i; perltidy -pbp -b -nse -nst \$i; done"
+alias pt="perltidy -pro=.../.perltidyrc"
+alias pta="for i in \`ack -f --perl\`; do echo \$i; perltidy -pro=.../.perltidyrc \$i; done"
 alias ptarm="find . -name \"*.bak\" | xargs rm -f {} \;"
 
 # testing aliases
