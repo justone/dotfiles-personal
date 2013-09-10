@@ -58,8 +58,8 @@ set-option -g status-left-length 40
 
 setw -g window-status-bg black
 setw -g window-status-current-fg green
-#setw -g window-status-alert-attr default
-#setw -g window-status-alert-fg yellow
+setw -g window-status-alert-attr default
+setw -g window-status-alert-fg yellow
 
 # monitor activity
 setw -g monitor-activity on
