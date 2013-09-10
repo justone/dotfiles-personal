@@ -138,3 +138,7 @@
 	url = https://github.com/kien/ctrlp.vim.git
 	path = .vim/bundle/ctrlp.vim
 	branch = master
+[subtree ".vim/bundle/vim-airline"]
+	url = https://github.com/bling/vim-airline.git
+	path = .vim/bundle/vim-airline
+	branch = master
