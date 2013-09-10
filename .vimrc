@@ -17,6 +17,9 @@ let mapleader = ','
 let perl_fold = 1
 let perl_fold_anonymous_subs = 1
 
+set laststatus=2
+let g:airline_powerline_fonts = 1
+
 " configure syntastic
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
