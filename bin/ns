@@ -18,4 +18,4 @@ fi
 
 touch $NEW_SCRIPT
 chmod +x $NEW_SCRIPT
-vi $NEW_SCRIPT
+vim $NEW_SCRIPT
