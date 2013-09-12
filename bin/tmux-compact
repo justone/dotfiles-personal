@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# I index tmux starting at 1
+BASE=1
+
+tmux list-windows | cut -d : -f 1 | while read index; do
+    if [[ $BASE -ne $index ]]; then
+        echo "moving $index -> $BASE"
+        tmux move-window -t $BASE -s $index
+    fi
+    BASE=$[BASE + 1]
+done
