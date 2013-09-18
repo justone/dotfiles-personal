@@ -12,6 +12,7 @@ set expandtab smarttab
 
 " the famous leader character
 let mapleader = ','
+let maplocalleader = ","
 
 " for some reason this has to go in .vimrc
 let perl_fold = 1
