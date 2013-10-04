@@ -142,3 +142,7 @@
 	url = https://github.com/bling/vim-airline.git
 	path = .vim/bundle/vim-airline
 	branch = master
+[subtree ".vim/bundle/vim-clojure-static"]
+	url = https://github.com/guns/vim-clojure-static.git
+	path = .vim/bundle/vim-clojure-static
+	branch = master
