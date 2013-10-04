@@ -141,6 +141,9 @@ filetype on
 filetype plugin on
 filetype indent on
 
+" fold go files with syntax
+au FileType go setlocal foldmethod=syntax
+
 map <F2> :map<CR>
 map <F7> :call ToggleSyntax()<CR>
 map <F8> :set paste!<CR>
