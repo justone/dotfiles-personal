@@ -146,3 +146,7 @@
 	url = https://github.com/guns/vim-clojure-static.git
 	path = .vim/bundle/vim-clojure-static
 	branch = master
+[subtree ".vim/bundle/vim-fireplace"]
+	url = https://github.com/tpope/vim-fireplace.git
+	path = .vim/bundle/vim-fireplace
+	branch = master
