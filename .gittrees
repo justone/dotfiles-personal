@@ -154,3 +154,7 @@
 	url = https://github.com/jnwhiteh/vim-golang.git
 	path = .vim/bundle/vim-golang
 	branch = master
+[subtree ".vim/bundle/vim-unstack"]
+	url = https://github.com/mattboehm/vim-unstack.git
+	path = .vim/bundle/vim-unstack
+	branch = master
