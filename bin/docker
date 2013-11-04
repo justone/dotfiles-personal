@@ -10,5 +10,5 @@ SUB_COMMAND=$(type -path docker-${COMMAND})
 if [ -n "$SUB_COMMAND" -a -x "$SUB_COMMAND" -a "${COMMAND}" != "upgrade" ]; then
     exec $SUB_COMMAND "$@"
 else
-    docker $COMMAND "$@"
+    command -p docker $COMMAND "$@"
 fi
