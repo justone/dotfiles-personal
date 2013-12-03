@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Run a shell in an image
+
+IMAGE=$1
+SHELL=${2:-/bin/bash}
+
+docker run -i -t $IMAGE $SHELL
