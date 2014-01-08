@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ -e "$HOME/perl5" ]]; then
+    echo "A local lib install looks to be present already."
+    exit
+fi
+
+DIR=$(mktemp -d -t locallib)
+
+cd $DIR
+
+wget http://search.cpan.org/CPAN/authors/id/H/HA/HAARG/local-lib-2.000004.tar.gz
+tar -xzvf local-lib-2.000004.tar.gz
+cd local-lib-2.000004
+
+perl Makefile.PL --bootstrap
+make test && make install
+
+echo '[ $SHLVL -eq 1 ] && eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)"' >>~/.bashrc
