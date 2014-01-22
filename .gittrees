@@ -102,10 +102,6 @@
 	url = git://git.kitenet.net/moreutils
 	path = bin/moreutils
 	branch = master
-[subtree ".vim/bundle/vimux"]
-	url = https://github.com/benmills/vimux.git
-	path = .vim/bundle/vimux
-	branch = master
 [subtree ".vim/bundle/vim-scala"]
 	url = https://github.com/derekwyatt/vim-scala.git
 	path = .vim/bundle/vim-scala
