@@ -26,7 +26,7 @@ let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_mode_map = { 'mode': 'active',
             \ 'passive_filetypes': ['puppet'] }
-nmap <leader>st :SyntasticCheck<CR>
+nmap <leader>st :SyntasticToggleMode<CR>
 
 let g:UltiSnipsExpandTrigger="<tab>"
 let g:UltiSnipsJumpForwardTrigger="<tab>"
@@ -301,17 +301,28 @@ nnoremap <silent> <C-N> :tabnext<CR>
 nnoremap <silent> <C-P> :tabprev<CR>
 
 " vimux config
-function! InterruptVimTmuxRunnerAndRunLastVimTmuxCommand()
-    :InterruptVimTmuxRunner
-    :RunLastVimTmuxCommand
-endfunction
+if strlen($TMUX)
+    let tmuxver = system("tmux -V")
+    if matchstr(tmuxver, '1.8')
+        function! InterruptRunnerAndRunLastCommand()
+            :VimuxInterruptRunner
+            :VimuxRunLastCommand
+        endfunction
 
-noremap <Leader>tp :PromptVimTmuxCommand<CR>
-noremap <Leader>tr :RunLastVimTmuxCommand<CR>
-noremap <Leader>tt :call InterruptVimTmuxRunnerAndRunLastVimTmuxCommand()<CR>
-noremap <Leader>ti :InspectVimTmuxRunner<CR>
-noremap <Leader>tx :CloseVimTmuxPanes<CR>
-noremap <Leader>tc :InterruptVimTmuxRunner<CR> 
+        "let g:VimuxRunnerType = 'window'
+        "let g:VimuxUseNearest = 0
+
+        noremap <Leader>tp :VimuxPromptCommand<CR>
+        noremap <Leader>tr :VimuxRunLastCommand<CR>
+        noremap <Leader>tt :call InterruptRunnerAndRunLastCommand()<CR>
+        noremap <Leader>ti :VimuxInspectRunner<CR>
+        noremap <Leader>tx :VimuxCloseRunner<CR>
+        noremap <Leader>tc :VimuxInterruptRunner<CR>
+        noremap <Leader>tz :VimuxZoomRunner<CR>
+    else
+        noremap <Leader>tp :echo "Upgrade tmux to 1.8"<CR>
+    endif
+endif
 
 " sideways.vim
 nnoremap <c-h> :SidewaysLeft<cr>
