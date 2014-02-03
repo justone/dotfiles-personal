@@ -52,14 +52,17 @@ set -s escape-time 0
 set-option -g status-utf8 on
 # set-option -g status-justify centre
 set-option -g status-justify left
-set-option -g status-bg black
+set-option -g status-bg colour16
 set-option -g status-fg white
 set-option -g status-left-length 40
 
-setw -g window-status-bg black
-setw -g window-status-current-fg green
-setw -g window-status-alert-attr default
-setw -g window-status-alert-fg yellow
+setw -g window-status-bg colour16
+setw -g window-status-fg white
+setw -g window-status-current-fg colour46
+
+setw -g window-status-activity-attr default
+setw -g window-status-activity-fg colour192
+setw -g window-status-activity-bg colour16
 
 # monitor activity
 setw -g monitor-activity on
@@ -68,7 +71,7 @@ set -g visual-activity off
 bind m setw monitor-activity off
 bind M setw monitor-activity on
 
-set -g status-left '#[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
+set -g status-left '#[fg=green][ #[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
 #set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
 #set -g status-right '#[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
-set -g status-right ''
+set -g status-right '#[fg=green]]'
