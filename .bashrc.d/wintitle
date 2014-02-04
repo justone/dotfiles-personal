@@ -50,14 +50,20 @@ fi
 # Comment in the above and uncomment this below for a color prompt
 #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
+# Support for direnv.  This puts the direnv hook at the end of PROMPT_COMMAND
+# so that LAST_EXIT will work properly
+if type direnv &> /dev/null; then
+    eval "$(direnv hook bash)"
+fi
+
 case $TERM in
     linux)
-        PROMPT_COMMAND='LAST_EXIT=$?; reconnect_ssh_agent;'
+        PROMPT_COMMAND='LAST_EXIT=$?; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
     xterm*)
-        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;${WIN_TITLE}\007"; else echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; fi; reconnect_ssh_agent;'
+        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;${WIN_TITLE}\007"; else echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; fi; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
     screen*)
-        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k${WIN_TITLE}\033\\"; else echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; fi; reconnect_ssh_agent;'
+        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k${WIN_TITLE}\033\\"; else echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; fi; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
 esac
