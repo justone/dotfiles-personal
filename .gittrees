@@ -10,10 +10,6 @@
 	url = https://github.com/micha/resty.git
 	path = .bashrc.d/resty
 	branch = master
-[subtree ".bashrc.d/z"]
-	url = https://github.com/rupa/z.git
-	path = .bashrc.d/z
-	branch = master
 [subtree ".vim/bundle/AutoTag"]
 	url = https://github.com/vim-scripts/AutoTag.git
 	path = .vim/bundle/AutoTag
