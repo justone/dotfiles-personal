@@ -11,7 +11,6 @@ export PATH=$PATH:$HOME/bin
 [ -z "$PS1" ] && return
 
 . $HOME/.bashrc.d/safe # includes aliases, shell, path
-. $HOME/.bashrc.d/z/z.sh
 . $HOME/.bashrc.d/wintitle
 . $HOME/.bashrc.d/tmux_local_lib
 
