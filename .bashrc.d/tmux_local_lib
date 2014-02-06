@@ -1,6 +1,11 @@
 # Reactivate local::lib as tmux resets PATH
 
-if [[ -d $HOME/perl5 && -n $TMUX ]]; then
-    eval $(perl -Mlocal::lib=--deactivate)
+if [[ -d $HOME/perl5 && -e $HOME/perl5/lib/perl5/local/lib.pm && -n $TMUX ]]; then
+    #echo "Fixing local::lib"
+    if [[ -n $PERL5LIB ]]; then
+        #echo "Deactivating local::lib"
+        eval $(perl -Mlocal::lib=--deactivate)
+    fi
+    #echo "Activating local::lib"
     eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)
 fi
