@@ -162,3 +162,7 @@
 	url = https://github.com/kien/rainbow_parentheses.vim.git
 	path = .vim/bundle/rainbow_parentheses.vim
 	branch = master
+[subtree ".vim/bundle/vim-sexp"]
+	url = https://github.com/guns/vim-sexp.git
+	path = .vim/bundle/vim-sexp
+	branch = master
