@@ -333,7 +333,7 @@ nmap <leader>vv :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalon
 nmap <leader>vp :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/buttondown.css "%" \|bcat<cr><cr>
 
 " clojure rainbow parens
-au VimEnter *.clj RainbowParenthesesToggle
+au BufEnter *.clj RainbowParenthesesActivate
 au Syntax clojure RainbowParenthesesLoadRound
 au Syntax clojure RainbowParenthesesLoadSquare
 au Syntax clojure RainbowParenthesesLoadBraces
