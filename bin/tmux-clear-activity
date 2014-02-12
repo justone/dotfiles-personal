@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# loop through all windows till back to the current one,
+# to clear the activity alert
+
+# retrieves the current window ID
+current_window ()
+{
+    tmux list-windows | grep active | cut -d : -f 1
+}
+
+# capture where we start and go to the next window
+STARTWIN=$(current_window)
+
+# go to the next window until we're back were we started
+while [[ $CURWIN -ne $STARTWIN ]]; do
+    tmux next-window
+    CURWIN=$(current_window)
+done

@@ -30,6 +30,9 @@ bind-key @ command-prompt -p "create pane from:"  "join-pane -s ':%%'"
 bind-key y save-buffer ~/.tmux-buffer \; run-shell "remotecopy foo || true" \; command-prompt -p "secret:" "run-shell \"cat ~/.tmux-buffer | remotecopy -s %%\""
 bind-key ] select-layout even-horizontal \; resize-pane -t 1 -x 80
 
+# binding to clear activity alerts
+bind-key C run-shell tmux-clear-activity
+
 # easily toggle synchronization (mnemonic: e is for echo)
 bind e setw synchronize-panes on
 bind E setw synchronize-panes off
