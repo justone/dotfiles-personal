@@ -337,3 +337,6 @@ au BufEnter *.clj RainbowParenthesesActivate
 au Syntax clojure RainbowParenthesesLoadRound
 au Syntax clojure RainbowParenthesesLoadSquare
 au Syntax clojure RainbowParenthesesLoadBraces
+
+" support mapping from old version of vim-surround
+xmap s <Plug>VSurround
