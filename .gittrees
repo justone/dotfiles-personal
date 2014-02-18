@@ -170,3 +170,7 @@
 	url = https://github.com/tpope/vim-sexp-mappings-for-regular-people.git
 	path = .vim/bundle/vim-sexp-mappings-for-regular-people
 	branch = master
+[subtree ".vim/bundle/vim-surround"]
+	url = https://github.com/tpope/vim-surround.git
+	path = .vim/bundle/vim-surround
+	branch = master
