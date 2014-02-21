@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Run lxc-attach to get into a container
+
+CONTAINER_NAME=$1
+
+LXC_ID=$(docker ps --no-trunc | grep $CONTAINER_NAME | awk '{ print $1 }')
+
+if [[ -n $LXC_ID ]]; then
+    echo "Attaching to $LXC_ID"
+    sudo lxc-attach -n $LXC_ID
+else
+    echo "No container found matching '$CONTAINER_NAME'"
+fi
