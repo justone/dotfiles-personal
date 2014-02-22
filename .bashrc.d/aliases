@@ -85,7 +85,12 @@ function resty() {
 # Short form for remotecopy
 alias rc="remotecopy -c"
 # Remotecopy last command
-alias rcl="fc -l -n -1 -1 | sed -r 's/^\s+//' | rc"
+if [ "$OS" == "Darwin" ]
+then
+    alias rcl="fc -l -n -1 -1 | sed -E 's/^	 //g'| rc"
+else
+    alias rcl="fc -l -n -1 -1 | sed -r 's/^\s+//' | rc"
+fi
 
 # strip ansi color codes
 alias nocolor="perl -pe 's/\e\[?.*?[\@-~]//g'"
