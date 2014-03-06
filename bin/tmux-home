@@ -1,6 +1,3 @@
 #!/bin/sh
 
-SESS=home
-
-tmux -L home -f ~/.tmux.master att -t $SESS -d ||
-tmux -L home -f ~/.tmux.master new -s $SESS
+tmux-sess -s home -f ~/.tmux.master $*

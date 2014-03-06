@@ -1,0 +1,34 @@
+#!/bin/bash
+
+read -r -d '' USAGE <<'USAGEEND'
+tmux-sess - start a tmux session
+
+Options:
+    -h          This help text.
+    -f <file>   Tmux config file to use (default: ~/.tmux.conf).
+    -s <name>   Socket/session name to use.
+    -n          Start a new session that joins the existing session.
+USAGEEND
+
+CONF=$HOME/.tmux.conf
+SESS=main
+NEWSESS=
+while getopts hnf:s: flag; do
+    case $flag in
+        h|\?)
+            echo "$USAGE"; exit;;
+        f)
+            CONF=$OPTARG;;
+        s)
+            SESS=$OPTARG;;
+        n)
+            NEWSESS=1;;
+    esac
+done
+
+if [[ -n $NEWSESS ]]; then
+    tmux -L $SESS -f $CONF new -t $SESS
+else
+    tmux -L $SESS -f $CONF att -t $SESS -d ||
+    tmux -L $SESS -f $CONF new -s $SESS
+fi
