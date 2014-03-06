@@ -63,7 +63,7 @@ use ${1};
 
 subtest 'subtest' => sub {
 	ok( 1, "sub test" );
-}
+};
 
 done_testing;
 endsnippet
@@ -75,7 +75,7 @@ subtest '${1}' => sub {
 endsnippet
 
 snippet ddump "Dump a data structure in a test"
-diag(Dumper(${1})); use Data::Dumper;
+diag explain ${1}
 endsnippet
 
 snippet dump "Dump a data structure"
