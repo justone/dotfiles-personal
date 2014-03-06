@@ -13,6 +13,9 @@ bind p paste-buffer
 bind-key -t vi-copy 'v' begin-selection
 bind-key -t vi-copy 'y' copy-selection
 
+# when sharing a session, don't lock entire session to shared screen size
+setw -g aggressive-resize on
+
 # VI for splitting
 bind s split-window -v
 bind v split-window -h
