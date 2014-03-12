@@ -309,8 +309,17 @@ if strlen($TMUX)
             :VimuxRunLastCommand
         endfunction
 
-        "let g:VimuxRunnerType = 'window'
+        let g:VimuxRunnerType = 'pane'
         "let g:VimuxUseNearest = 0
+
+        function! ToggleVimuxType()
+            if g:VimuxRunnerType == 'window'
+                let g:VimuxRunnerType = 'pane'
+            else
+                call VimuxCloseRunner()
+                let g:VimuxRunnerType = 'window'
+            end
+        endfunction
 
         noremap <Leader>tp :VimuxPromptCommand<CR>
         noremap <Leader>tr :VimuxRunLastCommand<CR>
