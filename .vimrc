@@ -141,8 +141,12 @@ filetype on
 filetype plugin on
 filetype indent on
 
+" settings for go
 " fold go files with syntax
 au FileType go setlocal foldmethod=syntax
+if executable("goimports")
+    let g:gofmt_command = 'goimports'
+endif
 
 map <F2> :map<CR>
 map <F7> :call ToggleSyntax()<CR>
