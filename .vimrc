@@ -310,16 +310,21 @@ if strlen($TMUX)
         endfunction
 
         let g:VimuxRunnerType = 'pane'
-        "let g:VimuxUseNearest = 0
+        let g:VimuxUseNearest = 1
 
         function! ToggleVimuxType()
             if g:VimuxRunnerType == 'window'
                 let g:VimuxRunnerType = 'pane'
+                let g:VimuxUseNearest = 1
+                echo "VimuxType -> pane"
             else
                 call VimuxCloseRunner()
                 let g:VimuxRunnerType = 'window'
+                let g:VimuxUseNearest = 0
+                echo "VimuxType -> window"
             end
         endfunction
+        command! ToggleVimuxType call ToggleVimuxType()
 
         noremap <Leader>tp :VimuxPromptCommand<CR>
         noremap <Leader>tr :VimuxRunLastCommand<CR>
