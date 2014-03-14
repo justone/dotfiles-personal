@@ -144,6 +144,7 @@ filetype indent on
 " settings for go
 " fold go files with syntax
 au FileType go setlocal foldmethod=syntax
+au FileType go autocmd BufWritePre <buffer> Fmt
 if executable("goimports")
     let g:gofmt_command = 'goimports'
 endif
