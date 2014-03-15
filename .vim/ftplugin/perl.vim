@@ -15,7 +15,7 @@ setlocal foldlevel=1
 function! PerlTidy()
     let ptline = line('.')
     if executable('perltidy')
-        %! perltidy -pbp
+        %! perltidy -pro=.../.perltidyrc
     else
         %! lwp-request -m POST http://perlster.com/tools/perltidy/service.pl
     endif
@@ -27,6 +27,12 @@ map ,pt :call PerlTidy()<CR>
 
 " perl syntax check
 nmap <C-c><C-c> :!perl -Wc %<CR>
+
+" allow perltidy to be called as a command
+command! PerlTidy call PerlTidy()
+
+" tidy buffer on save
+autocmd BufWritePre <buffer> :PerlTidy
 
 " Restore the saved compatibility options.
 let &cpo = s:save_cpo
