@@ -13,6 +13,8 @@ set expandtab smarttab
 " the famous leader character
 let mapleader = ','
 let maplocalleader = ","
+" map backslash to comma so reversing line search is fast
+nnoremap \ ,
 
 " for some reason this has to go in .vimrc
 let perl_fold = 1
