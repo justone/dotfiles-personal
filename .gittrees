@@ -34,10 +34,6 @@
 	url = https://github.com/vim-scripts/bufkill.vim.git
 	path = .vim/bundle/bufkill
 	branch = master
-[subtree ".vim/bundle/conque-shell"]
-	url = https://github.com/vim-scripts/Conque-Shell.git
-	path = .vim/bundle/conque-shell
-	branch = master
 [subtree ".vim/bundle/gundo"]
 	url = https://github.com/sjl/gundo.vim.git
 	path = .vim/bundle/gundo
