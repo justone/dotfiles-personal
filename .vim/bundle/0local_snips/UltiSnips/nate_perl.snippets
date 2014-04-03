@@ -71,7 +71,7 @@ endsnippet
 snippet st "Subtest"
 subtest '${1}' => sub {
 	${2}
-};
+} or exit;
 endsnippet
 
 snippet ddump "Dump a data structure in a test"
