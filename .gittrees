@@ -14,10 +14,6 @@
 	url = https://github.com/vim-scripts/AutoTag.git
 	path = .vim/bundle/AutoTag
 	branch = master
-[subtree ".vim/bundle/FuzzyFinder"]
-	url = https://github.com/vim-scripts/FuzzyFinder.git
-	path = .vim/bundle/FuzzyFinder
-	branch = master
 [subtree ".vim/bundle/L9"]
 	url = https://github.com/vim-scripts/L9.git
 	path = .vim/bundle/L9
