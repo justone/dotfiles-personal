@@ -25,6 +25,9 @@ endfunction
 map <F9> :call PerlTidy()<CR>
 map ,pt :call PerlTidy()<CR>
 
+" don't look in included files for completions
+setlocal complete-=i
+
 " perl syntax check
 nmap <C-c><C-c> :!perl -Wc %<CR>
 
