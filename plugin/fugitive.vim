@@ -198,6 +198,7 @@ augroup fugitive
   autocmd FileType           netrw call fugitive#detect(expand('%:p'))
   autocmd User NERDTreeInit,NERDTreeNewRoot call fugitive#detect(b:NERDTreeRoot.path.str())
   autocmd VimEnter * if expand('<amatch>')==''|call fugitive#detect(getcwd())|endif
+  autocmd CmdWinEnter * call fugitive#detect(expand('#:p'))
   autocmd BufWinLeave * execute getwinvar(+bufwinnr(+expand('<abuf>')), 'fugitive_leave')
 augroup END
 
@@ -460,15 +461,15 @@ function! fugitive#buffer(...) abort
 endfunction
 
 function! s:buffer_getvar(var) dict abort
-  return getbufvar(bufname(self['#']), a:var)
+  return getbufvar(self['#'],a:var)
 endfunction
 
 function! s:buffer_setvar(var,value) dict abort
-  return setbufvar(bufname(self['#']), a:var, a:value)
+  return setbufvar(self['#'],a:var,a:value)
 endfunction
 
 function! s:buffer_getline(lnum) dict abort
-  return get(getbufline(bufname(self['#']), a:lnum), 0, '')
+  return get(getbufline(self['#'], a:lnum), 0, '')
 endfunction
 
 function! s:buffer_repo() dict abort
@@ -1512,6 +1513,9 @@ function! s:Diff(bang,...) abort
     let spec = s:repo().translate(file)
     let commit = matchstr(spec,'\C[^:/]//\zs\x\+')
     let restore = s:diff_restore()
+    if exists('+cursorbind')
+      set cursorbind
+    endif
     let w:fugitive_diff_restore = restore
     if s:buffer().compare_age(commit) < 0
       execute 'rightbelow '.vert.'diffsplit '.s:fnameescape(spec)
@@ -1519,6 +1523,11 @@ function! s:Diff(bang,...) abort
       execute 'leftabove '.vert.'diffsplit '.s:fnameescape(spec)
     endif
     let w:fugitive_diff_restore = restore
+    let winnr = winnr()
+    if getwinvar('#', '&diff')
+      wincmd p
+      call feedkeys("\<C-W>p", 'n')
+    endif
     return ''
   catch /^fugitive:/
     return 'echoerr v:errmsg'
@@ -1696,6 +1705,8 @@ function! s:Blame(bang,line1,line2,count,args) abort
           setlocal norelativenumber
         endif
         execute "vertical resize ".(s:linechars('.\{-\}\ze\s\+\d\+)')+1)
+        nnoremap <buffer> <silent> <F1> :help fugitive-:Gblame<CR>
+        nnoremap <buffer> <silent> g?   :help fugitive-:Gblame<CR>
         nnoremap <buffer> <silent> q    :exe substitute(bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>'.bufnr('').'bdelete','^-1','','')<CR>
         nnoremap <buffer> <silent> gq   :exe substitute(bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>'.bufnr('').'bdelete<Bar>if expand("%:p") =~# "^fugitive:[\\/][\\/]"<Bar>Gedit<Bar>endif','^-1','','')<CR>
         nnoremap <buffer> <silent> <CR> :<C-U>exe <SID>BlameCommit("exe 'norm q'<Bar>edit")<CR>
@@ -1935,7 +1946,7 @@ function! s:github_url(repo,url,rev,commit,path,type,line1,line2) abort
   for domain in domains
     let domain_pattern .= '\|' . escape(split(domain, '://')[-1], '.')
   endfor
-  let repo = matchstr(a:url,'^\%(https\=://\|git://\|git@\)\zs\('.domain_pattern.'\)[/:].\{-\}\ze\%(\.git\)\=$')
+  let repo = matchstr(a:url,'^\%(https\=://\|git://\|git@\)\=\zs\('.domain_pattern.'\)[/:].\{-\}\ze\%(\.git\)\=$')
   if repo ==# ''
     return ''
   endif
@@ -2134,6 +2145,7 @@ function! s:BufReadIndex() abort
     xnoremap <buffer> <silent> p :<C-U>execute <SID>StagePatch(line("'<"),line("'>"))<CR>
     nnoremap <buffer> <silent> q :<C-U>if bufnr('$') == 1<Bar>quit<Bar>else<Bar>bdelete<Bar>endif<CR>
     nnoremap <buffer> <silent> R :<C-U>edit<CR>
+    nnoremap <buffer> <silent> g?   :help fugitive-:Gstatus<CR>
     nnoremap <buffer> <silent> <F1> :help fugitive-:Gstatus<CR>
   catch /^fugitive:/
     return 'echoerr v:errmsg'
@@ -2268,6 +2280,7 @@ function! s:BufReadObject() abort
         endif
       elseif b:fugitive_type ==# 'blob'
         call s:ReplaceCmd(s:repo().git_command('cat-file',b:fugitive_type,hash))
+        setlocal nomodeline
       endif
     finally
       keepjumps call setpos('.',pos)
