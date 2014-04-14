@@ -166,3 +166,7 @@
 	url = https://github.com/int3/vim-extradite.git
 	path = .vim/bundle/vim-extradite
 	branch = master
+[subtree ".vim/bundle/vim-sleuth"]
+	url = https://github.com/tpope/vim-sleuth.git
+	path = .vim/bundle/vim-sleuth
+	branch = master
