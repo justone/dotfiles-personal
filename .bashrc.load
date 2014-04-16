@@ -22,6 +22,11 @@ then
     . $HOME/.bashrc.d/keychain
 fi
 
+if [ "$OS" == "Linux" ]
+then
+    . $HOME/.bashrc.d/completion
+fi
+
 # load up host specific files, either
 # ~/.bashrc.d/host.d/hostname.com
 #  -- or --
