@@ -23,6 +23,8 @@ for path in /usr/local/bin /usr/local/sbin $HOME/bin $HOME/bin/excluded $HOME/bi
     pre_path $path
 done
 
+add_path $HOME/bin/after
+
 export PATH
 
 function vipath() {
