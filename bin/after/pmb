@@ -1,0 +1,104 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+# TODO: template these
+my $version = '2014-04-25-0738afa';
+
+my $base_url = 'http://get.pmb.io';
+my $os       = $^O;
+my $bits     = `uname -m`;
+my $local    = "$ENV{HOME}/.pmb";
+
+my $os_bits_to_name = {
+    darwin => { x86_64 => 'pmb_darwin_amd64', },
+    linux  => { x86_64 => 'pmb_linux_amd64', },
+};
+
+chomp($bits);
+
+DEBUG("OS: $os\n");
+DEBUG("BITS: $bits\n");
+DEBUG("VERSION: $version\n");
+DEBUG("LOCAL: $local\n");
+
+my $binary = $os_bits_to_name->{$os}{$bits}
+    || die "Unknown os/bits combination $os/$bits\n";
+my $sum = get_sum($binary);
+
+if ( !-e $local || !check_sum( $local, $sum ) ) {
+    fetch( "${base_url}/${version}/$binary", $local );
+    chmod 0755, $local;
+}
+
+if ( !check_sum( $local, $sum ) ) {
+    die "Downloaded file doesn't match checksum.\n";
+}
+
+DEBUG("Running ${local}\n");
+exec $local, @ARGV;
+
+sub fetch {
+    my ( $remote_path, $local_path ) = @_;
+
+    INFO("Fetching $remote_path\n");
+    if ( bin_exists('wget') ) {
+        system("wget -q $remote_path -O $local_path");
+    }
+    elsif ( bin_exists('curl') ) {
+        system("curl -s $remote_path $local_path");
+    }
+    my $rc = $? >> 8;
+    DEBUG("RC: $rc\n");
+    if ( $rc > 0 ) {
+        unlink($local_path);
+        die "Unable to fetch $remote_path\n";
+    }
+}
+
+sub bin_exists {
+    my $prog = shift;
+
+    return scalar grep {defined}
+        map { -x $_ } map {"$_/$prog"} split( /:/, $ENV{PATH} );
+}
+
+sub get_sum {
+    my $binary_name = shift;
+
+    foreach my $sum_info (<DATA>) {
+        chomp($sum_info);
+        my ( $sum, $name ) = split( /\s+/, $sum_info );
+        if ( $name eq $binary_name ) {
+            return $sum;
+        }
+    }
+}
+
+sub check_sum {
+    my ( $local_path, $sum ) = @_;
+
+    my $output = `md5sum $local_path`;
+    my ($file_sum) = split( /\s+/, $output );
+
+    DEBUG("downloaded: $file_sum\n");
+    DEBUG("checked: $sum\n");
+
+    return $file_sum eq $sum;
+}
+
+sub DEBUG {
+    if ( $ENV{PMB_BOOTSTRAP_DEBUG} ) {
+        print @_;
+    }
+}
+
+sub INFO {
+    print @_;
+}
+
+# TODO: template these
+__END__
+6251ed7fb981d8bc27e3c1e71def7a78  pmb_darwin_amd64
+041374577f756a6f102a003373060c9f  pmb_linux_amd64
