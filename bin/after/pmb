@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-my $version = '2014-04-27-2150-91be715';
+my $version = '2014-04-30-0733-e06b04f';
 
 my $base_url = 'http://get.pmb.io';
 my $os       = $^O;
@@ -19,7 +19,7 @@ chomp($bits);
 
 DEBUG("OS: $os\n");
 DEBUG("BITS: $bits\n");
-DEBUG("2014-04-27-2150-91be715: $version\n");
+DEBUG("2014-04-30-0733-e06b04f: $version\n");
 DEBUG("LOCAL: $local\n");
 
 my $binary = $os_bits_to_name->{$os}{$bits}
@@ -98,5 +98,5 @@ sub INFO {
 }
 
 __END__
-830f499b84fb791dfa86ec040450c0d4  pmb_darwin_amd64
-ba1ac4f4cf0c4fb4e94d16288ca3e2c1  pmb_linux_amd64
+e4e1650828b031bb4525feb07852ff24  pmb_darwin_amd64
+3e150c6325e0ad9bc6748cba7fe0b8f5  pmb_linux_amd64
