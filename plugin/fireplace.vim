@@ -87,6 +87,20 @@ function! fireplace#omnicomplete(findstart, base) abort
     return col('.') - strlen(matchstr(line, '\k\+$')) - 1
   else
     try
+
+      if fireplace#op_available('complete')
+        let response = fireplace#message({'op': 'complete', 'symbol': a:base})
+        if type(get(response[0], 'value')) == type([])
+          if type(get(response[0].value, 0)) == type([])
+            return map(response[0].value[0], '{"word": v:val}')
+          elseif type(get(response[0].value, 0)) == type('')
+            return map(response[0].value, '{"word": v:val}')
+          else
+            return []
+          endif
+        endif
+      endif
+
       let omnifier = '(fn [[k v]] (let [{:keys [arglists] :as m} (meta v)]' .
             \ ' {:word k :menu (pr-str (or arglists (symbol ""))) :info (str (when arglists (str arglists "\n")) "  " (:doc m)) :kind (if arglists "f" "v")}))'
 
@@ -134,6 +148,7 @@ let s:repl = {"requires": {}}
 if !exists('s:repls')
   let s:repls = []
   let s:repl_paths = {}
+  let s:repl_portfiles = {}
 endif
 
 function! s:repl.user_ns() abort
@@ -236,6 +251,34 @@ endfunction
 function! s:unregister_connection(conn) abort
   call filter(s:repl_paths, 'v:val.connection.transport isnot# a:conn.transport')
   call filter(s:repls, 'v:val.connection.transport isnot# a:conn.transport')
+  call filter(s:repl_portfiles, 'v:val.connection.transport isnot# a:conn.transport')
+endfunction
+
+function! fireplace#register_port_file(portfile, ...) abort
+  let old = get(s:repl_portfiles, a:portfile, {})
+  if has_key(old, 'time') && getftime(a:portfile) !=# old.time
+    call s:unregister_connection(old.connection)
+    let old = {}
+  endif
+  if empty(old) && getfsize(a:portfile) > 0
+    let port = matchstr(readfile(a:portfile, 'b', 1)[0], '\d\+')
+    let s:repl_portfiles[a:portfile] = {'time': getftime(a:portfile)}
+    try
+      let conn = nrepl#fireplace_connection#open(port)
+      let s:repl_portfiles[a:portfile].connection = conn
+      call s:register_connection(conn, a:0 ? a:1 : '')
+      return conn
+    catch /^nREPL Connection Error:/
+      if &verbose
+        echohl WarningMSG
+        echomsg v:exception
+        echohl None
+      endif
+      return {}
+    endtry
+  else
+    return get(old, 'connection', {})
+  endif
 endfunction
 
 " }}}1
@@ -353,14 +396,14 @@ function! s:spawning_eval(classpath, expr, ns) abort
   let java_cmd = exists('$JAVA_CMD') ? $JAVA_CMD : 'java'
   let command = java_cmd.' -cp '.shellescape(a:classpath).' clojure.main -e ' .
         \ shellescape(
-        \   '(clojure.core/binding [*out* (java.io.FileWriter. '.s:str(s:oneoff_out).')' .
-        \   '                       *err* (java.io.FileWriter. '.s:str(s:oneoff_err).')]' .
+        \   '(binding [*out* (java.io.FileWriter. '.s:str(s:oneoff_out).')' .
+        \   '          *err* (java.io.FileWriter. '.s:str(s:oneoff_err).')]' .
         \   '  (try' .
-        \   '    (clojure.core/require ''clojure.repl) '.ns.'(clojure.core/spit '.s:str(s:oneoff_pr).' (clojure.core/pr-str (clojure.core/eval (clojure.core/read-string (clojure.core/slurp '.s:str(s:oneoff_in).')))))' .
+        \   '    (require ''clojure.repl ''clojure.java.javadoc) '.ns.'(spit '.s:str(s:oneoff_pr).' (pr-str (eval (read-string (slurp '.s:str(s:oneoff_in).')))))' .
         \   '    (catch Exception e' .
-        \   '      (clojure.core/spit *err* (.toString e))' .
-        \   '      (clojure.core/spit '.s:str(s:oneoff_ex).' (clojure.core/class e))' .
-        \   '      (clojure.core/spit '.s:str(s:oneoff_stk).' (clojure.core/apply clojure.core/str (clojure.core/interpose "\n" (.getStackTrace e))))))' .
+        \   '      (spit *err* (.toString e))' .
+        \   '      (spit '.s:str(s:oneoff_ex).' (class e))' .
+        \   '      (spit '.s:str(s:oneoff_stk).' (apply str (interpose "\n" (.getStackTrace e))))))' .
         \   '  nil)')
   let captured = system(command)
   let result = {}
@@ -369,6 +412,11 @@ function! s:spawning_eval(classpath, expr, ns) abort
   let result.err   = join(readfile(s:oneoff_err, 'b'), "\n")
   let result.ex    = join(readfile(s:oneoff_ex, 'b'), "\n")
   let result.stacktrace = readfile(s:oneoff_stk)
+  if empty(result.ex)
+    let result.status = ['done']
+  else
+    let result.status = ['eval-error', 'done']
+  endif
   call filter(result, '!empty(v:val)')
   if v:shell_error && get(result, 'ex', '') ==# ''
     throw 'Error running Java: '.get(split(captured, "\n"), -1, '')
@@ -384,20 +432,23 @@ function! s:oneoff.user_ns() abort
 endfunction
 
 function! s:oneoff.path() dict abort
-  return classpath#split(self.classpath)
+  return self._path
 endfunction
 
 function! s:oneoff.eval(expr, options) dict abort
-  if &verbose && !empty(get(a:options, 'session', 1))
-    echohl WarningMSG
-    echomsg "No REPL found. Running java clojure.main ..."
-    echohl None
+  if !empty(get(a:options, 'session', 1))
+    throw 'Fireplace: no live REPL connection'
   endif
-  return s:spawning_eval(self.classpath, a:expr, get(a:options, 'ns', self.user_ns()))
+  let result = s:spawning_eval(join(self.path(), has('win32') ? ';' : ':'),
+        \ a:expr, get(a:options, 'ns', self.user_ns()))
+  if has_key(a:options, 'id')
+    let result.id = a:options.id
+  endif
+  return result
 endfunction
 
 function! s:oneoff.message(...) abort
-  throw 'No live REPL connection'
+  throw 'Fireplace: no live REPL connection'
 endfunction
 
 let s:oneoff.piggieback = s:oneoff.message
@@ -425,6 +476,20 @@ function! s:includes_file(file, path) abort
   endfor
 endfunction
 
+function! s:path_extract(path)
+  let path = []
+  if a:path =~# '\.jar'
+    for elem in split(substitute(a:path, ',$', '', ''), ',')
+      if elem ==# ''
+        let path += ['.']
+      else
+        let path += split(glob(substitute(elem, '\\\ze[\\ ,]', '', 'g'), 1), "\n")
+      endif
+    endfor
+  endif
+  return path
+endfunction
+
 function! fireplace#path(...) abort
   let buf = a:0 ? a:1 : s:buf()
   for repl in s:repls
@@ -432,14 +497,22 @@ function! fireplace#path(...) abort
       return repl.path()
     endif
   endfor
-  if exists('*classpath#from_vim')
-    return classpath#split(classpath#from_vim(getbufvar(buf, '&path')))
-  endif
-  return []
+  return s:path_extract(getbufvar(buf, '&path'))
 endfunction
 
 function! fireplace#platform(...) abort
+  for [k, v] in items(s:repl_portfiles)
+    if getftime(k) != v.time
+      call s:unregister_connection(v.connection)
+    endif
+  endfor
+
+  let portfile = findfile('.nrepl-port', '.;')
+  if !empty(portfile)
+    call fireplace#register_port_file(portfile, fnamemodify(portfile, ':h'))
+  endif
   silent doautocmd User FireplacePreConnect
+
   let buf = a:0 ? a:1 : s:buf()
   let root = simplify(fnamemodify(bufname(buf), ':p:s?[\/]$??'))
   let previous = ""
@@ -455,11 +528,11 @@ function! fireplace#platform(...) abort
       return repl
     endif
   endfor
-  if exists('*classpath#from_vim') && fnamemodify(bufname(buf), ':e') =~# '^cljx\=$'
-    let cp = classpath#from_vim(getbufvar(buf, '&path'))
-    return extend({'classpath': cp, 'nr': bufnr(buf)}, s:oneoff)
+  let path = s:path_extract(getbufvar(buf, '&path'))
+  if !empty(path) && fnamemodify(bufname(buf), ':e') =~# '^cljx\=$'
+    return extend({'_path': path, 'nr': bufnr(buf)}, s:oneoff)
   endif
-  throw ':Connect to a REPL or install classpath.vim to evaluate code'
+  throw 'Fireplace: :Connect to a REPL or install classpath.vim'
 endfunction
 
 function! fireplace#client(...) abort
@@ -467,7 +540,7 @@ function! fireplace#client(...) abort
   let client = fireplace#platform(buf)
   if fnamemodify(bufname(buf), ':e') ==# 'cljs'
     if !has_key(client, 'connection')
-      throw ':Connect to a REPL to evaluate code'
+      throw 'Fireplace: no live REPL connection'
     endif
     if empty(client.piggiebacks)
       let result = client.piggieback('')
@@ -485,8 +558,20 @@ function! fireplace#message(payload, ...) abort
   let payload = copy(a:payload)
   if !has_key(payload, 'ns')
     let payload.ns = fireplace#ns()
+  elseif empty(payload.ns)
+    unlet payload.ns
   endif
   return call(client.message, [payload] + a:000, client)
+endfunction
+
+function! fireplace#op_available(op) abort
+  try
+    let client = fireplace#platform()
+    if has_key(client, 'connection')
+      return client.connection.has_op(a:op)
+    endif
+  catch /^Fireplace: :Connect to a REPL/
+  endtry
 endfunction
 
 function! fireplace#findresource(resource, ...) abort
@@ -511,42 +596,15 @@ function! fireplace#findresource(resource, ...) abort
   return ''
 endfunction
 
-function! s:qfmassage(line, path) abort
-  let entry = {'text': a:line}
-  let match = matchlist(a:line, '\(\S\+\)\s\=(\(\S\+\))')
-  if !empty(match)
-    let [_, class, file; __] = match
-    if file =~# '^NO_SOURCE_FILE:' || file !~# ':'
-      let entry.resource = ''
-      let entry.lnum = 0
-    else
-      let truncated = substitute(class, '\.[A-Za-z0-9_]\+\%([$/].*\)$', '', '')
-      let entry.resource = tr(truncated, '.', '/').'/'.split(file, ':')[0]
-      let entry.lnum = split(file, ':')[-1]
-    endif
-    let entry.filename = fireplace#findresource(entry.resource, a:path)
-    if empty(entry.filename)
-      let entry.lnum = 0
-    else
-      let entry.text = class
-    endif
-  endif
-  return entry
-endfunction
-
-function! fireplace#quickfix_for(stacktrace) abort
-  let path = fireplace#path()
-  return map(copy(a:stacktrace), 's:qfmassage(v:val, path)')
-endfunction
-
 function! s:output_response(response) abort
+  let substitution_pat =  '\e\[[0-9;]*m\|\r\|\n$'
   if get(a:response, 'err', '') !=# ''
     echohl ErrorMSG
-    echo substitute(a:response.err, '\r\|\n$', '', 'g')
+    echo substitute(a:response.err, substitution_pat, '', 'g')
     echohl NONE
   endif
   if get(a:response, 'out', '') !=# ''
-    echo substitute(a:response.out, '\r\|\n$', '', 'g')
+    echo substitute(a:response.out, substitution_pat, '', 'g')
   endif
 endfunction
 
@@ -642,6 +700,10 @@ function! fireplace#echo_session_eval(expr, ...) abort
   try
     echo fireplace#session_eval(a:expr, a:0 ? a:1 : {})
   catch /^Clojure:/
+  catch
+    echohl ErrorMSG
+    echomsg v:exception
+    echohl NONE
   endtry
   return ''
 endfunction
@@ -681,6 +743,55 @@ function! fireplace#evalparse(expr, ...) abort
 endfunction
 
 " }}}1
+" Quickfix {{{1
+
+function! s:qfmassage(line, path) abort
+  let entry = {'text': a:line}
+  let match = matchlist(a:line, '\(\S\+\)\s\=(\(\S\+\))')
+  if !empty(match)
+    let [_, class, file; __] = match
+    if file =~# '^NO_SOURCE_FILE:' || file !~# ':'
+      let entry.resource = ''
+      let entry.lnum = 0
+    else
+      let truncated = substitute(class, '\.[A-Za-z0-9_]\+\%([$/].*\)$', '', '')
+      let entry.resource = tr(truncated, '.', '/').'/'.split(file, ':')[0]
+      let entry.lnum = split(file, ':')[-1]
+    endif
+    let entry.filename = fireplace#findresource(entry.resource, a:path)
+    if empty(entry.filename)
+      let entry.lnum = 0
+    else
+      let entry.text = class
+    endif
+  endif
+  return entry
+endfunction
+
+function! fireplace#quickfix_for(stacktrace) abort
+  let path = fireplace#path()
+  return map(copy(a:stacktrace), 's:qfmassage(v:val, path)')
+endfunction
+
+function! s:massage_quickfix() abort
+  let p = substitute(matchstr(','.&errorformat, ',classpath\zs\%(\\.\|[^\,]\)*'), '\\\ze[\,%]', '', 'g')
+  if empty(p)
+    return
+  endif
+  let path = p[0] ==# ',' ? s:path_extract(p[1:-1]) : split(p[1:-1], p[0])
+  let qflist = getqflist()
+  for entry in qflist
+    call extend(entry, s:qfmassage(get(entry, 'text', ''), path))
+  endfor
+  call setqflist(qflist, 'replace')
+endfunction
+
+augroup fireplace_quickfix
+  autocmd!
+  autocmd QuickFixCmdPost make,cfile,cgetfile call s:massage_quickfix()
+augroup END
+
+" }}}1
 " Eval {{{1
 
 let fireplace#skip = 'synIDattr(synID(line("."),col("."),1),"name") =~? "comment\\|string\\|char"'
@@ -691,7 +802,23 @@ function! s:opfunc(type) abort
   let reg_save = @@
   try
     set selection=inclusive clipboard-=unnamed clipboard-=unnamedplus
-    if a:type =~# '^.$'
+    if type(a:type) == type(0)
+      let open = '[[{(]'
+      let close = '[]})]'
+      if getline('.')[col('.')-1] =~# close
+        let [line1, col1] = searchpairpos(open, '', close, 'bn', g:fireplace#skip)
+        let [line2, col2] = [line('.'), col('.')]
+      else
+        let [line1, col1] = searchpairpos(open, '', close, 'bcn', g:fireplace#skip)
+        let [line2, col2] = searchpairpos(open, '', close, 'n', g:fireplace#skip)
+      endif
+      while col1 > 1 && getline(line1)[col1-2] =~# '[#''`~@]'
+        let col1 -= 1
+      endwhile
+      call setpos("'[", [0, line1, col1, 0])
+      call setpos("']", [0, line2, col2, 0])
+      silent exe "normal! `[v`]y"
+    elseif a:type =~# '^.$'
       silent exe "normal! `<" . a:type . "`>y"
     elseif a:type ==# 'line'
       silent exe "normal! '[V']y"
@@ -704,7 +831,7 @@ function! s:opfunc(type) abort
       silent exe "normal! `[v`]y"
     endif
     redraw
-    return @@
+    return repeat("\n", line("'<")-1) . repeat(" ", col("'<")-1) . @@
   finally
     let @@ = reg_save
     let &selection = sel_save
@@ -714,9 +841,12 @@ endfunction
 
 function! s:filterop(type) abort
   let reg_save = @@
+  let sel_save = &selection
+  let cb_save = &clipboard
   try
+    set selection=inclusive clipboard-=unnamed clipboard-=unnamedplus
     let expr = s:opfunc(a:type)
-    let @@ = matchstr(expr, '^\n\+').fireplace#session_eval(expr).matchstr(expr, '\n\+$')
+    let @@ = fireplace#session_eval(matchstr(expr, '^\n\+').expr).matchstr(expr, '\n\+$')
     if @@ !~# '^\n*$'
       normal! gvp
     endif
@@ -724,6 +854,8 @@ function! s:filterop(type) abort
     return ''
   finally
     let @@ = reg_save
+    let &selection = sel_save
+    let &clipboard = cb_save
   endtry
 endfunction
 
@@ -732,7 +864,7 @@ function! s:macroexpandop(type) abort
 endfunction
 
 function! s:macroexpand1op(type) abort
-  call fireplace#macroexpand("clojure.core/macroexpand-1", s:opfunc(a:type))
+  call fireplace#macroexpand("macroexpand-1", s:opfunc(a:type))
 endfunction
 
 function! s:printop(type) abort
@@ -741,13 +873,16 @@ function! s:printop(type) abort
 endfunction
 
 function! s:print_last() abort
-  call fireplace#echo_session_eval(s:todo)
+  call fireplace#echo_session_eval(s:todo, {'file_path': s:buffer_path()})
   return ''
 endfunction
 
 function! s:editop(type) abort
   call feedkeys(&cedit . "\<Home>", 'n')
-  let input = s:input(substitute(substitute(s:opfunc(a:type), "\s*;[^\n\"]*\\%(\n\\@=\\|$\\)", '', 'g'), '\n\+\s*', ' ', 'g'))
+  let input = s:input(substitute(substitute(substitute(
+        \ s:opfunc(a:type), "\s*;[^\n\"]*\\%(\n\\@=\\|$\\)", '', 'g'),
+        \ '\n\+\s*', ' ', 'g'),
+        \ '^\s*', '', ''))
   if input !=# ''
     call fireplace#echo_session_eval(input)
   endif
@@ -784,9 +919,9 @@ function! s:Eval(bang, line1, line2, count, args) abort
     if line1 == line2
       let expr .= getline(line1)[col1-1 : col2-1]
     else
-    let expr .= getline(line1)[col1-1 : -1] . "\n"
-          \ . join(map(getline(line1+1, line2-1), 'v:val . "\n"'))
-          \ . getline(line2)[0 : col2-1]
+      let expr .= getline(line1)[col1-1 : -1] . "\n"
+            \ . join(map(getline(line1+1, line2-1), 'v:val . "\n"'))
+            \ . getline(line2)[0 : col2-1]
     endif
     if a:bang
       exe line1.','.line2.'delete _'
@@ -886,18 +1021,22 @@ endfunction
 nnoremap <silent> <Plug>FireplacePrintLast :exe <SID>print_last()<CR>
 nnoremap <silent> <Plug>FireplacePrint  :<C-U>set opfunc=<SID>printop<CR>g@
 xnoremap <silent> <Plug>FireplacePrint  :<C-U>call <SID>printop(visualmode())<CR>
-nnoremap <silent> <Plug>FireplaceCountPrint :<C-U>Eval<CR>
+nnoremap <silent> <Plug>FireplaceCountPrint  :<C-U>call <SID>printop(v:count)<CR>
 
 nnoremap <silent> <Plug>FireplaceFilter :<C-U>set opfunc=<SID>filterop<CR>g@
 xnoremap <silent> <Plug>FireplaceFilter :<C-U>call <SID>filterop(visualmode())<CR>
+nnoremap <silent> <Plug>FireplaceCountFilter :<C-U>call <SID>filterop(v:count)<CR>
 
 nnoremap <silent> <Plug>FireplaceMacroExpand  :<C-U>set opfunc=<SID>macroexpandop<CR>g@
 xnoremap <silent> <Plug>FireplaceMacroExpand  :<C-U>call <SID>macroexpandop(visualmode())<CR>
-nnoremap <silent> <Plug>FireplaceMacroExpand1 :<C-U>set opfunc=<SID>macroexpand1op<CR>g@
-xnoremap <silent> <Plug>FireplaceMacroExpand1 :<C-U>call <SID>macroexpand1op(visualmode())<CR>
+nnoremap <silent> <Plug>FireplaceCountMacroExpand  :<C-U>call <SID>macroexpandop(v:count)<CR>
+nnoremap <silent> <Plug>Fireplace1MacroExpand :<C-U>set opfunc=<SID>macroexpand1op<CR>g@
+xnoremap <silent> <Plug>Fireplace1MacroExpand :<C-U>call <SID>macroexpand1op(visualmode())<CR>
+nnoremap <silent> <Plug>Fireplace1MacroExpand :<C-U>call <SID>macroexpand1op(v:count)<CR>
 
 nnoremap <silent> <Plug>FireplaceEdit   :<C-U>set opfunc=<SID>editop<CR>g@
 xnoremap <silent> <Plug>FireplaceEdit   :<C-U>call <SID>editop(visualmode())<CR>
+nnoremap <silent> <Plug>FireplaceCountEdit :<C-U>call <SID>editop(v:count)<CR>
 
 nnoremap          <Plug>FireplacePrompt :exe <SID>inputeval()<CR>
 
@@ -932,15 +1071,15 @@ function! s:setup_eval() abort
   nmap <buffer> cpp <Plug>FireplaceCountPrint
 
   nmap <buffer> c! <Plug>FireplaceFilter
-  nmap <buffer> c!! <Plug>FireplaceFilterab
+  nmap <buffer> c!! <Plug>FireplaceCountFilter
 
   nmap <buffer> cm <Plug>FireplaceMacroExpand
-  nmap <buffer> cmm <Plug>FireplaceMacroExpandab
-  nmap <buffer> c1m <Plug>FireplaceMacroExpand1
-  nmap <buffer> c1mm <Plug>FireplaceMacroExpand1ab
+  nmap <buffer> cmm <Plug>FireplaceCountMacroExpand
+  nmap <buffer> c1m <Plug>Fireplace1MacroExpand
+  nmap <buffer> c1mm <Plug>FireplaceCount1MacroExpand
 
   nmap <buffer> cq <Plug>FireplaceEdit
-  nmap <buffer> cqq <Plug>FireplaceEditab
+  nmap <buffer> cqq <Plug>FireplaceCountEdit
 
   nmap <buffer> cqp <Plug>FireplacePrompt
   exe 'nmap <buffer> cqc <Plug>FireplacePrompt' . &cedit . 'i'
@@ -974,15 +1113,20 @@ augroup END
 " }}}1
 " :Require {{{1
 
-function! s:Require(bang, ns) abort
+function! s:Require(bang, echo, ns) abort
+  if &autowrite || &autowriteall
+    silent! wall
+  endif
   if expand('%:e') ==# 'cljs'
     let cmd = '(load-file '.s:str(tr(a:ns ==# '' ? fireplace#ns() : a:ns, '-.', '_/').'.cljs').')'
   else
-    let cmd = ('(clojure.core/require '.s:qsym(a:ns ==# '' ? fireplace#ns() : a:ns).' :reload'.(a:bang ? '-all' : '').')')
+    let cmd = ('(require '.s:qsym(a:ns ==# '' ? fireplace#ns() : a:ns).' :reload'.(a:bang ? '-all' : '').')')
   endif
-  echo cmd
+  if a:echo
+    echo cmd
+  endif
   try
-    call fireplace#session_eval(cmd)
+    call fireplace#session_eval(cmd, {'ns': fireplace#client().user_ns()})
     return ''
   catch /^Clojure:.*/
     return ''
@@ -990,8 +1134,8 @@ function! s:Require(bang, ns) abort
 endfunction
 
 function! s:setup_require() abort
-  command! -buffer -bar -bang -complete=customlist,fireplace#ns_complete -nargs=? Require :exe s:Require(<bang>0, <q-args>)
-  nnoremap <silent><buffer> cpr :Require<CR>
+  command! -buffer -bar -bang -complete=customlist,fireplace#ns_complete -nargs=? Require :exe s:Require(<bang>0, 1, <q-args>)
+  nnoremap <silent><buffer> cpr :if expand('%:e') ==# 'cljs'<Bar>Require<Bar>else<Bar>RunTests<Bar>endif<CR>
 endfunction
 
 augroup fireplace_require
@@ -1002,18 +1146,37 @@ augroup END
 " }}}1
 " Go to source {{{1
 
-function! fireplace#source(symbol) abort
-  let cmd =
-        \ '(when-let [v (resolve ' . s:qsym(a:symbol) .')]' .
-        \ '  (when-let [filepath (:file (meta v))]' .
-        \ '    [filepath' .
-        \ '     (:line (meta v))]))'
-  let result = fireplace#evalparse(cmd)
-  if type(result) == type([])
-    let file = fireplace#findresource(result[0])
-    if !empty(file)
-      return '+' . result[1] . ' ' . fnameescape(file)
+function! fireplace#info(symbol) abort
+  if fireplace#op_available('info')
+    let response = fireplace#message({'op': 'info', 'symbol': a:symbol})[0]
+    if type(get(response, 'value')) == type({})
+      return response.value
     endif
+  endif
+  let cmd =
+        \ '(if-let [m (meta (resolve ' . s:qsym(a:symbol) .'))]'
+        \ . ' {:name (:name m)'
+        \ .  ' :ns (:ns m)'
+        \ .  ' :resource (:file m)'
+        \ .  ' :line (:line m)'
+        \ .  ' :doc (:doc m)'
+        \ .  ' :arglists-str (str (:arglists m))}'
+        \ . ' {})'
+  return fireplace#evalparse(cmd)
+endfunction
+
+function! fireplace#source(symbol) abort
+  let info = fireplace#info(a:symbol)
+
+  let file = ''
+  if !empty(get(info, 'resource'))
+    let file = fireplace#findresource(info.resource)
+  elseif get(info, 'file') =~# '^/\|^\w:\\' && filereadable(info.file)
+    let file = info.file
+  endif
+
+  if !empty(file) && !empty(get(info, 'line'))
+    return '+' . info.line . ' ' . fnameescape(file)
   endif
   return ''
 endfunction
@@ -1032,6 +1195,7 @@ function! s:Edit(cmd, keyword) abort
   endtry
   if location !=# ''
     if matchstr(location, '^+\d\+ \zs.*') ==# fnameescape(expand('%:p')) && a:cmd ==# 'edit'
+      normal! m'
       return matchstr(location, '\d\+')
     else
       return a:cmd.' '.location.'|let &l:path = '.string(&l:path)
@@ -1155,9 +1319,9 @@ function! fireplace#ns(...) abort
 endfunction
 
 function! s:Lookup(ns, macro, arg) abort
-  " doc is in clojure.core in older Clojure versions
   try
-    call fireplace#session_eval("(clojure.core/require '".a:ns.") (clojure.core/eval (clojure.core/list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
+    let response = s:eval('('.a:ns.'/'.a:macro.' '.a:arg.')', {'session': 0})
+    call s:output_response(response)
   catch /^Clojure:/
   catch /.*/
     echohl ErrorMSG
@@ -1180,24 +1344,18 @@ function! s:inputlist(label, entries) abort
   endif
 endfunction
 
-function! s:Apropos(pattern) abort
-  if a:pattern =~# '^#\="'
-    let pattern = a:pattern
-  elseif a:pattern =~# '^^'
-    let pattern = '#"' . a:pattern . '"'
-  else
-    let pattern = '"' . a:pattern . '"'
+function! s:Doc(symbol) abort
+  let info = fireplace#info(a:symbol)
+  if has_key(info, 'ns') && has_key(info, 'name')
+    echo info.ns . '/' . info.name
   endif
-  let matches = fireplace#evalparse('(clojure.repl/apropos '.pattern.')')
-  if empty(matches)
-    return ''
+  if get(info, 'arglists-str', 'nil') !=# 'nil'
+    echo info['arglists-str']
   endif
-  let choice = s:inputlist('Look up docs for:', matches)
-  if choice !=# ''
-    return 'echo "\n"|Doc '.choice
-  else
-    return ''
+  if !empty(get(info, 'doc', ''))
+    echo '  ' . info.doc
   endif
+  return ''
 endfunction
 
 function! s:K() abort
@@ -1218,168 +1376,119 @@ augroup fireplace_doc
   autocmd FileType clojure nmap <buffer> K  <Plug>FireplaceK
   autocmd FileType clojure nmap <buffer> [d <Plug>FireplaceSource
   autocmd FileType clojure nmap <buffer> ]d <Plug>FireplaceSource
-  autocmd FileType clojure command! -buffer -nargs=1 Apropos :exe s:Apropos(<q-args>)
   autocmd FileType clojure command! -buffer -nargs=1 FindDoc :exe s:Lookup('clojure.repl', 'find-doc', printf('#"%s"', <q-args>))
   autocmd FileType clojure command! -buffer -bar -nargs=1 Javadoc :exe s:Lookup('clojure.java.javadoc', 'javadoc', <q-args>)
-  autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,fireplace#eval_complete Doc     :exe s:Lookup('clojure.repl', 'doc', <q-args>)
+  autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,fireplace#eval_complete Doc     :exe s:Doc(<q-args>)
   autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,fireplace#eval_complete Source  :exe s:Lookup('clojure.repl', 'source', <q-args>)
 augroup END
 
 " }}}1
-" Alternate {{{1
+" Tests {{{1
+
+function! fireplace#capture_test_run(expr, ...) abort
+  let expr = '(require ''clojure.test) '
+        \ . '(try '
+        \ . '(binding [clojure.test/report (fn [m]'
+        \ .  ' (case (:type m)'
+        \ .    ' (:fail :error)'
+        \ .    ' (let [{file :file line :line test :name} (meta (last clojure.test/*testing-vars*))]'
+        \ .      ' (clojure.test/with-test-out'
+        \ .        ' (println (clojure.string/join "\t" [file line (name (:type m)) test]))'
+        \ .        ' (when (seq clojure.test/*testing-contexts*) (println (clojure.test/testing-contexts-str)))'
+        \ .        ' (when-let [message (:message m)] (println message))'
+        \ .        ' (println "expected:" (pr-str (:expected m)))'
+        \ .        ' (println "  actual:" (pr-str (:actual m)))))'
+        \ .    ' ((.getRawRoot #''clojure.test/report) m)))]'
+        \ . ' ' . (a:0 ? a:1 : '') . a:expr . ')'
+        \ . ' (catch Exception e'
+        \ . '   (println (str e))'
+        \ . '   (println (clojure.string/join "\n" (.getStackTrace e)))))'
+  let qflist = []
+  let response = s:eval(expr, {'session': 0})
+  if !has_key(response, 'out')
+    call setqflist(fireplace#quickfix_for(get(response, 'stacktrace', [])))
+    return s:output_response(response)
+  endif
+  for line in split(response.out, "\n")
+    if line =~# '\t.*\t.*\t'
+      let entry = {'text': line}
+      let [resource, lnum, type, name] = split(line, "\t", 1)
+      let entry.lnum = lnum
+      let entry.type = (type ==# 'fail' ? 'W' : 'E')
+      let entry.text = name
+      if resource ==# 'NO_SOURCE_FILE'
+        let resource = ''
+        let entry.lnum = 0
+      endif
+      let entry.filename = fireplace#findresource(resource, fireplace#path())
+      if empty(entry.filename)
+        let entry.lnum = 0
+      endif
+    else
+      let entry = s:qfmassage(line, fireplace#path())
+    endif
+    call add(qflist, entry)
+  endfor
+  call setqflist(qflist)
+  let was_qf = &buftype ==# 'quickfix'
+  botright cwindow
+  if &buftype ==# 'quickfix' && !was_qf
+    wincmd p
+  endif
+  for winnr in range(1, winnr('$'))
+    if getwinvar(winnr, '&buftype') ==# 'quickfix'
+      call setwinvar(winnr, 'quickfix_title', a:expr)
+      return
+    endif
+  endfor
+endfunction
+
+function! s:RunTests(bang, ...) abort
+  if &autowrite || &autowriteall
+    silent! wall
+  endif
+  let pre = ''
+  if a:bang && a:0
+    let expr = '(clojure.test/run-all-tests #"'.join(a:000, '|').'")'
+  elseif a:bang
+    let expr = '(clojure.test/run-all-tests)'
+  else
+    let reqs = map(copy(a:000), '"''".v:val')
+    let pre = '(clojure.core/require '.join(empty(a:000) ? ["'".fireplace#ns()] : reqs, ' ').' :reload) '
+    let expr = join(['(clojure.test/run-tests'] + reqs, ' ').')'
+  endif
+  call fireplace#capture_test_run(expr, pre)
+  echo expr
+endfunction
+
+augroup fireplace_command
+  autocmd!
+  autocmd FileType clojure command! -buffer -bar -bang -nargs=*
+        \ -complete=customlist,fireplace#ns_complete RunTests
+        \ call s:RunTests(<bang>0, <f-args>)
+augroup END
+
+" }}}1
+" Legacy {{{1
+
+if !empty(findfile('plugin/leiningen.vim', escape(&rtp, ' ')))
+  finish
+endif
 
 augroup fireplace_alternate
   autocmd!
-  autocmd FileType clojure command! -buffer -bar -bang A :exe s:Alternate('edit<bang>')
-  autocmd FileType clojure command! -buffer -bar AS :exe s:Alternate('split')
-  autocmd FileType clojure command! -buffer -bar AV :exe s:Alternate('vsplit')
-  autocmd FileType clojure command! -buffer -bar AT :exe s:Alternate('tabedit')
+  autocmd FileType clojure call s:define_alternates()
 augroup END
 
-function! fireplace#alternates() abort
-  let ns = fireplace#ns()
-  if ns =~# '-test$'
-    let alt = [ns[0:-6]]
-  elseif ns =~# '\.test\.'
-    let alt = [substitute(ns, '\.test\.', '.', '')]
-  elseif ns =~# '-spec$'
-    let alt = [ns[0:-6], ns . '-test']
-  elseif ns =~# '\.t-[^\.]*$'
-    let alt = [substitute(ns, '\.t-\([^\.]*\)$', '\.\1', '')]
-  else
-    let alt = [ns . '-test', substitute(ns, '\.', '.test.', ''), ns . '-spec',
-             \ substitute(ns, '\.\([^\.]*\)$', '.t-\1', '')]
-  endif
-  return map(alt, 'tr(v:val, ".-", "/_") . "." . expand("%:e")')
-endfunction
-
-function! s:Alternate(cmd) abort
-  let alternates = fireplace#alternates()
-  for file in alternates
-    let path = fireplace#findresource(file)
-    if !empty(path)
-      return a:cmd . ' ' . fnameescape(path)
-    endif
-  endfor
-  return 'echoerr '.string("Couldn't find " . alternates[0] . " in class path")
-endfunction
-
-" }}}1
-" Leiningen {{{1
-
-function! s:hunt(start, anchor, pattern) abort
-  let root = simplify(fnamemodify(a:start, ':p:s?[\/]$??'))
-  if !isdirectory(fnamemodify(root, ':h'))
-    return ''
-  endif
-  let previous = ""
-  while root !=# previous
-    if filereadable(root . '/' . a:anchor) && join(readfile(root . '/' . a:anchor, '', 50)) =~# a:pattern
-      return root
-    endif
-    let previous = root
-    let root = fnamemodify(root, ':h')
-  endwhile
-  return ''
-endfunction
-
-if !exists('s:leiningen_repls')
-  let s:leiningen_repls = {}
-  let s:leiningen_paths = {}
-endif
-
-function! s:portfile() abort
-  if !exists('b:leiningen_root')
-    return ''
-  endif
-
-  let root = b:leiningen_root
-  let portfiles = [root.'/target/repl-port', root.'/target/repl/repl-port', root.'/.nrepl-port']
-
-  for f in portfiles
-    if filereadable(f)
-      return f
-    endif
-  endfor
-  return ''
-endfunction
-
-
-function! s:leiningen_connect() abort
-  for [k, v] in items(s:leiningen_repls)
-    if getfsize(v.file) <= 0
-      call remove(s:leiningen_repls, k)
-      call s:unregister_connection(v.connection)
-    endif
-  endfor
-
-  let portfile = s:portfile()
-  if empty(portfile)
+function! s:define_alternates() abort
+  if exists(':A') == 2
     return
   endif
-
-  if getfsize(portfile) > 0 && getftime(portfile) !=# get(get(s:leiningen_repls, b:leiningen_root, {}), 'time', -1)
-    let port = matchstr(readfile(portfile, 'b', 1)[0], '\d\+')
-    let s:leiningen_repls[b:leiningen_root] = {'time': getftime(portfile), 'file': portfile}
-    try
-      let conn = nrepl#fireplace_connection#open(port)
-      let s:leiningen_repls[b:leiningen_root].connection = conn
-      call s:register_connection(conn, b:leiningen_root)
-      let s:leiningen_paths[b:leiningen_root] = conn.path()
-    catch /^nREPL Connection Error:/
-      if &verbose
-        echohl WarningMSG
-        echomsg v:exception
-        echohl None
-      endif
-    endtry
-  endif
+  command! -buffer -bar -bang A  echoerr 'Install leiningen.vim to continue using :A'
+  command! -buffer -bar -bang AS echoerr 'Install leiningen.vim to continue using :A'
+  command! -buffer -bar -bang AV echoerr 'Install leiningen.vim to continue using :A'
+  command! -buffer -bar -bang AT echoerr 'Install leiningen.vim to continue using :A'
 endfunction
-
-function! s:leiningen_init() abort
-
-  if !exists('b:leiningen_root')
-    let root = s:hunt(expand('%:p'), 'project.clj', '(\s*defproject')
-    if root !=# ''
-      let b:leiningen_root = root
-    endif
-  endif
-  if !exists('b:leiningen_root')
-    return
-  endif
-
-  let b:java_root = b:leiningen_root
-
-  compiler lein
-
-  if exists('classpath#from_vim')
-    let s:leiningen_paths[b:leiningen_root] = classpath#split(classpath#from_vim(&path))
-  endif
-  call s:leiningen_connect()
-endfunction
-
-function! s:massage_quickfix() abort
-  if &errorformat !~# 'fireplace$'
-    return
-  endif
-  if has_key(s:leiningen_paths, getcwd())
-    let path = s:leiningen_paths[getcwd()]
-  else
-    return
-  endif
-  let qflist = getqflist()
-  for entry in qflist
-    call extend(entry, s:qfmassage(get(entry, 'text', ''), path))
-  endfor
-  call setqflist(qflist, 'replace')
-endfunction
-
-augroup fireplace_leiningen
-  autocmd!
-  autocmd User FireplacePreConnect call s:leiningen_connect()
-  autocmd FileType clojure call s:leiningen_init()
-  autocmd QuickFixCmdPost make,cfile,cgetfile call s:massage_quickfix()
-augroup END
 
 " }}}1
 
