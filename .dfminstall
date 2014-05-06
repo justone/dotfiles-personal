@@ -1,5 +1,6 @@
 README.md skip
 .ssh recurse
+.lein recurse
 .gittrees skip
 .nd skip
 css skip
