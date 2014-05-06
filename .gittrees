@@ -170,3 +170,7 @@
 	url = https://github.com/tpope/vim-dispatch.git
 	path = .vim/bundle/vim-dispatch
 	branch = master
+[subtree ".vim/bundle/vim-projectionist"]
+	url = https://github.com/tpope/vim-projectionist.git
+	path = .vim/bundle/vim-projectionist
+	branch = master
