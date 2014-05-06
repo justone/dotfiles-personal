@@ -166,3 +166,7 @@
 	url = https://github.com/tpope/vim-sleuth.git
 	path = .vim/bundle/vim-sleuth
 	branch = master
+[subtree ".vim/bundle/vim-dispatch"]
+	url = https://github.com/tpope/vim-dispatch.git
+	path = .vim/bundle/vim-dispatch
+	branch = master
