@@ -6,7 +6,8 @@ License: Same terms as Vim itself (see |license|)
 This plugin is only available if 'compatible' is not set.
 
                                                 *fireplace*
-You need Clojure runtime files to use this plugin.  Try vim-clojure-static.
+While not strictly necessary, this plugin works best with the middleware
+provided by <https://github.com/clojure-emacs/cider-nrepl>.
 
 CONNECTING TO A REPL                            *fireplace-connect*
 
@@ -22,17 +23,17 @@ you can connect by hand.
                         REPL server.
 
 The REPL is used for the commands below. If no REPL is found for the current
-buffer and classpath.vim is installed, java (or $JAVA_CMD) is invoked
-directly, which can be quite slow depending on your setup.
+buffer and 'path' contains at least one jar file, java (or $JAVA_CMD) is
+invoked directly, which can be quite slow depending on your setup.
 
 The only adapter shipped with fireplace.vim is for nREPL.  You need either
 |if_pyth| or the python command in your PATH.
 
                         *fireplace-piggieback* *fireplace-clojurescript*
-ClojureScript is can be evaled with Piggieback if the appropriate nREPL
-middleware is loaded.  https://github.com/cemerick/piggieback. Be aware that
+ClojureScript can be evaled with Piggieback if the appropriate nREPL
+middleware is loaded: https://github.com/cemerick/piggieback.  Be aware that
 your ClojureScript files must be available on the classpath for this to work
-properly.
+properly, and that not all operations are supported.
 
                                                 *fireplace-:Piggieback*
 :Piggieback [{env}]     Create a new nREPL session and invoke
@@ -43,13 +44,6 @@ properly.
 
 :Piggieback!            Terminate the most recently created piggieback
                         session.
-
-LEININGEN                                       *fireplace-leiningen*
-
-In addition to automatic repl connection, Clojure buffers in a Leiningen
-project will automatically have their 'makeprg' set to lein and 'efm' set to
-"%+G,fireplace".  This combination enables `:make test` to run `lein test` and
-parse the stacktraces in the results.
 
 DOCUMENTATION                                   *fireplace-documentation*
 
@@ -64,9 +58,6 @@ K                       Look up docs for keyword under cursor.
 
                                                 *fireplace-:FindDoc*
 :FindDoc {arg}          Wrapper around (clojure.repl/find-doc ...).
-
-                                                *fireplace-:Apropos*
-:Apropos {arg}          Wrapper around (clojure.repl/apropos ...).
 
                                                 *fireplace-:Source*
 :Source {symbol}        Show the source for the given symbol.
@@ -98,21 +89,6 @@ gf                      Go to the file for the namespace under the cursor.
 :Dsplit {symbol}        Jump to the definition for the given symbol in a
                         split.
 
-                                                *fireplace-:A*
-:A                      In a test file, edit the implementation, and vice
-                        versa.  Basically adds or removes -test from the end
-                        of the current namespace and searches for it in the
-                        class path.
-
-                                                *fireplace-:AS*
-:AS                     Like :A, but in a split.
-
-                                                *fireplace-:AV*
-:AV                     Like :A, but in a vertical split.
-
-                                                *fireplace-:AT*
-:AT                     Like :A, but in a tab.
-
 EVALUATING CODE                                 *fireplace-eval*
 
 All code is evaluated in the namespace of the current file, requiring it if
@@ -127,8 +103,7 @@ stack trace is loaded into the |location-list|.  Use |:lopen| to view it.
 :Require! [ns]          Require :reload-all the given/current namespace.
 
                                                 *fireplace-:Eval*
-:Eval                   Eval/print the outermost expression for the current
-                        line.
+:Eval                   Eval/print the outermost form for the current line.
 
 :{range}Eval            Eval/print the given range.
 
@@ -141,13 +116,20 @@ stack trace is loaded into the |location-list|.  Use |:lopen| to view it.
 :[range]Eval! {expr}    Eval the given expression and insert it after
                         the given range or current line.
 
+                                                *fireplace-:RunTests*
+:RunTests [ns] [...]    Call clojure.test/run-tests on the given namespaces
+                        and load the results into the quickfix list.
+
+:RunTests! [pattern]    Call clojure.test/run-all-tests with the given pattern
+                        and load the results into the quickfix list.
+
                                                 *fireplace-cp*
 cp{motion}              Eval/print the code indicated by {motion}.
 
-cpp                     Eval/print the outermost form at the cursor.
+cpp                     Eval/print the innermost form at the cursor.
 
                                                 *fireplace-cpr*
-cpr                     Eval a require :reload form.
+cpr                     :Require|RunTests
 
                                                 *fireplace-c!*
 c!{motion}              Eval/replace the code indicated by {motion}.
