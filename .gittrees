@@ -178,3 +178,7 @@
 	url = https://github.com/tpope/vim-leiningen.git
 	path = .vim/bundle/vim-leiningen
 	branch = master
+[subtree ".vim/bundle/vim-abolish"]
+	url = https://github.com/tpope/vim-abolish.git
+	path = .vim/bundle/vim-abolish
+	branch = master
