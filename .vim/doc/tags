@@ -32,7 +32,6 @@
 'NERDUsePlaceHolders'	NERD_commenter.txt	/*'NERDUsePlaceHolders'*
 'loaded_nerd_comments'	NERD_commenter.txt	/*'loaded_nerd_comments'*
 'loaded_nerd_tree'	NERD_tree.txt	/*'loaded_nerd_tree'*
-:Mark	mark.txt	/*:Mark*
 :NERDTree	NERD_tree.txt	/*:NERDTree*
 :NERDTreeClose	NERD_tree.txt	/*:NERDTreeClose*
 :NERDTreeFind	NERD_tree.txt	/*:NERDTreeFind*
@@ -138,19 +137,6 @@ NERDTreeOptions	NERD_tree.txt	/*NERDTreeOptions*
 NERDTreeRender()	NERD_tree.txt	/*NERDTreeRender()*
 NERD_commenter.txt	NERD_commenter.txt	/*NERD_commenter.txt*
 NERD_tree.txt	NERD_tree.txt	/*NERD_tree.txt*
-mark-configuration	mark.txt	/*mark-configuration*
-mark-dependencies	mark.txt	/*mark-dependencies*
-mark-description	mark.txt	/*mark-description*
-mark-history	mark.txt	/*mark-history*
-mark-ideas	mark.txt	/*mark-ideas*
-mark-installation	mark.txt	/*mark-installation*
-mark-integration	mark.txt	/*mark-integration*
-mark-known-problems	mark.txt	/*mark-known-problems*
-mark-limitations	mark.txt	/*mark-limitations*
-mark-todo	mark.txt	/*mark-todo*
-mark-usage	mark.txt	/*mark-usage*
-mark.txt	mark.txt	/*mark.txt*
-mark.vim	mark.txt	/*mark.vim*
 perlhelp	perlhelp.txt	/*perlhelp*
 perlhelp-bugs	perlhelp.txt	/*perlhelp-bugs*
 perlhelp-contents	perlhelp.txt	/*perlhelp-contents*
