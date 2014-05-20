@@ -182,3 +182,7 @@
 	url = https://github.com/tpope/vim-abolish.git
 	path = .vim/bundle/vim-abolish
 	branch = master
+[subtree ".vim/bundle/vim-commentary"]
+	url = https://github.com/tpope/vim-commentary.git
+	path = .vim/bundle/vim-commentary
+	branch = master
