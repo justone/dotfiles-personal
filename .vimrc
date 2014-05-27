@@ -310,7 +310,7 @@ nnoremap <silent> <C-P> :tabprev<CR>
 " vimux config
 if strlen($TMUX)
     let tmuxver = system("tmux -V")
-    if matchstr(tmuxver, '1.8')
+    if matchstr(tmuxver, '1.8') || matchstr(tmuxver, '1.9')
         function! InterruptRunnerAndRunLastCommand()
             :VimuxInterruptRunner
             :VimuxRunLastCommand
