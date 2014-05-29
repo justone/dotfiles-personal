@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if type textql > /dev/null; then
+    textql -header -console -source $*
+else
+    echo "textql not found"
+    exit 1
+fi
