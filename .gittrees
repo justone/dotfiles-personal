@@ -186,3 +186,7 @@
 	url = https://github.com/tpope/vim-commentary.git
 	path = .vim/bundle/vim-commentary
 	branch = master
+[subtree ".vim/bundle/vim-eunuch"]
+	url = https://github.com/tpope/vim-eunuch.git
+	path = .vim/bundle/vim-eunuch
+	branch = master
