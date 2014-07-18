@@ -1,13 +1,47 @@
--- Hi!
--- Save this as ~/.hydra/init.lua and choose Reload Config from the menu
+hydra.alert("Hydra (re)started.", 1.5)
 
-hydra.alert("Hydra sample config loaded", 1.5)
+-- launch on startup
+autolaunch.set(true)
+-- relaunch when config updated
+pathwatcher.new(os.getenv("HOME") .. "/.hydra/", hydra.reload):start()
 
--- open a repl
---   * the repl is a Lua prompt; type "print('hello world')"
---   * when you're in the repl, type "help" to get started
---   * almost all readline functionality works in the repl
-hotkey.bind({"cmd", "ctrl", "alt"}, "R", repl.open)
+local hyper = {"cmd", "ctrl"}
+
+-- keybindings for apps or actions
+hotkey.bind(hyper, "R", repl.open)
+hotkey.bind(hyper, "Q", hydra.reload)
+hotkey.bind(hyper, "T", function() application.launchorfocus("Terminal") end)
+hotkey.bind(hyper, "C", function() application.launchorfocus("iTerm") end)
+hotkey.bind(hyper, "B", function() application.launchorfocus("Google Chrome") end)
+
+-- status light options
+hotkey.bind(hyper, "S", function() os.execute('/Users/nate/bin/excluded/blink1-tool --red') end)
+hotkey.bind(hyper, "D", function() os.execute('/Users/nate/bin/excluded/blink1-tool --green') end)
+
+-- grid stuff, managing windows
+
+-- load in grid extension
+dofile(package.searchpath("grid", package.path))
+
+hotkey.bind(hyper, ';', function() ext.grid.snap(window.focusedwindow()) end)
+hotkey.bind(hyper, '=', function() ext.grid.adjustwidth( 1) end)
+hotkey.bind(hyper, '-', function() ext.grid.adjustwidth(-1) end)
+
+hotkey.bind(hyper, 'A', ext.grid.maximize_window)
+
+hotkey.bind(hyper, 'N', ext.grid.pushwindow_nextscreen)
+hotkey.bind(hyper, 'P', ext.grid.pushwindow_prevscreen)
+
+hotkey.bind(hyper, 'J', ext.grid.pushwindow_down)
+hotkey.bind(hyper, 'K', ext.grid.pushwindow_up)
+hotkey.bind(hyper, 'H', ext.grid.pushwindow_left)
+hotkey.bind(hyper, 'L', ext.grid.pushwindow_right)
+
+hotkey.bind(hyper, 'U', ext.grid.resizewindow_taller)
+hotkey.bind(hyper, 'O', ext.grid.resizewindow_wider)
+hotkey.bind(hyper, 'I', ext.grid.resizewindow_thinner)
+
+-- rest of file basically the same as the stock sample file
 
 -- save the time when updates are checked
 function checkforupdates()
@@ -38,24 +72,11 @@ menu.show(function()
     }
 end)
 
--- move the window to the right half of the screen
-function movewindow_righthalf()
-  local win = window.focusedwindow()
-  local newframe = win:screen():frame_without_dock_or_menu()
-  newframe.w = newframe.w / 2
-  newframe.x = newframe.w -- comment this line to push it to left half of screen
-  win:setframe(newframe)
-end
-
-hotkey.new({"cmd", "ctrl", "alt"}, "L", movewindow_righthalf):enable()
-
 -- show available updates
 local function showupdate()
   os.execute('open https://github.com/sdegutis/Hydra/releases')
 end
 
--- Uncomment this if you want Hydra to make sure it launches at login
--- autolaunch.set(true)
 
 -- check for updates every week
 timer.new(timer.weeks(1), checkforupdates):start()

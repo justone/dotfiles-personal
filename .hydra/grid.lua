@@ -1,8 +1,8 @@
 ext.grid = {}
 
-ext.grid.MARGINX = 5
-ext.grid.MARGINY = 5
-ext.grid.GRIDWIDTH = 3
+ext.grid.MARGINX = 2
+ext.grid.MARGINY = 2
+ext.grid.GRIDWIDTH = 8
 
 local function round(num, idp)
   local mult = 10^(idp or 0)
