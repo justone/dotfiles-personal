@@ -39,7 +39,7 @@ COMMANDS                                        *dispatch-commands*
                         {command} and use its 'errorformat' to dispatch a
                         |:Make| for the given {command} and [arguments].  If
                         no compiler plugin is found, the generic format
-                        %+G%.%# is used.
+                        %+I%.%# is used.
 
                         :Dispatch picks a compiler by looking for either
                         CompilerSet makeprg={program}\ [arguments] or
@@ -98,6 +98,11 @@ COMMANDS                                        *dispatch-commands*
 :Start[!] -title={title} {command}
                         Start a process in a window titled {title}.  This is
                         not normally used interactively.
+
+                                                *dispatch-:Spawn*
+:Spawn[!] [command]     Like |:Start|, but always spawn a new process rather
+                        than focusing an existing one.  The default is always
+                        to spawn a new 'shell'.
 
 STRATEGIES                                      *dispatch-strategies*
 
