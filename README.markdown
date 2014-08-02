@@ -4,9 +4,6 @@ There's a REPL in fireplace, but you probably wouldn't have noticed if I hadn't
 told you.  Such is the way with fireplace.vim.  By the way, this plugin is for
 Clojure.
 
-Fireplace.vim used to be called foreplay.vim, but it was renamed so Java
-developers wouldn't have to speak in hushed tones.
-
 ## Installation
 
 First, set up [cider-nrepl][].  (If you skip this step, fireplace.vim will
@@ -43,9 +40,9 @@ compiled in, or `python` in your path.
 
 Oh, and if you don't have an nREPL connection, installing [leiningen.vim][]
 lets it fall back to using `java clojure.main` for some of the basics, using a
-class path based on your Leiningen or Maven config.  It's a bit slow, but a
-two-second delay is vastly preferable to being forced out of my flow for a
-single command, in my book.
+class path based on your Leiningen config.  It's a bit slow, but a two-second
+delay is vastly preferable to being forced out of my flow for a single
+command, in my book.
 
 [cider-nrepl]: https://github.com/clojure-emacs/cider-nrepl
 [Piggieback]: https://github.com/cemerick/piggieback
@@ -116,7 +113,8 @@ That's either [classpath.vim][] or [leiningen.vim][].
 ## Self-Promotion
 
 Like fireplace.vim? Follow the repository on
-[GitHub](https://github.com/tpope/vim-fireplace). And if
+[GitHub](https://github.com/tpope/vim-fireplace) and vote for it on
+[vim.org](http://www.vim.org/scripts/script.php?script_id=4978).  And if
 you're feeling especially charitable, follow [tpope](http://tpo.pe/) on
 [Twitter](http://twitter.com/tpope) and
 [GitHub](https://github.com/tpope).
