@@ -1,4 +1,4 @@
-*fireplace.txt*  Clojure REPL tease
+*fireplace.txt*  Clojure REPL support
 
 Author:  Tim Pope <http://tpo.pe/>
 License: Same terms as Vim itself (see |license|)
@@ -40,7 +40,10 @@ properly, and that not all operations are supported.
                         cemerick.piggieback/cljs-repl with the given or
                         default (Rhino) environment.  This will also happen
                         automatically on first eval in a ClojureScript buffer
-                        if not invoked explicitly.
+                        if not invoked explicitly. If {env} is a number, the
+                        piggieback repl-env will will use a cljs.repl.browser
+                        (rather than a Rhino) env with the port set to the
+                        number provided.
 
 :Piggieback!            Terminate the most recently created piggieback
                         session.
@@ -54,7 +57,7 @@ DOCUMENTATION                                   *fireplace-documentation*
 :Javadoc {class}        Open the java docs for the given class in a browser.
 
                                                 *fireplace-K*
-K                       Look up docs for keyword under cursor.
+K                       Look up docs for symbol under cursor.
 
                                                 *fireplace-:FindDoc*
 :FindDoc {arg}          Wrapper around (clojure.repl/find-doc ...).
@@ -63,7 +66,7 @@ K                       Look up docs for keyword under cursor.
 :Source {symbol}        Show the source for the given symbol.
 
                                                 *fireplace-[d*
-[d                      Show source for keyword under cursor.
+[d                      Show source for symbol under cursor.
 ]d
 
 NAVIGATING                                      *fireplace-navigating*
@@ -72,11 +75,11 @@ These commands will never use a remote REPL, only a local one, as file paths
 on a remote server wouldn't be very useful locally.
 
                                                 *fireplace-[_CTRL-D*
-[<C-D>                  Jump to the source of the keyword under the cursor.
+[<C-D>                  Jump to the source of the symbol under the cursor.
 ]<C-D>
 
                                                 *fireplace-CTRL-W_CTRL-D*
-<C-W><C-D>              Jump to the source of the keyword under the cursor in
+<C-W><C-D>              Jump to the source of the symbol under the cursor in
 <C-W>d                  a split.
 
                                                 *fireplace-gf*
@@ -120,7 +123,7 @@ stack trace is loaded into the |location-list|.  Use |:lopen| to view it.
 :RunTests [ns] [...]    Call clojure.test/run-tests on the given namespaces
                         and load the results into the quickfix list.
 
-:RunTests! [pattern]    Call clojure.test/run-all-tests with the given pattern
+:RunAllTests [pattern]  Call clojure.test/run-all-tests with the given pattern
                         and load the results into the quickfix list.
 
                                                 *fireplace-cp*
