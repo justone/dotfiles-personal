@@ -33,7 +33,8 @@ function! dispatch#tmux#handle(request) abort
 endfunction
 
 function! dispatch#tmux#make(request) abort
-  let pipepane = &shellpipe ==# '2>&1| tee' || &shellpipe ==# '|& tee'
+  let pipepane = (&shellpipe ==# '2>&1| tee' || &shellpipe ==# '|& tee')
+        \ && a:request.format !~# '%\\[er]'
   let session = get(g:, 'tmux_session', '')
   let script = dispatch#isolate(['TMUX', 'TMUX_PANE'],
         \ call('dispatch#prepare_make',
@@ -57,7 +58,7 @@ function! dispatch#tmux#make(request) abort
   elseif uname ==# 'Linux'
     let filter .= ' -u'
   endif
-  let filter .= " -e \"s/\r//g\" -e \"s/\e[[0-9;]*m//g\" > ".a:request.file
+  let filter .= " -e \"s/\r$//\" -e \"s/.*\r//\" -e \"s/\e\\[K//g\" -e \"s/\e\\[[0-9;]*m//g\" > ".a:request.file
   call system('tmux ' . cmd . '|tee ' . s:make_pane .
         \ (pipepane ? '|xargs -I {} tmux pipe-pane -t {} '.shellescape(filter) : ''))
 
