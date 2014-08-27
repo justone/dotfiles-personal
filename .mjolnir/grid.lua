@@ -2,9 +2,9 @@ local grid = {}
 
 -- requires: core.window, core.fnutils, core.alert
 
-grid.MARGINX = 5
-grid.MARGINY = 5
-grid.GRIDWIDTH = 3
+grid.MARGINX = 2
+grid.MARGINY = 2
+grid.GRIDWIDTH = 8
 
 local function round(num, idp)
   local mult = 10^(idp or 0)
