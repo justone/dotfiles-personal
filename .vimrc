@@ -355,6 +355,7 @@ nmap <leader>vp :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalon
 
 " clojure rainbow parens
 au BufEnter *.clj RainbowParenthesesActivate
+au BufEnter *.cljs RainbowParenthesesActivate
 au Syntax clojure RainbowParenthesesLoadRound
 au Syntax clojure RainbowParenthesesLoadSquare
 au Syntax clojure RainbowParenthesesLoadBraces
