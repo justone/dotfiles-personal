@@ -1,6 +1,7 @@
 local grid = {}
 
--- requires: core.window, core.fnutils, core.alert
+local fnutils = require "mjolnir.fnutils"
+local window = require "mjolnir.window"
 
 grid.MARGINX = 2
 grid.MARGINY = 2
@@ -13,7 +14,7 @@ end
 
 function grid.get(win)
   local winframe = win:frame()
-  local screenrect = win:screen():frame_without_dock_or_menu()
+  local screenrect = win:screen():frame()
   local thirdscreenwidth = screenrect.w / grid.GRIDWIDTH
   local halfscreenheight = screenrect.h / 2
   return {
@@ -25,7 +26,7 @@ function grid.get(win)
 end
 
 function grid.set(win, cell, screen)
-  local screenrect = screen:frame_without_dock_or_menu()
+  local screenrect = screen:frame()
   local thirdscreenwidth = screenrect.w / grid.GRIDWIDTH
   local halfscreenheight = screenrect.h / 2
   local newframe = {
@@ -51,30 +52,30 @@ end
 
 function grid.adjustwidth(by)
   grid.GRIDWIDTH = math.max(1, grid.GRIDWIDTH + by)
-  -- hydra.alert("grid is now " .. tostring(grid.GRIDWIDTH) .. " tiles wide", 1)
-  core.fnutils.map(core.window.visiblewindows(), grid.snap)
+  -- alert("grid is now " .. tostring(grid.GRIDWIDTH) .. " tiles wide", 1)
+  fnutils.map(window.visiblewindows(), grid.snap)
 end
 
 function grid.adjust_focused_window(fn)
-  local win = core.window.focusedwindow()
+  local win = window.focusedwindow()
   local f = grid.get(win)
   fn(f)
   grid.set(win, f, win:screen())
 end
 
 function grid.maximize_window()
-  local win = core.window.focusedwindow()
+  local win = window.focusedwindow()
   local f = {x = 0, y = 0, w = grid.GRIDWIDTH, h = 2}
   grid.set(win, f, win:screen())
 end
 
 function grid.pushwindow_nextscreen()
-  local win = core.window.focusedwindow()
+  local win = window.focusedwindow()
   grid.set(win, grid.get(win), win:screen():next())
 end
 
 function grid.pushwindow_prevscreen()
-  local win = core.window.focusedwindow()
+  local win = window.focusedwindow()
   grid.set(win, grid.get(win), win:screen():previous())
 end
 
