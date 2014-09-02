@@ -1,3 +1,8 @@
+
+-- because of boxen, add those lua paths
+package.path = package.path .. ';/opt/boxen/homebrew/share/lua/5.2/?.lua'
+package.cpath = package.cpath .. ';/opt/boxen/homebrew/lib/lua/5.2/?.so'
+
 mjolnir.application = require "mjolnir.application"
 mjolnir.window = require "mjolnir.window"
 mjolnir.hotkey = require "mjolnir.hotkey"
