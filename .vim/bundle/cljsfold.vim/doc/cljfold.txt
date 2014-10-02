@@ -1,0 +1,56 @@
+*cljfold.txt*          Provides semantic folding for Clojure files within Vim.
+
+==============================================================================
+Author:  Greg Berenfield <gberenfield@gmail.com>              *cljfold-author*
+License: GPL v2
+
+==============================================================================
+INTRODUCTION                                                   *cljfold-intro*
+
+This plugin is simply to provide folding for Clojure source code in vim
+based on code-blocks as defined in the 'g:clojure_foldwords' variable.
+
+All folding happens at the 'top-level', which is preference hence this plugin.
+
+Folding happens by default in *.clj files.
+
+==============================================================================
+CONFIGURATION                                                 *cljfold-config*
+
+By default, folding will happen on code-blocks starting with "def" and
+"ns". This behevaior can be changed in your vimrc file by setting
+g:clojure_foldwords to a comma-separated string of words to be included.
+
+For example:
+>
+    let g:clojure_foldwords = "def,ns,run,demo"
+<
+would fold the likes of code-blocks such as
+>
+    (demo 10
+      (buf-rd 2 flute-buf ...
+<
+and
+>
+    (run* [q]
+       (== {:a q :b 2} {:a 1 :b 2}))
+<
+==============================================================================
+LICENSE                                                      *cljfold-license*
+
+GPL v2 @ http://www.gnu.org/licenses/gpl-2.0.html
+
+==============================================================================
+CONTRIBUTING                                            *cljfold-contributing*
+
+Source code and bugs can be found at:
+
+https://github.com/gberenfield/cljfold.vim
+
+==============================================================================
+CREDITS                                                      *cljfold-credits*
+
+Most of the code was gratuitously ripped from code by Steve Losh and Meikel
+Brandmeyer from VimClojure and Steve's dotfiles.
+
+==============================================================================
