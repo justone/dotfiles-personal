@@ -194,3 +194,7 @@
 	url = https://github.com/krisajenkins/vim-pipe.git
 	path = .vim/bundle/vim-pipe
 	branch = master
+[subtree ".vim/bundle/cljsfold.vim"]
+	url = https://github.com/gberenfield/cljfold.vim.git
+	path = .vim/bundle/cljsfold.vim
+	branch = master
