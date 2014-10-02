@@ -362,3 +362,7 @@ au Syntax clojure RainbowParenthesesLoadBraces
 
 " support mapping from old version of vim-surround
 xmap s <Plug>VSurround
+
+" configure vim-pipe
+let g:vimpipe_invoke_map="<leader>w"
+let g:vimpipe_close_map="<leader>W"
