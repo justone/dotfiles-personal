@@ -366,3 +366,6 @@ xmap s <Plug>VSurround
 " configure vim-pipe
 let g:vimpipe_invoke_map="<leader>w"
 let g:vimpipe_close_map="<leader>W"
+
+" configure clojure folding
+let g:clojure_foldwords = "defn,defmacro,defmethod"
