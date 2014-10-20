@@ -1,0 +1,5 @@
+#!/bin/sh
+
+REV=${1:-HEAD}
+
+exec git difftool --tool=vimdiff -y $REV^ $REV
