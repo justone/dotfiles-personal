@@ -14,7 +14,7 @@ echo "removing old cover dir"
 rm -rf cover_db/
 
 echo "running tests in cover mode"
-./Build testcover
+./Build testcover $*
 
 echo "serving coverage report"
 cd cover_db && python -m SimpleHTTPServer
