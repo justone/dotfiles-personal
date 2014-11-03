@@ -31,6 +31,11 @@ else
     alias vi=vim
 fi
 
+# shortcut to finding files in vim
+alias viff='vim -c ":CtrlP"'
+alias vifl='vim -c ":CtrlPMRU"'
+alias vifr='vim -c ":CtrlPMRU"'
+
 # fixup ssh-agent so tmux in tmux works
 alias fixagent='[[ ! -e "$HOME/.ssh_auth_sock" ]] && rm -f $HOME/.ssh_auth_sock && ln -s $SSH_AUTH_SOCK $HOME/.ssh_auth_sock && export SSH_AUTH_SOCK=$HOME/.ssh_auth_sock'
 
