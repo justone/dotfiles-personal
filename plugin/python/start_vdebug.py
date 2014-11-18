@@ -9,6 +9,7 @@ import socket
 import traceback
 import vdebug.runner
 import vdebug.event
+import vim
 
 class DebuggerInterface:
     """Acts as a facade layer to the debugger client.
@@ -28,7 +29,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.run()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def run_to_cursor(self):
@@ -36,7 +37,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.run_to_cursor()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def step_over(self):
@@ -44,7 +45,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.step_over()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def step_into(self):
@@ -52,7 +53,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.step_into()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def step_out(self):
@@ -60,15 +61,31 @@ class DebuggerInterface:
         """
         try:
             self.runner.step_out()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
+
+    def handle_opt(self,option,value = None):
+        """Set an option, overwriting the existing value.
+        """
+        try:
+            if value is None:
+                return self.runner.ui.say(vdebug.opts.Options.get(option))
+            else:
+                self.runner.ui.say("Setting vdebug option '%s' to: %s"\
+                                    %(option,value))
+                vim.command('let g:vdebug_options["%s"] = "%s"' %(option,value))
+                return vdebug.opts.Options.overwrite(option,value)
+
+        except Exception as e:
+            self.handle_exception(e)
+
 
     def handle_return_keypress(self):
         """React to a <enter> keypress event.
         """
         try:
             return self.event_dispatcher.by_position()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def handle_double_click(self):
@@ -76,7 +93,7 @@ class DebuggerInterface:
         """
         try:
             return self.event_dispatcher.by_position()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def handle_visual_eval(self):
@@ -84,7 +101,7 @@ class DebuggerInterface:
         """
         try:
             return self.event_dispatcher.visual_eval()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def handle_eval(self,args):
@@ -92,7 +109,7 @@ class DebuggerInterface:
         """
         try:
             return self.runner.eval(args)
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def eval_under_cursor(self):
@@ -100,7 +117,7 @@ class DebuggerInterface:
         """
         try:
             return self.event_dispatcher.eval_under_cursor()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def toggle_breakpoint_window(self):
@@ -108,7 +125,7 @@ class DebuggerInterface:
         """
         try:
             return self.runner.toggle_breakpoint_window()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def set_breakpoint(self,args = None):
@@ -116,7 +133,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.set_breakpoint(args)
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def remove_breakpoint(self,args = None):
@@ -124,7 +141,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.remove_breakpoint(args)
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
     def get_context(self):
@@ -132,7 +149,7 @@ class DebuggerInterface:
         """
         try:
             self.runner.get_context()
-        except Exception, e:
+        except Exception as e:
             self.handle_exception(e)
 
 
@@ -141,7 +158,8 @@ class DebuggerInterface:
         """
         try:
             self.runner.detach()
-        except Exception, e:
+            self.runner.close_connection()
+        except Exception as e:
             self.handle_exception(e)
 
     def close(self):
@@ -204,7 +222,10 @@ class DebuggerInterface:
         if isinstance(e,vdebug.dbgp.TimeoutError):
             self.handle_timeout()
         elif isinstance(e,vdebug.util.UserInterrupt):
-            self.handle_interrupt()
+            try:
+                self.handle_interrupt()
+            except:
+                pass
         elif isinstance(e,vdebug.event.EventError):
             self.handle_readable_error(e)
         elif isinstance(e,vdebug.breakpoint.BreakpointError):

@@ -9,23 +9,28 @@ class Dispatcher:
         self.runner = runner
 
     def visual_eval(self):
-        event = VisualEvalEvent()
-        return event.execute(self.runner)
+        if self.runner.is_alive():
+            event = VisualEvalEvent()
+            return event.execute(self.runner)
 
     def eval_under_cursor(self):
-        event = CursorEvalEvent()
-        return event.execute(self.runner)
+        if self.runner.is_alive():
+            event = CursorEvalEvent()
+            return event.execute(self.runner)
 
     def by_position(self):
-        event = self._get_event_by_position()
-        if event is not None:
-            return event.execute(self.runner)
-        else:
-            return False
+        if self.runner.is_alive():
+            event = self._get_event_by_position()
+            if event is not None:
+                return event.execute(self.runner)
+            else:
+                vdebug.log.Log("No executable event found at current cursor position",\
+                        vdebug.log.Logger.DEBUG)
+                return False
 
     def _get_event_by_position(self):
         buf_name = vim.current.buffer.name
-        p = re.compile('.*[\\/]([^\\/]+)')
+        p = re.compile('.*[\\\/]([^\\\/]+)')
         m = p.match(buf_name)
         if m is None:
             return None
@@ -35,12 +40,12 @@ class Dispatcher:
             lineno = vim.current.window.cursor[0]
             vdebug.log.Log("User action in watch window, line %s" % lineno,\
                     vdebug.log.Logger.DEBUG)
-            line = self.runner.ui.watchwin.buffer[lineno-1]
+            line = self.runner.ui.watchwin.buffer[lineno-1].strip()
             if lineno == 1:
                 return WatchWindowContextChangeEvent()
-            elif line.find("▸") > -1:
+            elif line.startswith(vdebug.opts.Options.get('marker_closed_tree')):
                 return WatchWindowPropertyGetEvent()
-            elif line.find("▾") > -1:
+            elif line.startswith(vdebug.opts.Options.get('marker_open_tree')):
                 return WatchWindowHideEvent()
         elif window_name == self.runner.ui.stackwin.name:
             return StackWindowLineSelectEvent()
@@ -55,7 +60,7 @@ class VisualEvalEvent(Event):
     """Evaluate a block of code given by visual selection in Vim.
     """
     def execute(self,runner):
-        selection = vim.eval("vdebug:get_visual_selection()")
+        selection = vim.eval("Vdebug_get_visual_selection()")
         runner.eval(selection)
         return True
 
@@ -72,7 +77,7 @@ class CursorEvalEvent(Event):
     var_regex = {
         "default" : "^[a-zA-Z_]",
         "ruby" : "^[$@a-zA-Z_]",
-        "php" : "^\$",
+        "php" : "^[\$A-Z]",
         "perl" : "^[$@%]"
     }
 
@@ -90,7 +95,7 @@ class CursorEvalEvent(Event):
         var = ""
         linelen = len(line)
 
-        for i in range(colno,linelen-1):
+        for i in range(colno,linelen):
             char = line[i]
             if p.match(char):
                 var += char
@@ -135,8 +140,8 @@ class StackWindowLineSelectEvent(Event):
             return False
         filename_pos = line.find(" @ ") + 3
         file_and_line = line[filename_pos:]
-        line_pos = file_and_line.find(":")
-        file = vdebug.util.FilePath(file_and_line[:line_pos])
+        line_pos = file_and_line.rfind(":")
+        file = vdebug.util.LocalFilePath(file_and_line[:line_pos])
         lineno = file_and_line[line_pos+1:]
         runner.ui.sourcewin.set_file(file)
         runner.ui.sourcewin.set_line(lineno)
@@ -149,17 +154,19 @@ class WatchWindowPropertyGetEvent(Event):
     def execute(self,runner):
         lineno = vim.current.window.cursor[0]
         line = vim.current.buffer[lineno-1]
-        pointer_index = line.find("▸")
+        pointer_index = line.find(vdebug.opts.Options.get('marker_closed_tree'))
+        step = len(vdebug.opts.Options.get('marker_closed_tree')) + 1
 
         eq_index = line.find('=')
         if eq_index == -1:
-            raise EventError, "Cannot read the selected property"
+            raise EventError("Cannot read the selected property")
 
-        name = line[pointer_index+4:eq_index-1]
+        name = line[pointer_index+step:eq_index-1]
         context_res = runner.api.property_get(name)
         rend = vdebug.ui.vimui.ContextGetResponseRenderer(context_res)
         output = rend.render(pointer_index - 1)
-        runner.ui.watchwin.delete(lineno,lineno+1)
+        if vdebug.opts.Options.get('watch_window_style') == 'expanded':
+          runner.ui.watchwin.delete(lineno,lineno+1)
         runner.ui.watchwin.insert(output.rstrip(),lineno-1,True)
 
 class WatchWindowHideEvent(Event):
@@ -168,7 +175,7 @@ class WatchWindowHideEvent(Event):
     def execute(self,runner):
         lineno = vim.current.window.cursor[0]
         line = vim.current.buffer[lineno-1]
-        pointer_index = line.find("▾")
+        pointer_index = line.find(vdebug.opts.Options.get('marker_open_tree'))
 
         buf_len = len(vim.current.buffer)
         end_lineno = buf_len - 1
@@ -183,7 +190,10 @@ class WatchWindowHideEvent(Event):
             append = "\n" + "".rjust(pointer_index) + "|"
         else:
             append = ""
-        runner.ui.watchwin.insert(line.replace("▾","▸")+append,lineno-1,True)
+        runner.ui.watchwin.insert(line.replace(\
+                    vdebug.opts.Options.get('marker_open_tree'),\
+                    vdebug.opts.Options.get('marker_closed_tree'),1) + \
+                append,lineno-1,True)
 
 class WatchWindowContextChangeEvent(Event):
     """Event used to trigger a watch window context change.
@@ -204,7 +214,7 @@ class WatchWindowContextChangeEvent(Event):
 
         if tab_end_pos == -1 or \
                 tab_start_pos == -1:
-            raise EventError, "Failed to find context name under cursor"
+            raise EventError("Failed to find context name under cursor")
 
         context_name = line[tab_start_pos:tab_end_pos]
         vdebug.log.Log("Context name: %s" % context_name,\
@@ -217,12 +227,12 @@ class WatchWindowContextChangeEvent(Event):
                 runner.context_names,context_name)
 
         if context_id == -1:
-            raise EventError, "Could not resolve context name"
+            raise EventError("Could not resolve context name")
             return False
         else:
             runner.get_context(context_id)
             return True
-            
+
     def __get_word_end(self,line,column):
         tab_end_pos = -1
         line_len = len(line)

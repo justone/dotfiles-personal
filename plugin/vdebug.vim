@@ -8,7 +8,7 @@
 "  Description: Multi-language debugger client for Vim (PHP, Ruby, Python,
 "               Perl, NodeJS)
 "   Maintainer: Jon Cairns <jon at joncairns.com>
-"      Version: 1.2
+"      Version: 1.4.1
 "               Inspired by the Xdebug plugin, which was originally written by 
 "               Seung Woo Shin <segv <at> sayclub.com> and extended by many
 "               others.
@@ -22,6 +22,8 @@
 if !has("python")
     finish
 endif
+
+silent doautocmd User VdebugPre
 
 " Load start_vdebug.py either from the runtime directory (usually
 " /usr/local/share/vim/vim71/plugin/ if you're running Vim 7.1) or from the
@@ -41,12 +43,29 @@ else
   endif
 endif
 
+" Nice characters get screwed up on windows
+if has('win32') || has('win64')
+    let g:vdebug_force_ascii = 1
+elseif has('multi_byte') == 0
+    let g:vdebug_force_ascii = 1
+else
+    let g:vdebug_force_ascii = 0
+end
+
 if !exists("g:vdebug_options")
     let g:vdebug_options = {}
 endif
 
 if !exists("g:vdebug_keymap")
     let g:vdebug_keymap = {}
+endif
+
+if !exists("g:vdebug_features")
+    let g:vdebug_features = {}
+endif
+
+if !exists("g:vdebug_leader_key")
+    let g:vdebug_leader_key = ""
 endif
 
 let g:vdebug_keymap_defaults = {
@@ -60,6 +79,7 @@ let g:vdebug_keymap_defaults = {
 \    "set_breakpoint" : "<F10>",
 \    "get_context" : "<F11>",
 \    "eval_under_cursor" : "<F12>",
+\    "eval_visual" : "<Leader>e"
 \}
 
 let g:vdebug_options_defaults = {
@@ -72,35 +92,103 @@ let g:vdebug_options_defaults = {
 \    "debug_window_level" : 0,
 \    "debug_file_level" : 0,
 \    "debug_file" : "",
-\    "remote_path" : "",
-\    "local_path" : "",
+\    "path_maps" : {},
 \    "watch_window_style" : 'expanded',
+\    "marker_default" : '⬦',
+\    "marker_closed_tree" : '▸',
+\    "marker_open_tree" : '▾',
+\    "continuous_mode"  : 0
 \}
 
-let g:vdebug_options = extend(g:vdebug_options_defaults,g:vdebug_options)
-let g:vdebug_keymap = extend(g:vdebug_keymap_defaults,g:vdebug_keymap)
-let g:vdebug_leader_key = ""
+" Different symbols for non unicode Vims
+if g:vdebug_force_ascii == 1
+    let g:vdebug_options_defaults["marker_default"] = '*'
+    let g:vdebug_options_defaults["marker_closed_tree"] = '+'
+    let g:vdebug_options_defaults["marker_open_tree"] = '-'
+endif
 
+" Create the top dog
 python debugger = DebuggerInterface()
 
-exe "map ".g:vdebug_keymap["run"]." :python debugger.run()<cr>"
-exe "map ".g:vdebug_keymap["set_breakpoint"]." :python debugger.set_breakpoint()<cr>"
-
-vnoremap <Leader>e :python debugger.handle_visual_eval()<cr>
-
-command! -nargs=? Breakpoint python debugger.set_breakpoint('<args>')
-command! -nargs=? BreakpointRemove python debugger.remove_breakpoint('<args>')
+" Commands
+command! -nargs=? -complete=customlist,s:BreakpointTypes Breakpoint python debugger.set_breakpoint(<q-args>)
+command! VdebugStart python debugger.run()
+command! -nargs=? BreakpointRemove python debugger.remove_breakpoint(<q-args>)
 command! BreakpointWindow python debugger.toggle_breakpoint_window()
+command! -nargs=? VdebugEval python debugger.handle_eval(<q-args>)
+command! -nargs=+ -complete=customlist,s:OptionNames VdebugOpt python debugger.handle_opt(<f-args>)
 
-command! -nargs=? VdebugEval python debugger.handle_eval('<args>')
+" Signs and highlighted lines for breakpoints, etc.
+sign define current text=-> texthl=DbgCurrentSign linehl=DbgCurrentLine
+sign define breakpt text=B> texthl=DbgBreakptSign linehl=DbgBreakptLine
 
-sign define current text=->  texthl=DbgCurrent linehl=DbgCurrent
-sign define breakpt text=B>  texthl=DbgBreakPt linehl=DbgBreakPt
+hi default DbgCurrentLine term=reverse ctermfg=White ctermbg=Red guifg=#ffffff guibg=#ff0000
+hi default DbgCurrentSign term=reverse ctermfg=White ctermbg=Red guifg=#ffffff guibg=#ff0000
+hi default DbgBreakptLine term=reverse ctermfg=White ctermbg=Green guifg=#ffffff guibg=#00ff00
+hi default DbgBreakptSign term=reverse ctermfg=White ctermbg=Green guifg=#ffffff guibg=#00ff00
 
-hi DbgCurrent term=reverse ctermfg=White ctermbg=Red gui=reverse
-hi DbgBreakPt term=reverse ctermfg=White ctermbg=Green gui=reverse
+function! s:BreakpointTypes(A,L,P)
+    let arg_to_cursor = strpart(a:L,11,a:P)
+    let space_idx = stridx(arg_to_cursor,' ')
+    if space_idx == -1
+        return filter(['conditional ','exception ','return ','call ','watch '],'v:val =~ "^".a:A.".*"')
+    else
+        return []
+    endif
+endfunction
 
-function! vdebug:get_visual_selection()
+" Reload options dictionary, by merging with default options.
+"
+" This should be called if you want to update the options after vdebug has
+" been loaded.
+function! Vdebug_load_options(options)
+    " Merge options with defaults
+    let g:vdebug_options = extend(g:vdebug_options_defaults, a:options)
+endfunction
+
+" Assign keymappings, and merge with defaults.
+"
+" This should be called if you want to update the keymappings after vdebug has
+" been loaded.
+function! Vdebug_load_keymaps(keymaps)
+    " Unmap existing keys, if applicable
+    if has_key(g:vdebug_keymap, "run")
+        exe "silent! nunmap ".g:vdebug_keymap["run"]
+    endif
+    if has_key(g:vdebug_keymap, "set_breakpoint")
+        exe "silent! nunmap ".g:vdebug_keymap["set_breakpoint"]
+    endif
+    if has_key(g:vdebug_keymap, "eval_visual")
+        exe "silent! vunmap ".g:vdebug_keymap["eval_visual"]
+    endif
+
+    " Merge keymaps with defaults
+    let g:vdebug_keymap = extend(g:vdebug_keymap_defaults, a:keymaps)
+
+    " Mappings allowed in non-debug mode
+    exe "noremap ".g:vdebug_keymap["run"]." :python debugger.run()<cr>"
+    exe "noremap ".g:vdebug_keymap["set_breakpoint"]." :python debugger.set_breakpoint()<cr>"
+
+    " Exceptional case for visual evaluation
+    exe "vnoremap ".g:vdebug_keymap["eval_visual"]." :python debugger.handle_visual_eval()<cr>"
+endfunction
+
+function! s:OptionNames(A,L,P)
+    let arg_to_cursor = strpart(a:L,10,a:P)
+    let space_idx = stridx(arg_to_cursor,' ')
+    if space_idx == -1
+        return filter(keys(g:vdebug_options_defaults),'v:val =~ a:A')
+    else
+        let opt_name = strpart(arg_to_cursor,0,space_idx)
+        if has_key(g:vdebug_options,opt_name)
+            return [g:vdebug_options[opt_name]]
+        else
+            return []
+        endif
+    endif
+endfunction
+
+function! Vdebug_get_visual_selection()
   let [lnum1, col1] = getpos("'<")[1:2]
   let [lnum2, col2] = getpos("'>")[1:2]
   let lines = getline(lnum1, lnum2)
@@ -108,3 +196,15 @@ function! vdebug:get_visual_selection()
   let lines[0] = lines[0][col1 - 1:]
   return join(lines, "\n")
 endfunction
+
+function! Vdebug_edit(filename)
+    try
+        execute 'buffer' fnameescape(a:filename)
+    catch /^Vim\%((\a\+)\)\=:E94/
+        execute 'silent edit' fnameescape(a:filename)
+    endtry
+endfunction
+
+silent doautocmd User VdebugPost
+call Vdebug_load_options(g:vdebug_options)
+call Vdebug_load_keymaps(g:vdebug_keymap)

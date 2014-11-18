@@ -1,6 +1,7 @@
 import sys
-sys.path.append('../plugin/python')
-import unittest
+if __name__ == "__main__":
+    sys.path.append('../plugin/python/')
+import unittest2 as unittest
 import vdebug.dbgp
 import xml
 from mock import Mock
@@ -28,6 +29,8 @@ class ResponseTest(unittest.TestCase):
         assert res.as_string() == response
 
     def test_as_xml_is_element(self):
+        if sys.version_info < (2, 7):
+            return
         """Test that the as_xml() method returns an XML
         element"""
         response = """<?xml version="1.0" encoding="iso-8859-1"?>
@@ -198,8 +201,6 @@ class ContextGetAlternateTest(unittest.TestCase):
     def test_properties_are_objects(self):
         res = vdebug.dbgp.ContextGetResponse(self.response,"","",Mock())
         context = res.get_context()
-        p = context[0]
-        print "Display name: "+p.display_name
         assert len(context) == 3
         self.assertIsInstance(context[0],vdebug.dbgp.ContextProperty)
 

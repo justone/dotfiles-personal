@@ -24,17 +24,22 @@ class Response:
         in the response, then raise it as a DBGPError."""
         xml = self.as_xml()
         err_el = xml.find('%serror' % self.ns)
-        code = err_el.get("code")
-        if code is None:
-            raise ResponseError(
-                    "Missing error code in response",
-                    self.response)
-        msg_el = err_el.find('%smessage' % self.ns)
-        if msg_el is None:
-            raise ResponseError(
-                    "Missing error message in response",
-                    self.response)
-        raise DBGPError(msg_el.text,code)
+        if err_el is None:
+            raise DBGPError("Could not parse error from return XML",1)
+        else:
+            code = err_el.get("code")
+            if code is None:
+                raise ResponseError(
+                        "Missing error code in response",
+                        self.response)
+            elif int(code) == 4:
+                raise CmdNotImplementedError('Command not implemented')
+            msg_el = err_el.find('%smessage' % self.ns)
+            if msg_el is None:
+                raise ResponseError(
+                        "Missing error message in response",
+                        self.response)
+            raise DBGPError(msg_el.text,code)
 
     def get_cmd(self):
         """Get the command that created this response."""
@@ -46,7 +51,7 @@ class Response:
 
     def as_string(self):
         """Return the full response as a string.
-        
+
         There is a __str__ method, which will render the
         whole object as a string and should be used for
         displaying.
@@ -60,7 +65,16 @@ class Response:
         """
         if self.xml == None:
             self.xml = ET.fromstring(self.response)
+            self.__determine_ns()
         return self.xml
+
+    def __determine_ns(self):
+        tag_repr = str(self.xml.tag)
+        if tag_repr[0] != '{':
+            raise DBGPError('Invalid or missing XML namespace',1)
+        else:
+            ns_parts = tag_repr.split('}')
+            self.ns = ns_parts[0] + '}'
 
     def __str__(self):
         return self.as_string()
@@ -68,7 +82,7 @@ class Response:
 class ContextNamesResponse(Response):
     def names(self):
         names = {}
-        for c in self.as_xml().getchildren():
+        for c in list(self.as_xml()):
             names[int(c.get('id'))] = c.get('name')
         return names
 
@@ -82,11 +96,11 @@ class StackGetResponse(Response):
     """Response object used by the stack_get command."""
 
     def get_stack(self):
-        return self.as_xml().getchildren()
+        return list(self.as_xml())
 
 class ContextGetResponse(Response):
     """Response object used by the context_get command.
-    
+
     The property nodes are converted into ContextProperty
     objects, which are much easier to use."""
 
@@ -95,7 +109,7 @@ class ContextGetResponse(Response):
         self.properties = []
 
     def get_context(self):
-        for c in self.as_xml().getchildren():
+        for c in list(self.as_xml()):
             self.create_properties(ContextProperty(c))
 
         return self.properties
@@ -110,15 +124,15 @@ class EvalResponse(ContextGetResponse):
     def __init__(self,response,cmd,cmd_args,api):
         try:
             ContextGetResponse.__init__(self,response,cmd,cmd_args,api)
-        except DBGPError, e:
+        except DBGPError as e:
             if int(e.args[1]) == 206:
-                raise EvalError
+                raise EvalError()
             else:
                 raise e
 
     def get_context(self):
         code = self.get_code()
-        for c in self.as_xml().getchildren():
+        for c in list(self.as_xml()):
             self.create_properties(EvalProperty(c,code,self.api.language))
 
         return self.properties
@@ -180,7 +194,7 @@ class Api:
         if self.conn.isconnected() == 0:
             self.conn.open()
         self.__parse_init_msg(self.conn.recv_msg())
-        
+
     def __parse_init_msg(self,msg):
         """Parse the init message from the debugger"""
         xml = ET.fromstring(msg)
@@ -224,7 +238,7 @@ class Api:
 
     def status(self):
         """Get the debugger status.
-        
+
         Returns a Response object.
         """
         return self.send_cmd('status','',StatusResponse)
@@ -233,9 +247,9 @@ class Api:
         """Get the value of a feature from the debugger.
 
         See the DBGP documentation for a list of features.
-        
+
         Returns a FeatureGetResponse object.
-        
+
         name -- name of the feature, e.g. encoding
         """
         return self.send_cmd(
@@ -247,9 +261,9 @@ class Api:
         """Set the value of a debugger feature.
 
         See the DBGP documentation for a list of features.
-        
+
         Returns a Response object.
-        
+
         name -- name of the feature, e.g. encoding
         value -- new value for the feature
         """
@@ -277,7 +291,7 @@ class Api:
     def step_into(self):
         """Tell the debugger to step to the next
         statement.
-        
+
         If there's a function call, the debugger engine
         will break on the first statement in the function.
         """
@@ -286,7 +300,7 @@ class Api:
     def step_over(self):
         """Tell the debugger to step to the next
         statement.
-        
+
         If there's a function call, the debugger engine
         will stop at the next statement after the function call.
         """
@@ -294,7 +308,7 @@ class Api:
 
     def step_out(self):
         """Tell the debugger to step out of the statement.
-        
+
         The debugger will step out of the current scope.
         """
         return self.send_cmd('step_out','',StatusResponse)
@@ -333,7 +347,9 @@ class Api:
 
         The script is not terminated, but runs as normal
         from this point."""
-        return self.send_cmd('detach','',StatusResponse)
+        ret = self.send_cmd('detach','',StatusResponse)
+        self.conn.close()
+        return ret
 
     def breakpoint_set(self,cmd_args):
         """Set a breakpoint.
@@ -342,6 +358,9 @@ class Api:
         Breakpoint class for more detail."""
         return self.send_cmd('breakpoint_set',cmd_args,\
                 BreakpointSetResponse)
+
+    def breakpoint_list(self):
+        return self.send_cmd('breakpoint_list')
 
     def breakpoint_remove(self,id):
         """Remove a breakpoint by ID.
@@ -388,7 +407,7 @@ class Connection:
     def open(self):
         """Listen for a connection from the debugger. Listening for the actual
         connection is handled by self.listen()."""
-        print 'Waiting for a connection (this message will self-destruct in ',self.timeout,' seconds...)'
+        print 'Waiting for a connection (Ctrl-C to cancel, this message will self-destruct in ',self.timeout,' seconds...)'
         serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -399,19 +418,19 @@ class Connection:
             self.sock.settimeout(None)
         except socket.timeout:
             serv.close()
-            raise TimeoutError,"Timeout waiting for connection"
+            raise TimeoutError("Timeout waiting for connection")
         except:
             serv.close()
             raise
 
         self.isconned = 1
         serv.close()
-    
+
     def listen(self, serv, timeout):
         """Non-blocking listener. Provides support for keyboard interrupts from
-        the user. Although it's non-blocking, the user interface will still 
+        the user. Although it's non-blocking, the user interface will still
         block until the timeout is reached.
-        
+
         serv -- Socket server to listen to.
         timeout -- Seconds before timeout.
         """
@@ -430,6 +449,8 @@ class Connection:
     def close(self):
         """Close the connection."""
         if self.sock != None:
+            vdebug.log.Log("Closing the socket",\
+                            vdebug.log.Logger.DEBUG)
             self.sock.close()
             self.sock = None
         self.isconned = 0
@@ -441,7 +462,7 @@ class Connection:
             c = self.sock.recv(1)
             if c == '':
                 self.close()
-                raise EOFError, 'Socket Closed'
+                raise EOFError('Socket Closed')
             if c == '\0':
                 return int(length)
             if c.isdigit():
@@ -453,7 +474,7 @@ class Connection:
             c = self.sock.recv(1)
             if c == '':
                 self.close()
-                raise EOFError, 'Socket Closed'
+                raise EOFError('Socket Closed')
             if c == '\0':
                 return
 
@@ -467,14 +488,14 @@ class Connection:
             buf = self.sock.recv(to_recv)
             if buf == '':
                 self.close()
-                raise EOFError, 'Socket Closed'
+                raise EOFError('Socket Closed')
             to_recv -= len(buf)
             body = body + buf
         return body
 
     def recv_msg(self):
         """Receive a message from the debugger.
-        
+
         Returns a string, which is expected to be XML.
         """
         length = self.__recv_length()
@@ -499,7 +520,7 @@ class ContextProperty:
         self._determine_displayname(node)
         self.encoding = node.get('encoding')
         self.depth = depth
-        
+
         self.size = node.get('size')
         self.value = ""
         self.is_last_child = False
@@ -580,7 +601,7 @@ class ContextProperty:
         if self.has_children:
             idx = 0
             tagname = '%sproperty' % self.ns
-            children = node.getchildren()
+            children = list(node)
             if children is not None:
                 for c in children:
                     if c.tag == tagname:
@@ -659,6 +680,10 @@ class TimeoutError(Exception):
     pass
 
 class DBGPError(Exception):
+    """Raised when the debugger returns an error message."""
+    pass
+
+class CmdNotImplementedError(Exception):
     """Raised when the debugger returns an error message."""
     pass
 

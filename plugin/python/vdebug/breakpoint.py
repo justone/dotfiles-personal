@@ -16,6 +16,17 @@ class Store:
             res = self.api.breakpoint_set(bp.get_cmd())
             bp.set_debugger_id(res.get_id())
 
+    # Update line-based breakpoints with a dict of IDs and lines
+    def update_lines(self,lines):
+        for id, line in lines.iteritems():
+            try:
+                self.breakpoints[id].set_line(line)
+                vdebug.log.Log("Updated line number of breakpoint %s to %s"\
+                                    %(str(id),str(line)) )
+            except ValueError:
+                pass
+                # No method set_line, not a line breakpoint
+
     def unlink_api(self):
         self.api = None
 
@@ -34,7 +45,7 @@ class Store:
     def remove_breakpoint_by_id(self,id):
         id = str(id)
         if id not in self.breakpoints:
-            raise BreakpointError, "No breakpoint matching ID %s" % id
+            raise BreakpointError("No breakpoint matching ID %s" % id)
         vdebug.log.Log("Removing breakpoint id %s" % id)
         if self.api is not None:
             dbg_id = self.breakpoints[id].get_debugger_id()
@@ -106,8 +117,12 @@ class Breakpoint:
             row = ui.get_current_row()
             try:
                 file = ui.get_current_file()
+                line = ui.get_current_line()
+                if len(line.strip()) == 0:
+                    raise BreakpointError('Cannot set a breakpoint ' +\
+                                            'on an empty line')
             except vdebug.util.FilePathError:
-                raise BreakpointError, 'No file, cannot set breakpoint'
+                raise BreakpointError('No file, cannot set breakpoint')
             return LineBreakpoint(ui,file,row)
         else:
             arg_parts = args.split(' ')
@@ -117,38 +132,38 @@ class Breakpoint:
                 row = ui.get_current_row()
                 file = ui.get_current_file()
                 if len(arg_parts) == 0:
-                    raise BreakpointError, "Conditional breakpoints " +\
-                            "require a condition to be specified"
+                    raise BreakpointError("Conditional breakpoints " +\
+                            "require a condition to be specified")
                 cond = " ".join(arg_parts)
                 return ConditionalBreakpoint(ui,file,row,cond)
             elif type == 'watch':
                 if len(arg_parts) == 0:
-                    raise BreakpointError, "Watch breakpoints " +\
-                            "require a condition to be specified"
+                    raise BreakpointError("Watch breakpoints " +\
+                            "require a condition to be specified")
                 expr = " ".join(arg_parts)
                 vdebug.log.Log("Expression: %s"%expr)
                 return WatchBreakpoint(ui,expr)
             elif type == 'exception':
                 if len(arg_parts) == 0:
-                    raise BreakpointError, "Exception breakpoints " +\
-                            "require an exception name to be specified"
+                    raise BreakpointError("Exception breakpoints " +\
+                            "require an exception name to be specified")
                 return ExceptionBreakpoint(ui,arg_parts[0])
             elif type == 'return':
                 l = len(arg_parts)
                 if l == 0:
-                    raise BreakpointError, "Return breakpoints " +\
-                            "require a function name to be specified"
+                    raise BreakpointError("Return breakpoints " +\
+                            "require a function name to be specified")
                 return ReturnBreakpoint(ui,arg_parts[0])
             elif type == 'call':
                 l = len(arg_parts)
                 if l == 0:
-                    raise BreakpointError, "Call breakpoints " +\
-                            "require a function name to be specified"
+                    raise BreakpointError("Call breakpoints " +\
+                            "require a function name to be specified")
                 return CallBreakpoint(ui,arg_parts[0])
             else:
-                raise BreakpointError, "Unknown breakpoint type, " +\
+                raise BreakpointError("Unknown breakpoint type, " +\
                         "please choose one of: conditional, exception,"+\
-                        "call or return"
+                        "call or return")
 
     def get_cmd(self):
         pass
@@ -167,12 +182,15 @@ class LineBreakpoint(Breakpoint):
     def get_line(self):
         return self.line
 
+    def set_line(self,line):
+        self.line = int(line)
+
     def get_file(self):
         return self.file
 
     def get_cmd(self):
         cmd = "-t " + self.type
-        cmd += " -f file://" + self.file.as_remote()
+        cmd += " -f " + self.file.as_remote()
         cmd += " -n " + str(self.line)
         cmd += " -s enabled"
         

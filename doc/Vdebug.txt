@@ -1,16 +1,16 @@
 *Vdebug*   A powerful, fast, multi-language debugger for Vim
 
 
-    888     888      888          888                        
-    888     888      888          888                        
-    888     888      888          888                        
-    Y88b   d88P  .d88888  .d88b.  88888b.  888  888  .d88b.  
-     Y88b d88P  d88" 888 d8P  Y8b 888 "88b 888  888 d88P"88b 
-      Y88o88P   888  888 88888888 888  888 888  888 888  888 
-       Y888P    Y88b 888 Y8b.     888 d88P Y88b 888 Y88b 888 
-        Y8P      "Y88888  "Y8888  88888P"   "Y88888  "Y88888 
-                                                         888 
-                                                    Y8b d88P 
+    888     888      888          888
+    888     888      888          888
+    888     888      888          888
+    Y88b   d88P  .d88888  .d88b.  88888b.  888  888  .d88b.
+     Y88b d88P  d88" 888 d8P  Y8b 888 "88b 888  888 d88P"88b
+      Y88o88P   888  888 88888888 888  888 888  888 888  888
+       Y888P    Y88b 888 Y8b.     888 d88P Y88b 888 Y88b 888
+        Y8P      "Y88888  "Y8888  88888P"   "Y88888  "Y88888
+                                                         888
+                                                    Y8b d88P
                                                      "Y88P"
 
 
@@ -29,6 +29,7 @@ CONTENTS                                                      *Vdebug-contents*
         3.3 Ruby set up..............................|VdebugSetUpRuby|
         3.4 Perl set up..............................|VdebugSetUpPerl|
         3.5 NodeJS set up............................|VdebugSetUpNodejs|
+        3.6 TCL/Wish set up..........................|VdebugSetUpTcl|
     4. Usage.........................................|VdebugUsage|
         4.1 Starting the debugger....................|VdebugStart|
         4.2 Finding your way around the UI...........|VdebugUI|
@@ -56,13 +57,16 @@ CONTENTS                                                      *Vdebug-contents*
             4.5.2 Evaluating highlighted expressions.|VdebugEvalHighlighted|
             4.5.3 Evaluating variable under cursor   |VdebugEvalUnderCursor|
     5. Options.......................................|VdebugOptions|
+        5.1 Quickly setting options..................|VdebugOpt|
+        5.2 List of options..........................|VdebugOptionList|
     6. Key maps......................................|VdebugKeys|
-    7. Using an IDE key..............................|VdebugIDEKey|
-    8. Debugging a script on a remote server.........|VdebugRemote|
-        8.1 File path mapping........................|VdebugRemoteFilePaths|
-        8.2 Connecting the two machines..............|VdebugRemoteConnection|
-    9. Troubleshooting...............................|VdebugTroubleshooting|
-    10. Acknowledgements.............................|VdebugAcknowledgements|
+    7. Setting debugger features.....................|VdebugFeatures|
+    8. Using an IDE key..............................|VdebugIDEKey|
+    9. Debugging a script on a remote server.........|VdebugRemote|
+        9.1 File path mapping........................|VdebugRemoteFilePaths|
+        9.2 Connecting the two machines..............|VdebugRemoteConnection|
+    10. Troubleshooting..............................|VdebugTroubleshooting|
+    11. Acknowledgements.............................|VdebugAcknowledgements|
 
 ==============================================================================
 1. Introduction                                                  *VdebugIntro*
@@ -139,10 +143,12 @@ see section 3, |VdebugSetUp|.
 2. Installing the plugin                                  *VdebugInstallation*
 
 Please note that you must have VIM 7+ for this plugin to work, and it must be
-compiled with tabs, signs and Python support.
+compiled with tabs, signs and Python support. If you're using Windows, some
+reports have said that Python must be installed separately to allow VIM to use
+it.
 
 The Github page for the plugin is https://github.com/joonty/vdebug, and the VIM
-scripts URL is XXX.
+scripts URL is http://www.vim.org/scripts/script.php?script_id=4170.
 
 By far the easiest way to install is by using a plugin manager, e.g. vundle
 (https://github.com/gmarik/vundle/) or pathogen 
@@ -186,7 +192,7 @@ able to apply it to your circumstance.
 The most popular DBGP debugger for PHP is Xdebug.
 
 I find that the most effective way to install Xdebug is to use PECL, instead
-of a OS-level package manager such as apitude or yum. You can also compile it
+of a OS-level package manager such as aptitude or yum. You can also compile it
 from source if you're feeling hardy. To install it via PECL, run this from a
 command line (requires root/admin privileges): >
 
@@ -236,11 +242,16 @@ the "pydbgp" tool, created by ActiveState (who make the Komodo Edit/IDE
 software).
 
 To do this, go to http://code.activestate.com/komodo/remotedebugging/,
-download the Python client for your OS and extract it. Inside this package is 
-a binary file called pydbgp that we can include when running a script, which
-will allow for remote debugging.
+download the Python client for your OS and extract it.
 
-If we want to debug a script called "myscript.py", run the following: >
+Inside this package is a binary file called pydbgp that we can include when
+running a script, which will allow for remote debugging. If you're using
+version 8 or greater, then you will need to move the dbgp directory, which is
+inside pythonlib, to the same directory that contains the pydbgp executable.
+If you don't do this then you will get an error saying "No module named
+dbgp.client".
+
+To debug a script called "myscript.py", run the following: >
     python -S path/to/pydbgp -d localhost:9000 myscript.py
 <
 adding in the path to the pydbgp binary file. Running it without starting
@@ -250,10 +261,12 @@ this, you're ready to go.
 NOTE: You may have a problem when trying to do an "eval". If you get an error
 mentioning something about not providing a length then you need to patch the
 client.py file in the Python remote debugger source code. I've created a patch 
-that you can get at https://gist.github.com/3348076 - if using unix you can use 
-the patch command to apply it, e.g: >
+that you can get at https://gist.github.com/3348076. It will only apply cleanly
+if it's for the same version as the package you downloaded. 
 
-    patch dbgp/client.py < client.patch
+If using unix you can use the `patch` command to apply the changes, e.g: >
+
+    patch dbgp/client.py < client-7.1.0.patch
 <
 If you're still having trouble, drop me an email.
 
@@ -352,6 +365,32 @@ You can then begin a debug session by starting Vdebug and running: >
 Where the 'h' option specifies the address that Vdebug is listening on, and 'p'
 is the port.
 
+------------------------------------------------------------------------------
+3.6 TCL/Wish set up                                           *VdebugSetUpTcl*
+
+Like Python and Ruby, Tcl and Wish have an standalone debugging tool that you 
+can use from the command line, which has again been made avilable by 
+ActiveState.
+
+Go to http://code.activestate.com/komodo/remotedebugging/, download the Tcl 
+client for your OS and extract it. Inside this package is a binary file called 
+dbgp_tcldebug that we will use instead of the tcl/wish binary. It accepts the
+script as an option, along with the vdebug server address and port.
+
+If we want to debug a Tcl script called "myscript.tcl", start Vdebug listening
+and run the following: >
+    path/to/dbgp_tcldebug -dbgp localhost:9000 -app-file myscript.tcl \
+        -app-shell /usr/bin/tcl
+<
+To debug a wish script called "mywishscript.tcl", run the following: >
+    path/to/dbgp_tcldebug -dbgp localhost:9000 -app-file mywishscript.tcl \
+        -app-shell /usr/bin/wish
+<
+Note that the only difference is the app shell argument. 
+
+There is a known error with using "tix", however, as it appears that Activestate's
+debugger engine doesn't support it.
+
 ==============================================================================
 4. Usage                                                         *VdebugUsage*
 
@@ -402,7 +441,7 @@ Don't edit the contents of the file when in debug mode, and especially don't
 edit without saving - this causes problems when swapping between files.
 
 You can set line breakpoints here with the <F10> key or :Breakpoint, and can
-tell the debugger to run to the cursor with <F1>.
+tell the debugger to run to the cursor with <F9>.
 
 ------------------------------------------------------------------------------
 4.2.2 The watch window                                     *VdebugWatchWindow*
@@ -411,7 +450,9 @@ The watch window shows the variables at the current position in execution. The
 variable name, type, length (if applicable) and value are shown. They are shown
 as a tree, because arrays/lists and objects have children. Hopefully it's
 fairly self-explanatory: right arrows show a closed tree, down arrows show an
-open tree and diamonds show variables that don't have children.
+open tree and diamonds show variables that don't have children. These markers
+can be customised (see |VdebugOptions|), and will fall back to ASCII equivalents
+if multi byte support is not enabled in the VIM configuration.
 
 To open a closed tree, navigate to a line with a closed tree (right arrow) and
 press <enter> (<cr>) or double-click if you have mouse-support enabled. This 
@@ -442,7 +483,7 @@ can return to the variable context with <F11> (default).
 4.2.3 The stack window                                     *VdebugStackWindow*
 
 The stack window shows the current execution stack, which is a list of files
-and functions/methods that the program has run through to get the current
+and functions/methods that the program has run through to get to the current
 position. The top entry ([0]) is always the current position, and the entries
 below show the path the script has taken.
 
@@ -474,7 +515,7 @@ to go for help!
 
 This is a bit of an odd one out, as it doesn't show by default and can be
 summoned at will. It lists all the breakpoints that have been set, and shows
-their IDs that can be used to remove them.
+the IDs that can be used to remove them.
 
 To open the window use the command :BreakpointWindow. It's in a table format,
 so hopefully it won't need any more explanation. To close the window again,
@@ -515,7 +556,7 @@ debugging, and the default keys mapped to those commands.
     
     4.3.3 Step in                                        *VdebugCommandStepIn*
     Default key: <F3>
-    Tells the debugger engine to step in to a statement on the current line.
+    Tells the debugger engine to step into a statement on the current line.
     For instance, if there's a function call on the current line it will jump to
     the start of that function.
     
@@ -525,7 +566,7 @@ debugging, and the default keys mapped to those commands.
     calling statement. Essentially this is the opposite of step in.
 
     4.3.5 Run to cursor                             *VdebugCommandRunToCursor*
-    Default key: <F10>
+    Default key: <F9>
     Tells the debugger engine to run until the point where the cursor is
     currently sitting. One of the most useful commands, as it means that
     setting a hard breakpoint is not always necessary. This only works if the
@@ -678,7 +719,7 @@ You can evaluate code snippets at the current point of execution, which can be
 used to see the result of a condition, arithmetic expressions, etc. These
 snippets are written in the language that's being debugged. There are two ways
 of evaluating expresions: you can either write them yourself
-(|VdebugEvalExpression) or use visual highlighting to select an expression from
+(|VdebugEvalExpression|) or use visual highlighting to select an expression from
 the source window.
 
 On evaluating an expression, the result is shown in the watch window. To return
@@ -713,10 +754,36 @@ some debugger engines.
 ==============================================================================
 5. Options                                                     *VdebugOptions*
 
-As there are a lot of options in Vdebug, they are set using a dictionary
-(the equivalent of an associative array in PHP or a hash in Ruby). This
-dictionary can be modified using the global variable "g:vdebug_options". The
-default ptions look like this: >
+There are two ways of setting options for Vdebug. The options are stored in a 
+Vim dictionary (the equivalent of an associative array in PHP or a hash in Ruby). 
+This dictionary can be modified using the global variable "g:vdebug_options".
+However, as you may want to change options on the fly, a command (:VdebugOpt) 
+has been added for your convenience so that you can easily get and set options 
+without having to use Vim dictionary syntax.
+
+I've found that the best way of setting options is to use the dictionary in your
+vimrc file and the :VdebugOpt command when you want to set options on the fly.
+
+------------------------------------------------------------------------------
+5.1 Quickly setting options with :VdebugOpt                        *VdebugOpt*
+
+The VdebugOpt command takes one or two arguments: one if you want to retrieve
+the value of an option, and two if you want to set the option to a new value.
+The first argument autocompletes with a list of options, and the second argument
+will autocomplete to the current value, if set. Here are some examples: >
+
+    :VdebugOpt server " Prints the current value
+    :VdebugOpt continuous_mode 0 "Sets to 0
+    :VdebugOpt debug_file /home/jon/vdebug.log
+<
+Note that using :VdebugOpt only sets the value of the option for the time that
+your vim session is open. As soon as you close it they will be forgotten, so
+retain option settings by adding them to your vimrc.
+
+------------------------------------------------------------------------------
+5.2 List of options                                         *VdebugOptionList*
+
+The default options look like this: >
     let g:vdebug_options= {
     \    "port" : 9000,
     \    "server" : 'localhost',
@@ -724,12 +791,14 @@ default ptions look like this: >
     \    "on_close" : 'detach',
     \    "break_on_open" : 1,
     \    "ide_key" : '',
-    \    "remote_path" : "",
-    \    "local_path" : "",
+    \    "path_maps" : {},
     \    "debug_window_level" : 0,
     \    "debug_file_level" : 0,
     \    "debug_file" : "",
     \    "watch_window_style" : 'expanded',
+    \    "marker_default" : '⬦',
+    \    "marker_closed_tree" : '▸',
+    \    "marker_open_tree" : '▾'
     \}
 <
 You can either use the multi-line notation like above, or set individual keys:
@@ -758,7 +827,7 @@ g:vdebug_options["server"] (default = "localhost")
 g:vdebug_options["timeout"] (default = 20)             
     Number of seconds to wait for when listening for a connection. VIM will
     lock up due to the server socket listening for a client connection, so this
-    timeout is there to protect your VIM for locking up forever!
+    timeout is there to protect your VIM from locking up forever!
 
                                                       *VdebugOptions-on_close*
 g:vdebug_options["on_close"] (default = "detach")     
@@ -782,19 +851,12 @@ g:vdebug_options["ide_key"] (default = empty)
     restricts the connections to those that have a matching key. See
     |VdebugIDEKey| for more information.
 
-                                                   *VdebugOptions-remote_path*
-g:vdebug_options["remote_path"] (default = empty)  
+                                                       *VdebugOptions-path_maps*
+g:vdebug_options["path_maps"] (default = {})          
     This is only used for debugging a script on a remote machine. This is used
     to map remote file paths to local file paths, as they are very likely to be
-    different. Any file path specified here will be replaced by "local_path", 
-    so that the correct file is opened in the source window.
-
-                                                    *VdebugOptions-local_path*
-g:vdebug_options["local_path"] (default = empty)    
-    This is only used for debugging a script on a remote machine. This is used
-    to map local file paths to remote file paths, as they are very likely to be
-    different. Any file path specified here will be replaced by "remote_path"
-    before sending commands to the debugger engine.
+    different. This is a VimL dictionary of mappings between remote files (keys)
+    and local files (values).
 
                                             *VdebugOptions-debug_window_level*
 g:vdebug_options["debug_window_level"] (default = 0)    
@@ -823,13 +885,43 @@ g:vdebug_options["watch_window_style"] (default = 'expanded')
     version works better for smaller screens, but the expanded version looks
     a bit nicer in my opinion.
 
+                                                *VdebugOptions-marker_default*
+g:vdebug_options["marker_default"] (default = '⬦')    
+    Sets the marker used for a variable in the watch window that has no
+    children. A "*" symbol is used if multi byte support is not enabled.
+
+                                            *VdebugOptions-marker_closed_tree*
+g:vdebug_options["marker_closed_tree"] (default = '▸')    
+    Sets the marker used for a variable in the watch window that does have
+    children, but the tree is currently closed. A "+" symbol is used if multi 
+    byte support is not enabled.
+
+                                              *VdebugOptions-marker_open_tree*
+g:vdebug_options["marker_open_tree"] (default = '▾')    
+    Sets the marker used for a variable in the watch window that does have
+    children, and the tree is currently open. A "-" symbol is used if multi 
+    byte support is not enabled.
+
+                                              *VdebugOptions-continuous_mode*
+g:vdebug_options["continuous_mode"] (default = 0)    
+    If enabled, Vdebug will start listening immediately after a debugging 
+    session has finished, allowing for constant debugging across separate
+    requests. Press <F6> during a debugging session to stop this, or <Ctrl-C>
+    when Vdebug is listening.
+
 ==============================================================================
 6. Key maps                                                       *VdebugKeys*
 
 By default, function keys are mapped to execute debugger commands. However, I'm
 aware that people may already have them mapped to something else, so would like
-to change the default behaviour. This is possible using the key map dictionary,
-g:vdebug_keymap: >
+to change the default behaviour. Before you do that, be aware that Vdebug only
+maps two commands outside of the debugger mode, "run" and "set_breakpoint". All
+others are mapped only when Vdebug starts up, and unmapped when it shuts down.
+Not only this, but any commands that you have already mapped to these keys will
+be remembered and restored when you come out of debugging mode.
+
+If you would still like to remap the default keys, this is possible using the 
+key map dictionary, g:vdebug_keymap: >
 
     let g:vdebug_keymap = {
     \    "run" : "<F5>",
@@ -842,18 +934,37 @@ g:vdebug_keymap: >
     \    "set_breakpoint" : "<F10>",
     \    "get_context" : "<F11>",
     \    "eval_under_cursor" : "<F12>",
+    \    "eval_visual" : "<Leader>e",
     \}
 <
 
 As you can see, these are the default keys. You can change the keys using the
-multi-line notation as shown above, or by setting invidiual keys: >
+multi-line notation as shown above, or by setting individual keys: >
 
     let g:vdebug_keymap['run'] = '<C-s>'
 <
 Any options that you don't set will use the default value.
 
 ==============================================================================
-7. Using an IDE Key                                             *VdebugIDEKey*
+7. Setting debugger features                                  *VdebugFeatures*
+
+The DBGP protocol allows you to set features for debugging, such as the max 
+length of data that the debugger returns. You can set these features in the Vim
+dictionary g:vdebug_features, and they will be sent to the debugger when you 
+start a new debugging session.
+
+For example: >
+   let g:vdebug_features['max_depth'] = 2048
+<
+
+This will send the command to the debugger to set the "max_depth" feature to 
+2048.
+
+For a list of features supported by DBGP see 
+http://xdebug.org/docs-dbgp.php#feature-names.
+
+==============================================================================
+8. Using an IDE Key                                             *VdebugIDEKey*
 
 An IDE key is used to restrict debugger connections, kind of like a password:
 only a connection that supplies the same key as the IDE uses (in this case
@@ -880,7 +991,7 @@ From the command line, the environment variable "XDEBUG_CONFIG" holds the IDE
 key.
 
 ==============================================================================
-8. Debugging a script on a remote server                        *VdebugRemote*
+9. Debugging a script on a remote server                        *VdebugRemote*
 
 This is where things get really cool. You don't have to be on the same machine
 as the running script to be able to debug it: you can tell the remote script to
@@ -894,7 +1005,7 @@ There are a couple of hurdles to overcome in doing this:
        network route between the two machines.
 
 ------------------------------------------------------------------------------
-8.1 File path mapping                                  *VdebugRemoteFilePaths*
+9.1 File path mapping                                  *VdebugRemoteFilePaths*
 
 Firstly, file paths aren't a problem. You can use the options "remote_path" and
 "local_path" to swap out sections of the file URIs to make them compatible with
@@ -905,16 +1016,18 @@ Let's say we're debugging a file on a remote machine, and the path is
 /home/jon/php/myscript.php. I would have to set the remote and local path
 options as so: >
 
-    let g:vdebug_options['remote_path'] = "/home/user/scripts"
-    let g:vdebug_options['local_path'] = "/home/jon/php"
+    let g:vdebug_options['path_maps'] = {"/home/user/scripts": "/home/jon/php"}
 <
 When the debugger engine sends any file paths, a straight swap of the paths is
 done, so all instances of "/home/user/scripts" are replaced with
 "/home/jon/php". The opposite is done when sending file paths in the other
-direction. 
+direction.
+
+It is possible to have multiple file path mappings by adding more items in the
+"path_maps" dictionary.
 
 ------------------------------------------------------------------------------
-8.2 Connecting the two machines                       *VdebugRemoteConnection*
+9.2 Connecting the two machines                       *VdebugRemoteConnection*
 
 This part depends a lot upon your network set-up and firewall rules. But here's
 the basic information:
@@ -941,7 +1054,7 @@ then I can all but guarantee that you will have to route port 9000 to your
 machine using your router, as it will be blocked by default.
 
 ==============================================================================
-9. Troubleshooting/FAQ                                 *VdebugTroubleshooting*
+10. Troubleshooting/FAQ                                *VdebugTroubleshooting*
 
 If you have any questions or problems that aren't addressed or fixed here then
 feel free to raise an issue on the Github page https://github.com/joonty/vdebug
@@ -1005,7 +1118,9 @@ it to this list.
 
     Q. I keep getting error <x> when doing <y>.
     A. Send the details of the error to me at the email address at the top of
-        this section, or raise an issue on the Github page.
+        this section, or raise an issue on the Github page. Please supply the
+        version of Vdebug, your Vim version and your OS to make it as easy as
+        possible to diagnose!
 
     Q. Can you implement feature <x>?
     A. Maybe - raise an issue on the Github page (top of this section) and I'll
@@ -1017,7 +1132,7 @@ it to this list.
 
 
 ==============================================================================
-10. Acknowledgements                                  *VdebugAcknowledgements*
+11. Acknowledgements                                  *VdebugAcknowledgements*
 
 This plugin was inspired by the original Xdebug plugin created by Seung Woo Shin 
 (<segv <at> sayclub.com>),
@@ -1026,5 +1141,5 @@ remnants of the original code, but not many. He showed us all that it was
 possible.
 
 Thanks to everyone who's contributed ideas and code so far, including Githubbers
-artnez, csomme and beatle. Also thanks to Gareth Oslar to pointing out that
-Vdebug (almost) worked with NodeJS.
+teranex, qstrahl, artnez, csomme and beatle. Also thanks to Gareth Oslar to 
+pointing out that Vdebug (almost) worked with NodeJS.
