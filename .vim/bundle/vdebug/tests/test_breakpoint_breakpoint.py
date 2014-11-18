@@ -1,6 +1,7 @@
-import sys
-sys.path.append('../plugin/python/')
-import unittest
+if __name__ == "__main__":
+    import sys
+    sys.path.append('../plugin/python/')
+import unittest2 as unittest
 import vdebug.breakpoint
 import vdebug.util
 import base64
@@ -107,9 +108,18 @@ class BreakpointTest(unittest.TestCase):
 
     def test_parse_with_line_breakpoint(self):
         """ Test that a LineBreakpoint is created."""
+        Mock.__len__ = Mock(return_value=1)
         ui = Mock()
         ret = vdebug.breakpoint.Breakpoint.parse(ui,"")
         self.assertIsInstance(ret,vdebug.breakpoint.LineBreakpoint)
+
+    def test_parse_with_empty_line_raises_error(self):
+        """ Test that a LineBreakpoint is created."""
+        Mock.__len__ = Mock(return_value=0)
+        ui = Mock()
+        re = 'Cannot set a breakpoint on an empty line'
+        self.assertRaisesRegexp(vdebug.breakpoint.BreakpointError,\
+                re,vdebug.breakpoint.Breakpoint.parse,ui,"")
 
     def test_parse_with_conditional_breakpoint(self):
         """ Test that a ConditionalBreakpoint is created."""
