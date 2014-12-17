@@ -1,0 +1,14 @@
+#!/bin/bash
+
+MODE=$1
+
+if [[ $MODE = "images" ]]; then
+    URI=/images/json?all=1
+elif [[ $MODE = "containers" ]]; then
+    URI=/containers/json?all=1
+else
+    echo "Usage: docker json [images|containers]"
+    exit 1
+fi
+
+echo -e "GET $URI HTTP/1.0\r\n" | nc -U /var/run/docker.sock | tail -n +5
