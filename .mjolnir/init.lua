@@ -25,6 +25,7 @@ local mash = {"cmd", "ctrl"}
 hotkey.bind(mash, "T", function() application.launchorfocus("Terminal") end)
 hotkey.bind(mash, "C", function() application.launchorfocus("iTerm") end)
 hotkey.bind(mash, "B", function() application.launchorfocus("Google Chrome") end)
+hotkey.bind(mash, "V", function() application.launchorfocus("MacVim") end)
 
 -- status light options
 hotkey.bind(mash, "S", function() os.execute('/Users/nate/bin/excluded/blink1-tool --red') end)
