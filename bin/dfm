@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );    # Avoids regex performance penalty
-use Data::Dumper;
 use FindBin qw($RealBin $RealScript);
 use Getopt::Long;
 use Cwd qw(realpath getcwd);
