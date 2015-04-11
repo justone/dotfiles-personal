@@ -35,7 +35,7 @@ nmap <C-c><C-c> :!perl -Wc %<CR>
 command! PerlTidy call PerlTidy()
 
 " tidy buffer on save
-autocmd BufWritePre <buffer> :PerlTidy
+"autocmd BufWritePre <buffer> :PerlTidy
 
 " Restore the saved compatibility options.
 let &cpo = s:save_cpo
