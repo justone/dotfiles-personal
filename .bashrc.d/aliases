@@ -88,7 +88,7 @@ function resty() {
 }
 
 # Short form for remotecopy
-alias rc="remotecopy -c"
+alias rc="pmb remotecopy"
 # Remotecopy last command
 if [ "$OS" == "Darwin" ]
 then
