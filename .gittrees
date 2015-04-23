@@ -198,3 +198,7 @@
 	url = https://github.com/gberenfield/cljfold.vim.git
 	path = .vim/bundle/cljsfold.vim
 	branch = master
+[subtree ".vim/bundle/python-mode"]
+	url = https://github.com/klen/python-mode
+	path = .vim/bundle/python-mode
+	branch = master
