@@ -369,3 +369,6 @@ let g:vimpipe_close_map="<leader>W"
 
 " configure clojure folding
 let g:clojure_foldwords = "defn,defmacro,defmethod"
+
+let g:pymode_options = 0
+let g:pymode_lint_options_mccabe = { 'complexity': 20 }
