@@ -202,3 +202,7 @@
 	url = https://github.com/klen/python-mode
 	path = .vim/bundle/python-mode
 	branch = master
+[subtree ".vim/bundle/vim-json"]
+	url = https://github.com/elzr/vim-json
+	path = .vim/bundle/vim-json
+	branch = master
