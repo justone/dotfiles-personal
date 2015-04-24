@@ -374,3 +374,4 @@ let g:pymode_options = 0
 let g:pymode_lint_options_mccabe = { 'complexity': 20 }
 
 let g:vim_json_syntax_conceal = 0
+au FileType json setlocal foldmethod=syntax
