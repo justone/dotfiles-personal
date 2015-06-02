@@ -198,3 +198,7 @@
 	url = https://github.com/elzr/vim-json
 	path = .vim/bundle/vim-json
 	branch = master
+[subtree ".vim/bundle/vim-pmb"]
+	url = git@github.com:justone/vim-pmb.git
+	path = .vim/bundle/vim-pmb
+	branch = master
