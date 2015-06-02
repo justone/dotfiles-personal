@@ -111,7 +111,7 @@ let g:ctrlp_default_input = 0
 let g:ctrlp_working_path_mode = 0
 let g:ctrlp_mruf_relative = 1
 let g:ctrlp_match_window = 'top,order:ttb,min:1,max:10,results:100'
-let g:ctrlp_prompt_mappings = { 
+let g:ctrlp_prompt_mappings = {
   \ 'ToggleMRURelative()': ['<c-w>'],
   \ 'PrtDeleteWord()':     ['<F2>']
   \ }
@@ -127,7 +127,7 @@ noremap <leader>fb :CtrlPBuffer<CR>
 noremap <leader>fc :CtrlPClearCache<CR>
 
 " enable pathogen
-filetype off 
+filetype off
 call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
 
@@ -198,7 +198,7 @@ map ,cp :%w ! pbcopy<CR>
 " sessionman.vim mappings
 noremap <leader>sa :SessionSaveAs<CR>
 noremap <leader>ss :SessionSave<CR>
-noremap <leader>so :SessionOpen 
+noremap <leader>so :SessionOpen
 noremap <leader>sl :SessionList<CR>
 noremap <leader>sc :SessionClose<CR>
 
