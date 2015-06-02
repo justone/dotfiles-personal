@@ -18,7 +18,7 @@ del_path () {
 }
 
 # make sure these paths are before the system paths
-for path in /usr/local/bin /usr/local/sbin $HOME/bin $HOME/bin/excluded $HOME/bin/remotecopy $HOME/bin/outputdiff $HOME/bin/moreutils $HOME/.bashrc.d/resty; do
+for path in /usr/local/bin /usr/local/sbin $HOME/bin $HOME/bin/excluded $HOME/bin/outputdiff $HOME/bin/moreutils $HOME/.bashrc.d/resty; do
     del_path $path
     pre_path $path
 done

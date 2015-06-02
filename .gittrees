@@ -1,7 +1,3 @@
-[subtree "bin/remotecopy"]
-	url = git@github.com:justone/remotecopy.git
-	path = bin/remotecopy
-	branch = master
 [subtree ".bashrc.d/resty"]
 	url = https://github.com/micha/resty.git
 	path = .bashrc.d/resty
