@@ -1,7 +1,3 @@
-[subtree "bin/git-subtree"]
-	url = https://github.com/justone/git-subtree.git
-	path = bin/git-subtree
-	branch = master
 [subtree "bin/remotecopy"]
 	url = git@github.com:justone/remotecopy.git
 	path = bin/remotecopy
