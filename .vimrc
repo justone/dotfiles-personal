@@ -375,3 +375,17 @@ let g:pymode_lint_options_mccabe = { 'complexity': 20 }
 
 let g:vim_json_syntax_conceal = 0
 au FileType json setlocal foldmethod=syntax
+
+function! OpenURL(url)
+  if has("unix")
+    let s:uname = system("uname")
+    if s:uname == "Darwin\n"
+      call system("open ".a:url)
+    else
+      call pmb#openurl(a:url)
+    endif
+  endif
+endfunction
+
+" open web browser, mostly for vim-fugitive
+command! -nargs=1 Browse call OpenURL(<f-args>)
