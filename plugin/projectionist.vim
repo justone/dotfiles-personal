@@ -1,27 +1,32 @@
 " Location:     plugin/projectionist.vim
 " Author:       Tim Pope <http://tpo.pe/>
+" Version:      1.0
+" GetLatestVimScripts: 4989 1 :AutoInstall: projectionist.vim
 
 if exists("g:loaded_projectionist") || v:version < 700 || &cp
   finish
 endif
 let g:loaded_projectionist = 1
 
-if !exists('g:projectiles')
-  let g:projectiles = {}
+if !exists('g:projectionist_heuristics')
+  let g:projectionist_heuristics = {}
 endif
 
 function! s:has(root, file) abort
-  if a:file =~# '\*'
-    return !empty(glob(a:root . '/' . a:file))
-  elseif a:file =~# '/$'
-    return isdirectory(a:root . '/' . a:file)
+  let file = matchstr(a:file, '[^!].*')
+  if file =~# '\*'
+    let found = !empty(glob(a:root . '/' . file))
+  elseif file =~# '/$'
+    let found = isdirectory(a:root . '/' . file)
   else
-    return filereadable(a:root . '/' . a:file)
+    let found = filereadable(a:root . '/' . file)
   endif
+  return a:file =~# '^!' ? !found : found
 endfunction
 
 function! ProjectionistDetect(path) abort
   let b:projectionist = {}
+  unlet! b:projectionist_file
   let file = simplify(fnamemodify(a:path, ':p:s?[\/]$??'))
 
   let root = file
@@ -34,7 +39,7 @@ function! ProjectionistDetect(path) abort
       catch /^invalid JSON:/
       endtry
     endif
-    for [key, value] in items(g:projectiles)
+    for [key, value] in items(g:projectionist_heuristics)
       for test in split(key, '|')
         if empty(filter(split(test, '&'), '!s:has(root, v:val)'))
           call projectionist#append(root, value)
@@ -46,21 +51,14 @@ function! ProjectionistDetect(path) abort
     let root = fnamemodify(root, ':h')
   endwhile
 
+  let modelines = &modelines
   try
-    let g:projectile_file = file
+    set modelines=0
     let g:projectionist_file = file
-    let b:projectionist_file = file
-    if v:version + has('patch438') >= 704
-      silent doautocmd <nomodeline> User ProjectileDetect
-      silent doautocmd <nomodeline> User ProjectionistDetect
-    else
-      silent doautocmd User ProjectileDetect
-      silent doautocmd User ProjectionistDetect
-    endif
+    silent doautocmd User ProjectionistDetect
   finally
-    unlet! g:projectile_file
+    let &modelines = modelines
     unlet! g:projectionist_file
-    unlet! b:projectionist_file
   endtry
 
   if !empty(b:projectionist)
@@ -72,9 +70,10 @@ endfunction
 augroup projectionist
   autocmd!
   autocmd FileType *
-        \ if &filetype ==# 'netrw' || &buftype !~# 'nofile\|quickfix' |
+        \ if (&filetype ==# 'netrw' && !exists('b:projectionist')) ||
+        \     &buftype !~# 'nofile\|quickfix' |
         \   call ProjectionistDetect(expand('%:p')) |
-        \  endif
+        \ endif
   autocmd BufFilePost * call ProjectionistDetect(expand('<afile>:p'))
   autocmd BufNewFile,BufReadPost *
         \ if empty(&filetype) |
@@ -89,7 +88,7 @@ augroup projectionist
         \ endif
   autocmd BufWritePost .projections.json call ProjectionistDetect(expand('<afile>:p'))
   autocmd BufNewFile *
-        \ if !empty(b:projectionist) |
+        \ if has_key(b:, 'projectionist') && !empty(b:projectionist) |
         \   call projectionist#apply_template() |
         \ endif
 augroup END

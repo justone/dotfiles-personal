@@ -1,7 +1,7 @@
 # projectionist.vim
 
-Projectionist is a general purpose plugin based on "projections" from
-[rails.vim][].  What are projections?  Let's start with an example.
+Projectionist provides granular project configuration using "projections".
+What are projections?  Let's start with an example.
 
 ## Example
 
@@ -27,13 +27,13 @@ As you can see, rbenv plugins have hooks in `etc/rbenv.d/` and commands in
 `bin/` matching `rbenv-*`.  Here's a projectionist configuration for that
 setup:
 
-    let g:projectiles = {
+    let g:projectionist_heuristics = {
           \   "etc/rbenv.d/|bin/rbenv-*": {
           \     "bin/rbenv-*": {
-          \        "command": "command",
+          \        "type": "command",
           \        "template": ["#!/usr/bin/env bash"],
           \     },
-          \     "etc/rbenv.d/*.bash": {"command": "hook"}
+          \     "etc/rbenv.d/*.bash": {"type": "hook"}
           \   }
           \ }
 
@@ -54,9 +54,9 @@ highlights.
 
 ### Global and per project projection definitions
 
-In the above example, we used the global `g:projectiles` to declare
-projections based on requirements in the root directory.  If that's not
-flexible enough, you can use the autocommand based API, or create a
+In the above example, we used the global `g:projectionist_heuristics` to
+declare projections based on requirements in the root directory.  If that's
+not flexible enough, you can use the autocommand based API, or create a
 `.projections.json` in the root of the project.
 
 ### Navigation commands
@@ -65,10 +65,10 @@ Navigation commands encapsulate editing filenames matching certain patterns.
 Here are some examples for this very project:
 
     {
-      "plugin/*.vim": {"command": "plugin"},
-      "autoload/*.vim": {"command": "autoload"},
-      "doc/*.txt": {"command": "doc"},
-      "README.markdown": {"command": "doc"}
+      "plugin/*.vim": {"type": "plugin"},
+      "autoload/*.vim": {"type": "autoload"},
+      "doc/*.txt": {"type": "doc"},
+      "README.markdown": {"type": "doc"}
     }
 
 With these in place, you could use `:Eplugin projectionist` to edit
@@ -102,16 +102,15 @@ project.
 
 ### Buffer configuration
 
-Check out these examples for a Ruby project:
+Check out these examples for a minimal Ruby project:
 
     {
-      "*": {"make": ["rake", "-f", "{project}/Rakefile"]},
-      "*.rb": {"indent": 2},
-      "spec/*_spec.rb": {"dispatch": ["rspec", "{file}"]}
+      "*": {"make": "rake"},
+      "spec/*_spec.rb": {"dispatch": "rspec {file}"}
     }
 
-That last one sets the default for [dispatch.vim][].  The possibilities are
-*endless*.
+That second one sets the default for [dispatch.vim][].  Plugins can use
+projections for their own configuration.
 
 [dispatch.vim]: https://github.com/tpope/vim-dispatch
 
@@ -128,9 +127,9 @@ then simply copy and paste:
 
 > Why not a clearer filename like `.vim_projections.json`?
 
-I don't see any reason to tie the concept of projections to Vim in particular.
-While some features (in particular navigation commands) are idiosyncratic to
-the way Vim works, others could make sense in a wide variety of editors.
+Nothing about the file is Vim specific.  See
+[projectionist](https://github.com/glittershark/projectionist) for an example
+of another tool that uses it.
 
 ## License
 
