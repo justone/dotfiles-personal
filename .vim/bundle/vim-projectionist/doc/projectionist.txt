@@ -14,14 +14,14 @@ Maven project:
     {
       "src/main/java/*.java": {
         "alternate": "src/test/java/{}.java",
-        "command": "source"
+        "type": "source"
       },
       "src/test/java/*.java": {
         "alternate": "src/main/java/{}.java",
-        "command": "test"
+        "type": "test"
       },
-      "*.java": {"dispatch": ["javac", "{file}"]},
-      "*": {"make": ["mvn", "-f", "{project}/pom.xml"]}
+      "*.java": {"dispatch": "javac {file}"},
+      "*": {"make": "mvn"}
     }
 <
 In property values, "{}" will be replaced by the portion of the glob matched
@@ -29,26 +29,31 @@ by the "*".  You can also chain one or more transformations inside the braces
 separated by bars, e.g. "{dot|hyphenate}".  The complete list of available
 transformations is as follows:
 
-Name           Behavior ~
-dot            / to .
-underscore     / to _
-backslash      / to \
-colons         / to ::
-hyphenate      _ to -
-blank          _ and - to space
-uppercase      uppercase
-camelcase      foo/bar_baz to Foo/BarBaz
-capitalize     capitalize first letter and each letter after a slash
-dirname        remove last slash separated component
-basename       remove all but last slash separated component
-file           absolute path to file
-project        absolute path to project
-open           literal {
-close          literal }
+Name            Behavior ~
+dot             / to .
+underscore      / to _
+backslash       / to \
+colons          / to ::
+hyphenate       _ to -
+blank           _ and - to space
+uppercase       uppercase
+camelcase       foo/bar_baz to Foo/BarBaz
+snakecase       Foo/BarBaz to foo/bar_baz
+capitalize      capitalize first letter and each letter after a slash
+dirname         remove last slash separated component
+basename        remove all but last slash separated component
+singular        singularize
+plural          pluralize
+file            absolute path to file
+project         absolute path to project
+open            literal {
+close           literal }
 
 From a globbing perspective, "*" is actually a stand in for "**/*".  For
 advanced cases, you can include both globs explicitly: "test/**/test_*.rb".
-When expanding with {}, the inner portion is collapsed to a single slash.
+When expanding with {}, the ** and * portions are joined with a slash.  If
+necessary, the dirname and basename expansions can be used to split the value
+back apart.
 
 The full list of available properties in a projection is as follows:
 
@@ -56,54 +61,58 @@ The full list of available properties in a projection is as follows:
 "alternate" ~
         Determines the destination of the |projectionist-:A| command.  If this
         is a list, the first readable file will be used.
-						*projectionist-command*
-"command" ~
-        Names a family of navigation commands to be created.  Use the same
-        name on multiple projections to combine them into a single command.
-        If this option is provided for a literal filename rather than a glob,
-        it is used as the default destination of the navigation command when
-        no argument is given.
+						*projectionist-console*
+"console" ~
+        Command to run to start a REPL or other interactive shell.  Will be
+        defined as :Console.  This is useful to set from a "*" projection or
+        on a simple file glob like "*.js".  Experimental.
 						*projectionist-dispatch*
 "dispatch" ~
         Default task to use for |:Dispatch| in dispatch.vim.  If not provided,
-        the option for any existing alternate file is used instead.  Set to a
-        list of arguments and they will be shell escaped and joined.
+        the option for any existing alternate file is used instead.
+        Expansions are shell escaped.
 						*projectionist-make*
 "make" ~
         Sets 'makeprg'.  Also loads a |:compiler| plugin if one is available
         matching the executable name.  This is useful to set from a "*"
-        projection.  Set to a list of arguments and they will be shell escaped
-        and joined.
+        projection.  Expansions are shell escaped.
 						*projectionist-start*
 "start" ~
         Command to run to "boot" the project.  Examples include `lein run`,
         `rails server`, and `foreman start`.  It will be used as a default
         task for |:Start| in dispatch.vim.  This is useful to set from a "*"
-        projection.  Set to a list of arguments and they will be shell escaped
-        and joined.
+        projection.  Expansions are shell escaped.
 						*projectionist-template*
 "template" ~
         Array of lines to use when creating a new file.
+						*projectionist-type*
+"type" ~
+        Declares the type of file and navigation command it belongs to.  If
+        this option is provided for a literal filename rather than a glob, it
+        is used as the default destination of the navigation command when no
+        argument is given.
 
-                                                *g:projectiles*
+                                                *g:projectionist_heuristics*
 In addition to ".projections.json", projections can be defined globally
 through use of the |projectionist-autocmds| API or through the variable
-g:projectiles, a |Dictionary| mapping between a string describing the root of
-the project and a set of projections.  The keys of the dictionary are files
-and directories that can be found in the root of a project, with & separating
-multiple requirements and | separating multiple alternatives.
+g:projectionist_heuristics, a |Dictionary| mapping between a string describing
+the root of the project and a set of projections.  The keys of the dictionary
+are files and directories that can be found in the root of a project, with &
+separating multiple requirements and | separating multiple alternatives.  You
+can also prefix a file or directory with ! to forbid rather than require its
+presence.
 
 In the example below, the first key requires a directory named
 lib/heroku/ and a file named init.rb, and the second requires a directory
 named etc/rbenv.d/ or one or more files matching the glob bin/rbenv-*.
 >
-    let g:projectiles = {
+    let g:projectionist_heuristics = {
           \ "lib/heroku/&init.rb": {
-          \   "lib/heroku/command/*.rb": {"command": "command"}
+          \   "lib/heroku/command/*.rb": {"type": "command"}
           \ },
           \ "etc/rbenv.d/|bin/rbenv-*": {
-          \   "bin/rbenv-*": {"command": "command"},
-          \   "etc/rbenv.d/*.bash": {"command": "hook"}
+          \   "bin/rbenv-*": {"type": "command"},
+          \   "etc/rbenv.d/*.bash": {"type": "hook"}
           \ }}
 
 Note the use of VimScript |line-continuation|.
