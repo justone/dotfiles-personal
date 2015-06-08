@@ -97,10 +97,10 @@ map <leader>d :qa<CR>
 
 " for editing files next to the open one
 " http://vimcasts.org/episodes/the-edit-command/
-noremap <leader>ew :e <C-R>=expand("%:p:h") . "/" <CR>
-noremap <leader>es :sp <C-R>=expand("%:p:h") . "/" <CR>
-noremap <leader>ev :vsp <C-R>=expand("%:p:h") . "/" <CR>
-noremap <leader>et :tabe <C-R>=expand("%:p:h") . "/" <CR>
+noremap <leader>ew :e <C-R>=expand("%:.:h") . "/" <CR>
+noremap <leader>es :sp <C-R>=expand("%:.:h") . "/" <CR>
+noremap <leader>ev :vsp <C-R>=expand("%:.:h") . "/" <CR>
+noremap <leader>et :tabe <C-R>=expand("%:.:h") . "/" <CR>
 
 " use the octopress syntax for markdown files
 au BufNewFile,BufRead *.markdown setfiletype octopress
