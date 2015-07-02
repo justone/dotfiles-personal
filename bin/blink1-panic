@@ -1,0 +1,4 @@
+#!/bin/bash
+
+$HOME/bin/excluded/blink1-tool --red --blink 5
+$HOME/bin/excluded/blink1-tool --red
