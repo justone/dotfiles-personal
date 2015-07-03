@@ -6,3 +6,5 @@ echo -n "Email: "
 git config user.email
 echo "Branches:"
 git branch
+echo "SSH Keys:"
+ssh-add -l
