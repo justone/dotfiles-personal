@@ -61,3 +61,6 @@ done
 
 # cleanup
 unset TEST_DOMAIN_NAME HN HOST_DIR HN_PARTS c file
+
+# automatically launch tmux if configured
+. $HOME/.bashrc.d/autotmux
