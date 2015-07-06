@@ -1,5 +1,5 @@
 if [[ -z $TMUX ]]; then
-	if type tmux-auto; then
+	if type tmux-auto >/dev/null 2>&1 ; then
         tmux-auto
     fi
 fi
