@@ -5,6 +5,9 @@ setw -g mode-keys vi
 
 set -g default-terminal "screen-256color"
 
+# show messages for 4 seconds
+set-option -g display-time 4000
+
 # more VI-like copy/paste (http://jasonwryan.com/blog/2011/06/07/copy-and-paste-in-tmux/)
 unbind [
 bind Escape copy-mode
