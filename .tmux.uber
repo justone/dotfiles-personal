@@ -12,7 +12,7 @@ set-option -g prefix C-q
 bind-key C-q last-window
 
 # reload
-bind r source-file ~/.tmux.uber
+bind r source-file ~/.tmux.uber \; display-message "Config reloaded."
 
 # keybindings to make resizing easier
 bind -r C-h resize-pane -L

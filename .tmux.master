@@ -9,7 +9,7 @@ set-option -g prefix M-C-b
 bind-key M-C-b last-window
 
 # reload
-bind r source-file ~/.tmux.master
+bind r source-file ~/.tmux.master \; display-message "Config reloaded."
 
 # keybindings to make resizing easier
 bind -r M-C-h resize-pane -L
