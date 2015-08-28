@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ ! -e ~/bin/excluded/jq ]]; then
-    wget http://stedolan.github.io/jq/download/linux64/jq -q -O ~/bin/excluded/jq
+    wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -q -O ~/bin/excluded/jq
     chmod +x ~/bin/excluded/jq
 fi
 
