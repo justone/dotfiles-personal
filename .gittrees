@@ -202,3 +202,7 @@
 	url = git@github.com:justone/vim-pmb.git
 	path = .vim/bundle/vim-pmb
 	branch = master
+[subtree ".vim/bundle/vim-obsession"]
+	url = https://github.com/tpope/vim-obsession.git
+	path = .vim/bundle/vim-obsession
+	branch = master
