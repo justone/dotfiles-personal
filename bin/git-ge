@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cd ~/bin/excluded/
+if [[ -d git-extras ]]; then
+    cd git-extras
+    git pull
+else
+    git clone https://github.com/tj/git-extras
+fi

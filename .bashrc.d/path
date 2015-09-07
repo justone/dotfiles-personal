@@ -7,6 +7,10 @@ no_path() {
 add_path () {
     [ -d ${1:-.} ] && no_path $* && eval ${2:-PATH}="\$${2:-PATH}:$1"
 }
+# if $1 is not in path, append it
+add_path_no_check () {
+    no_path $* && eval ${2:-PATH}="\$${2:-PATH}:$1"
+}
 # if $1 exists and is not in path, prepend it
 pre_path () {
     [ -d ${1:-.} ] && no_path $* && eval ${2:-PATH}="$1:\$${2:-PATH}"
@@ -24,6 +28,7 @@ for path in /usr/local/bin /usr/local/sbin $HOME/bin $HOME/bin/excluded $HOME/bi
 done
 
 add_path $HOME/bin/after
+add_path_no_check $HOME/bin/excluded/git-extras/bin
 
 export PATH
 
