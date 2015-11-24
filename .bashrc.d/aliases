@@ -39,6 +39,9 @@ alias vifr='vim -c ":CtrlPMRU"'
 # fixup ssh-agent so tmux in tmux works
 alias fixagent='[[ ! -e "$HOME/.ssh_auth_sock" ]] && rm -f $HOME/.ssh_auth_sock && ln -s $SSH_AUTH_SOCK $HOME/.ssh_auth_sock && export SSH_AUTH_SOCK=$HOME/.ssh_auth_sock'
 
+# tmux helper aliases
+alias tmux-pane="tmux list-panes | grep $TMUX_PANE | cut -d: -f1"
+
 # add PPID to ps
 alias psa='ps axwwfo user,pid,ppid,pcpu,pmem,vsz,rssize,tname,stat,start_time,bsdtime,command'
 
