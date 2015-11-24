@@ -22,6 +22,13 @@ else
     }
 fi 
 
+__prompt_extra ()
+{
+    if [[ -n $PROMPT_EXTRA ]]; then
+        printf "\033[01;36m[$PROMPT_EXTRA] ";
+    fi
+}
+
 __jobs ()
 {
     njobs=$(jobs | wc -l | awk '{ print $1 }')
@@ -42,7 +49,7 @@ __cmd_failed ()
 # set a fancy prompt (non-color, unless we can handle color)
 COLORS=$(tput colors 2> /dev/null)
 if [ $? = 0 ] && [ $COLORS -gt 2 ]; then
-    PS1='${debian_chroot:+($debian_chroot)}$(__jobs)\[\033[01;31m\]$(__git_ps1 "[%s] ")\[\033[01;32m\]$(__cmd_failed)\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\n\$ '
+    PS1='${debian_chroot:+($debian_chroot)}$(__prompt_extra )$(__jobs)\[\033[01;31m\]$(__git_ps1 "[%s] ")\[\033[01;32m\]$(__cmd_failed)\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\n\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}$(__git_ps1 "[%s] ")\u@\h:\w\n\$ '
 fi
