@@ -34,8 +34,10 @@ bind-key @ command-prompt -p "create pane from:"  "join-pane -s ':%%'"
 
 # remotecopy the most recent buffer
 bind-key y save-buffer ~/.tmux-buffer \; run-shell "remotecopy foo || true" \; command-prompt -p "secret:" "run-shell \"cat ~/.tmux-buffer | remotecopy -s %%\""
-bind-key ] select-layout even-horizontal \; resize-pane -t 1 -x 80
-bind-key [ select-layout even-vertical \; resize-pane -t 1 -y 13
+
+# better parent/children window layouts
+bind-key ] select-layout main-vertical \; resize-pane -t 1 -x 80 \; display-message "Children right."
+bind-key [ select-layout main-horizontal \; resize-pane -t 1 -y 13 \; display-message "Children bottom."
 
 # binding to clear activity alerts
 bind-key C run-shell tmux-clear-activity
