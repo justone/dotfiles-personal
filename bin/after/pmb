@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-my $version = '2015-11-06-0912-a9df510';
+my $version = '2015-12-02-2148-347ff4e';
 
 my $base_url = 'http://get.pmb.io';
 my $os       = $^O;
@@ -12,7 +12,10 @@ my $local    = "$ENV{HOME}/.pmb";
 
 my $os_bits_to_name = {
     darwin => { x86_64 => 'pmb_darwin_amd64', },
-    linux  => { x86_64 => 'pmb_linux_amd64', },
+    linux  => {
+        x86_64 => 'pmb_linux_amd64',
+        armv6l => 'pmb_linux_arm'
+    },
 };
 
 chomp($bits);
@@ -112,6 +115,6 @@ sub INFO {
 }
 
 __END__
-d34cb65d1203cfca7bdd69c3f5bdcd5d  pmb_darwin_amd64
-a5a4ccfd0d7603cc2551c951b22442e2  pmb_linux_amd64
-3c94e0e9ebab5233eadaeed24be6717a  pmb_linux_arm
+e3db026cba1da5518afd8ed591ba39d1  pmb_darwin_amd64
+f0f19cc94024973934bcd41f5110bcf6  pmb_linux_amd64
+f6298339369f485052a928c1fc99208a  pmb_linux_arm
