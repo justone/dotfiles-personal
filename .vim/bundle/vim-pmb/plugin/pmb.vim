@@ -11,6 +11,7 @@ set cpo&vim
 command -range=% RemoteCopy call remotecopy#docopy(0, <line1>, <line2>)
 command -range=% RemoteCopyVisual call remotecopy#docopy(1, '', '')
 command RemoteCopyRegister call remotecopy#copyreg()
+command RemoteCopyClear call remotecopy#clearkey()
 
 " probably a better way to do this
 noremap <leader>y :RemoteCopy<CR>
