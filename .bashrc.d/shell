@@ -38,3 +38,14 @@ function reconnect_ssh_agent() {
         fi
     fi
 }
+
+function sync_pmb_key() {
+    if [[ -n $TMUX ]]; then
+        NEW_PMB_KEY=`tmux showenv|grep ^PMB_KEY|cut -d = -f 2`
+        if [[ -n $NEW_SSH_AUTH_SOCK ]]; then
+            PMB_KEY=$NEW_PMB_KEY
+        else
+            PMB_KEY=$NEW_PMB_KEY
+        fi
+    fi
+}

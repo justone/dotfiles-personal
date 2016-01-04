@@ -100,6 +100,9 @@ else
     alias rcl="fc -l -n -1 -1 | sed -r 's/^\s+//' | rc"
 fi
 
+# setting PMB_KEY in tmux env
+alias ptk='tmux set-environment PMB_KEY $(PMB_KEY= pmb get-key)'
+
 # strip ansi color codes
 alias nocolor="perl -pe 's/\e\[?.*?[\@-~]//g'"
 

@@ -65,12 +65,12 @@ fi
 
 case $TERM in
     linux)
-        PROMPT_COMMAND='LAST_EXIT=$?; reconnect_ssh_agent;'$PROMPT_COMMAND
+        PROMPT_COMMAND='LAST_EXIT=$?; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
     xterm*)
-        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;${WIN_TITLE}\007"; else echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; fi; reconnect_ssh_agent;'$PROMPT_COMMAND
+        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;${WIN_TITLE}\007"; else echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; fi; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
     screen*)
-        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k${WIN_TITLE}\033\\"; else echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; fi; reconnect_ssh_agent;'$PROMPT_COMMAND
+        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k${WIN_TITLE}\033\\"; else echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; fi; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
 esac
