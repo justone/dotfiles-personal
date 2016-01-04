@@ -14,13 +14,13 @@
 if [ -e /usr/local/git/contrib/completion/git-completion.bash ]; then
     #echo "file exists"
     . /usr/local/git/contrib/completion/git-completion.bash
-else 
+else
     #echo "file does not exist"
     __git_ps1 ()
     {
         printf ""
     }
-fi 
+fi
 
 __prompt_extra ()
 {
