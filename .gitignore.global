@@ -6,4 +6,4 @@ Build
 _build
 blib
 tags
-Session.vim
+Session*.vim
