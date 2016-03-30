@@ -210,3 +210,7 @@
 	url = https://github.com/chase/vim-ansible-yaml.git
 	path = .vim/bundle/vim-ansible-yaml
 	branch = master
+[subtree ".vim/bundle/vim-rhubarb"]
+	url = https://github.com/tpope/vim-rhubarb.git
+	path = .vim/bundle/vim-rhubarb
+	branch = master
