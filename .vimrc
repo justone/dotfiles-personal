@@ -1,5 +1,8 @@
 set nocp
-set ai to shell=/bin/bash terse nowarn sm ruler redraw sw=4 ts=4
+set ai to shell=/bin/bash terse nowarn sm ruler sw=4 ts=4
+if !has('nvim')
+  set redraw
+endif
 "set noremap
 set hls
 set bs=2
