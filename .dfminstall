@@ -1,6 +1,7 @@
 README.md skip
 .mjolnir recurse
 .ssh recurse
+.config recurse
 .lein recurse
 .gittrees skip
 .nd skip
