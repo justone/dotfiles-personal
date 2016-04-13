@@ -1,0 +1,15 @@
+#!/bin/bash
+
+BIN=vim
+if type nvim &> /dev/null; then
+    BIN=nvim
+fi
+
+CMD=$(basename $0)
+if [[ $CMD == 'vi' ]] || [[ $CMD == 'vim' ]]; then
+    exec $BIN $*
+elif [[ $CMD == 'viff' ]]; then
+    exec $BIN -c ":CtrlP" $*
+elif [[ $CMD == 'vifl' ]]; then
+    exec $BIN -c ":CtrlPMRU" $*
+fi
