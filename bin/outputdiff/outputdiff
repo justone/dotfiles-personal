@@ -33,7 +33,8 @@ sub run_outputdiff {
         $argv,     \%options,     'help|?|h', 'man',
         'new|n:s', 'compare|c:s', 'last|l:s', 'output|o:s',
         'log:s',   'list',        'clean:s',  'verbose|v',
-        'skip=n',  'quiet|q',     'vimdiff',  'no-diff'
+        'skip=n',  'quiet|q',     'vimdiff',  'no-diff',
+        'undo|u:s'
     );
 
     pod2usage(2) if !$opts_ok;
@@ -98,6 +99,18 @@ sub run_outputdiff {
         }
 
         $exit_code = $output_has_changes ? 0 : 1;
+    }
+    elsif ( defined( $options{'undo'} ) ) {
+        my ( $repo_name, $full_repo_path )
+            = get_repo_name_and_path( $config, $options{'undo'} );
+
+        my $skip = $options{'skip'} || 1;
+
+        run_git(
+            { wd => $full_repo_path, expose => 1 },
+            qw(reset --hard),
+            "HEAD~${skip}"
+        );
     }
     elsif ( defined( $options{'last'} ) ) {
         my ( $repo_name, $full_repo_path )
@@ -1231,13 +1244,15 @@ outputdiff - Diff output from multiple command runs.
   -l --last <name>          Show most recent diff again.
      --log <name>           Show log of captured output.
      --clean <name>         Remove a comparison.  If no comparison specified, remove all.
+     --undo <name>          Undo comparison.  Use --skip to undo more than the
+                            default (1).
      --list                 List all comparisons.
      --output               Show the last output.  Specify previous output with --skip.
      --vimdiff              Use vimdiff to show differences.  Only works with
                             --last, not --compare.
      --no-diff              Don't show a diff.  Used with --compare to suppress output.
-     --skip <count>         Instead of showing the most recent one, skip this number.
-                            Applies to --output.
+     --skip <count>         Skip a number of commits other than the default.
+                            Applies to --output and --undo.
 
  Documentation options:
   -v --verbose              Print more details about what the script is doing.
