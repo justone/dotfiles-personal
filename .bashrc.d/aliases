@@ -103,6 +103,7 @@ alias nocolor="perl -pe 's/\e\[?.*?[\@-~]//g'"
 alias odn="outputdiff --new"
 alias odc="outputdiff --compare"
 alias odv="outputdiff --compare --no-diff && outputdiff --last --vimdiff"
+alias odu="outputdiff --undo"
 
 # deactivate local::lib
 alias deactivate_ll='eval $(perl -Mlocal::lib=--deactivate)'
