@@ -1,5 +1,4 @@
 #!/bin/bash
 
 # Remove all stopped containers
-
-docker ps -a | grep -v "Up " | awk 'NR>1 { print $1 }' | xargs -n1 docker rm
+docker ps --filter=status=exited -q | xargs -n1 docker rm
