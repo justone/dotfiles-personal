@@ -11,14 +11,19 @@ shopt -s checkwinsize
 # don't blindly execute history expansions, but edit instead
 shopt -s histverify
 
+# append to history file when exit
+shopt -s histappend
+
 # when tab completing, don't show dotfiles
 if [ -n "$PS1" ]; then
     bind 'set match-hidden-files off'
 fi
 
+export HISTCONTROL=ignoredups:erasedups
+
 # capture more history
-export HISTSIZE=5000
-export HISTFILESIZE=5000
+export HISTSIZE=25000
+export HISTFILESIZE=25000
 
 export EDITOR=vim
 
