@@ -29,8 +29,9 @@ let g:airline_powerline_fonts = 1
 " configure syntastic
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
+let g:syntastic_rst_checkers = ['sphinx']
 let g:syntastic_mode_map = { 'mode': 'active',
-            \ 'passive_filetypes': ['puppet'] }
+            \ 'passive_filetypes': ['puppet', 'rst'] }
 nmap <leader>st :SyntasticToggleMode<CR>
 
 let g:UltiSnipsExpandTrigger="<tab>"
