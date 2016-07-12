@@ -362,6 +362,10 @@ nnoremap <leader>l :SidewaysRight<cr>
 nmap <leader>vv :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/pandoc.css "%" \|bcat<cr><cr>
 nmap <leader>vp :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/buttondown.css "%" \|bcat<cr><cr>
 
+" vim-pandoc and vim-pandoc-syntax
+let g:pandoc#folding#fdc=0
+let g:pandoc#syntax#conceal#urls=1
+
 " clojure rainbow parens
 au BufEnter *.clj RainbowParenthesesActivate
 au BufEnter *.cljs RainbowParenthesesActivate
