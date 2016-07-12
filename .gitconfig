@@ -42,7 +42,7 @@
 [difftool]
 	prompt = false
 [push]
-	default = matching
+	default = simple
 [core]
 	excludesfile = ~/.gitignore.global
 [github]
