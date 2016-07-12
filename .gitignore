@@ -1,1 +1,4 @@
-doc/tags
+/doc/tags
+*.pyc
+*.swp
+/t/tmp/*
