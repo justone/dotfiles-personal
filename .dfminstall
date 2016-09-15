@@ -6,3 +6,5 @@ README.md skip
 .gittrees skip
 .nd skip
 css skip
+.set_git_push_config.sh exec
+.set_git_push_config.sh skip
