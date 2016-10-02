@@ -364,7 +364,7 @@ nmap <leader>vp :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalon
 
 " vim-pandoc and vim-pandoc-syntax
 let g:pandoc#folding#fdc=0
-let g:pandoc#syntax#conceal#urls=1
+" let g:pandoc#syntax#conceal#urls=1
 
 " clojure rainbow parens
 au BufEnter *.clj RainbowParenthesesActivate
