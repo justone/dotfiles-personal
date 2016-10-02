@@ -318,8 +318,8 @@ nnoremap <silent> <C-P> :tabprev<CR>
 
 " vimux config
 if strlen($TMUX)
-    let tmuxver = system("tmux -V")
-    if matchstr(tmuxver, '1.8') || matchstr(tmuxver, '1.9')
+    let tmuxver = str2float(matchstr(system("tmux -V"), '\d\d*\.\d\d*'))
+    if tmuxver >= 1.8
         function! InterruptRunnerAndRunLastCommand()
             :VimuxInterruptRunner
             :VimuxRunLastCommand
@@ -350,7 +350,7 @@ if strlen($TMUX)
         noremap <Leader>tc :VimuxInterruptRunner<CR>
         noremap <Leader>tz :VimuxZoomRunner<CR>
     else
-        noremap <Leader>tp :echo "Upgrade tmux to 1.8"<CR>
+        noremap <Leader>tp :echo "Upgrade tmux to at least 1.8"<CR>
     endif
 endif
 
