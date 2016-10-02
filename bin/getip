@@ -1,10 +1,25 @@
 #!/bin/bash
 
-IP=$(/sbin/ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | grep -v '^10.' | grep -v '^192.168.' | grep -v '^172.' | head -n 1)
-PIP=$(/sbin/ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | head -n 1)
-
-if [[ -n "$IP" ]]; then
-    echo $IP
+if [[ -x /sbin/ifconfig ]]; then
+    IP=$(/sbin/ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | grep -v '^10.' | grep -v '^192.168.' | grep -v '^172.' | head -n 1)
+    PIP=$(/sbin/ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}' | head -n 1)
+elif [[ -x /sbin/ip ]]; then
+    IP=$(/sbin/ip addr | grep inet | grep -v inet6 | grep -v '127.0.0.1' | awk '{ print $2 }' | cut -d/ -f1 | grep -v '^10.' | grep -v '^192.168.' | grep -v '^172.' | head -n 1)
+    PIP=$(/sbin/ip addr | grep inet | grep -v inet6 | grep -v '127.0.0.1' | awk '{ print $2 }' | cut -d/ -f1)
 else
+    IP="unable to fine IP"
+fi
+
+BASE=$(basename $0)
+
+if [[ $BASE = 'getpip' ]]; then
     echo $PIP
+elif [[ $BASE = 'getoip' ]]; then
+    curl -q ipinfo.io/ip
+else
+    if [[ -n "$IP" ]]; then
+        echo $IP
+    else
+        echo $PIP
+    fi
 fi
