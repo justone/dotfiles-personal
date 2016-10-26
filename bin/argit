@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for dir in $(find . -type d -execdir test -d {}/.git \; -print -prune); do
+  echo $dir
+  (cd $dir; exec git "$@")
+  echo
+done
