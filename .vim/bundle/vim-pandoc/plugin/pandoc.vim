@@ -62,7 +62,7 @@ if v:version < 704
     " only message the user if we have extended g:pandoc#modules#disabled
     " automatically
     if s:module_disabled == 1
-        echomsg "vim-pandoc: 'bibliographies' and 'command' modules require vim >= 7.4 and have been disabled."
+        " echomsg "vim-pandoc: 'bibliographies' and 'command' modules require vim >= 7.4 and have been disabled."
     endif
 endif
 "}}}
