@@ -118,10 +118,6 @@
 	url = https://github.com/tpope/vim-fireplace.git
 	path = .vim/bundle/vim-fireplace
 	branch = master
-[subtree ".vim/bundle/vim-golang"]
-	url = https://github.com/jnwhiteh/vim-golang.git
-	path = .vim/bundle/vim-golang
-	branch = master
 [subtree ".vim/bundle/vim-unstack"]
 	url = https://github.com/mattboehm/vim-unstack.git
 	path = .vim/bundle/vim-unstack
