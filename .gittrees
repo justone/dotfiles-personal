@@ -214,3 +214,7 @@
 	url = https://github.com/vim-pandoc/vim-pandoc-syntax.git
 	path = .vim/bundle/vim-pandoc-syntax
 	branch = master
+[subtree ".vim/bundle/vim-go"]
+	url = https://github.com/fatih/vim-go.git
+	path = .vim/bundle/vim-go
+	branch = master
