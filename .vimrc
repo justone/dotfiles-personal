@@ -155,10 +155,8 @@ filetype indent on
 " settings for go
 " fold go files with syntax
 au FileType go setlocal foldmethod=syntax
-au FileType go autocmd BufWritePre <buffer> Fmt
-if executable("goimports")
-    let g:gofmt_command = 'goimports'
-endif
+" use goimports for formatting
+let g:go_fmt_command = "goimports"
 
 map <F2> :map<CR>
 map <F7> :call ToggleSyntax()<CR>
