@@ -218,3 +218,7 @@
 	url = https://github.com/fatih/vim-go.git
 	path = .vim/bundle/vim-go
 	branch = master
+[subtree ".vim/bundle/vim-gitgutter"]
+	url = https://github.com/airblade/vim-gitgutter.git
+	path = .vim/bundle/vim-gitgutter
+	branch = master
