@@ -356,6 +356,17 @@ if strlen($TMUX)
     endif
 endif
 
+" vim-test config
+if has('nvim')
+  let test#strategy = "neovim"
+else
+  let test#strategy = "vimux"
+endif
+noremap <leader>tn :TestNearest<CR>
+noremap <leader>tf :TestFile<CR>
+noremap <leader>ta :TestSuite<CR>
+noremap <leader>tl :TestLast<CR>
+
 " sideways.vim
 nnoremap <leader>h :SidewaysLeft<cr>
 nnoremap <leader>l :SidewaysRight<cr>
