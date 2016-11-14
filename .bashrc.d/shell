@@ -52,5 +52,6 @@ function sync_pmb_key() {
         else
             PMB_KEY=$NEW_PMB_KEY
         fi
+        export PMB_KEY
     fi
 }
