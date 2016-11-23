@@ -1,0 +1,132 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use FindBin qw($RealScript $Script $RealBin);
+use File::Path qw(make_path);
+use File::Basename;
+
+my $version = 'v0.3.0-pre1';
+
+my $base_url = 'https://github.com/justone/holen/releases/download';
+my $os       = $^O;
+my $bits     = `uname -m`;
+
+my $local_dir = "$ENV{HOME}/.local/share/holen/bin";
+if(length($ENV{XDG_DATA_HOME})) {
+    $local_dir = "$ENV{XDG_DATA_HOME}/holen/bin";
+}
+make_path($local_dir);
+my $local = "$local_dir/holen";
+
+my $os_bits_to_name = {
+    darwin => { x86_64 => 'holen_darwin_amd64', },
+    linux  => {
+        x86_64 => 'holen_linux_amd64',
+        armv6l => 'holen_linux_arm'
+    },
+};
+
+chomp($bits);
+
+DEBUG("OS: $os\n");
+DEBUG("BITS: $bits\n");
+DEBUG("VERSION: $version\n");
+DEBUG("LOCAL: $local\n");
+
+my $binary = $os_bits_to_name->{$os}{$bits}
+    || die "Unknown os/bits combination $os/$bits\n";
+my $sum = get_sum($binary);
+
+if ( !-e $local || !check_sum( $local, $sum ) ) {
+    fetch( "${base_url}/${version}/$binary", $local );
+    chmod 0755, $local;
+}
+
+if ( !check_sum( $local, $sum ) ) {
+    die "Downloaded file doesn't match checksum.\n";
+}
+
+DEBUG("Running ${local}\n");
+$ENV{HLN_SELF_PATH_OVERRIDE} = "$RealBin/$RealScript";
+$ENV{HLN_UTILITY} = basename($Script);
+DEBUG("HLN_SELF_PATH_OVERRIDE=$ENV{HLN_SELF_PATH_OVERRIDE}\n");
+DEBUG("HLN_UTILITY=$ENV{HLN_UTILITY}\n");
+exec $local, @ARGV;
+
+sub fetch {
+    my ( $remote_path, $local_path ) = @_;
+
+    INFO("Downloading $remote_path...\n");
+    if ( bin_exists('wget') ) {
+        system("wget -q $remote_path -O $local_path");
+    }
+    elsif ( bin_exists('curl') ) {
+        system("curl -sL $remote_path > $local_path");
+    }
+    my $rc = $? >> 8;
+    DEBUG("RC: $rc\n");
+    if ( $rc > 0 ) {
+        unlink($local_path);
+        die "Unable to fetch $remote_path\n";
+    }
+}
+
+sub bin_exists {
+    my $prog = shift;
+
+    return scalar grep {defined}
+        map { -x $_ } map {"$_/$prog"} split( /:/, $ENV{PATH} );
+}
+
+sub get_sum {
+    my $binary_name = shift;
+
+    foreach my $sum_info (<DATA>) {
+        chomp($sum_info);
+        my ( $sum, $name ) = split( /\s+/, $sum_info );
+        if ( $name eq $binary_name ) {
+            return $sum;
+        }
+    }
+}
+
+sub check_sum {
+    my ( $local_path, $sum ) = @_;
+
+    my $file_sum;
+    if ( bin_exists('openssl') ) {
+        my $output = `openssl md5 $local_path`;
+        $file_sum = ( split( /\s+/, $output ) )[1];
+    }
+    elsif ( bin_exists('md5sum') ) {
+        my $output = `md5sum $local_path`;
+        ($file_sum) = split( /\s+/, $output );
+    }
+    elsif ( bin_exists('gmd5sum') ) {
+        my $output = `gmd5sum $local_path`;
+        ($file_sum) = split( /\s+/, $output );
+    }
+    else {
+        die "Unable to check file sum.";
+    }
+
+    DEBUG("downloaded: $file_sum\n");
+    DEBUG("checked: $sum\n");
+
+    return $file_sum eq $sum;
+}
+
+sub DEBUG {
+    if ( $ENV{HLN_BOOTSTRAP_DEBUG} ) {
+        print STDERR @_;
+    }
+}
+
+sub INFO {
+    print STDERR @_;
+}
+
+__END__
+4bc893f5f03389212372616f22f1ce68  holen_darwin_amd64
+50ccbbe9aeabb9ee363321ffb470953d  holen_linux_amd64
