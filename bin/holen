@@ -6,7 +6,7 @@ use FindBin qw($RealScript $Script $RealBin);
 use File::Path qw(make_path);
 use File::Basename;
 
-my $version = 'v0.3.0-pre2';
+my $version = 'v0.3.0-pre3';
 
 my $base_url = 'https://github.com/justone/holen/releases/download';
 my $os       = $^O;
@@ -128,5 +128,5 @@ sub INFO {
 }
 
 __END__
-102d8f450a1bd5eeb5370341cae389ba  holen_darwin_amd64
-83a9934488fff0a3f192edad5176b5c8  holen_linux_amd64
+da160ec2ab0cc5231792c735ced2c897  holen_darwin_amd64
+16185353aecdea32e2c09a113abb2858  holen_linux_amd64
