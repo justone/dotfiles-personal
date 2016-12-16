@@ -33,7 +33,7 @@ bind l select-pane -R
 bind-key @ command-prompt -p "create pane from:"  "join-pane -s ':%%'"
 
 # remotecopy the most recent buffer
-bind-key y save-buffer ~/.tmux-buffer \; run-shell "remotecopy foo || true" \; command-prompt -p "secret:" "run-shell \"cat ~/.tmux-buffer | remotecopy -s %%\""
+bind-key y save-buffer ~/.tmux-buffer \; run-shell "pmb copy-key" \; command-prompt -p "secret:" "run-shell \"cat ~/.tmux-buffer | PMB_KEY=%% pmb remotecopy\""
 
 # better parent/children window layouts
 bind-key ] select-layout main-vertical \; resize-pane -t 1 -x 80 \; display-message "Children right."
