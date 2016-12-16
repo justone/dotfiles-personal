@@ -19,7 +19,6 @@ OS=`uname -s`
 if [ "$OS" == "Darwin" ]
 then
     . $HOME/.bashrc.d/completion
-    . $HOME/.bashrc.d/keychain
 fi
 
 if [ "$OS" == "Linux" ]

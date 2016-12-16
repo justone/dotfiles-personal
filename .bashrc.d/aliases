@@ -57,10 +57,6 @@ alias t='./Build test --test-files '
 alias tv='./Build test --verbose 1 --test-files '
 alias tc='./Build testcover'
 
-# keychain
-alias kcf="keychain --inherit any --quiet"
-alias kcr=". ~/.keychain/\$HOSTNAME-sh"
-
 # cleaning up downloads folder
 alias clean_downloads="find ~/Downloads -mtime +30 -maxdepth 1 -print -exec rmtrash '{}' ';'"
 
