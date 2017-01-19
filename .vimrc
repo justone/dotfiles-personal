@@ -19,6 +19,10 @@ let maplocalleader = ","
 " map backslash to comma so reversing line search is fast
 nnoremap \ ,
 
+if filereadable(expand("~/.vimrc.local"))
+    source ~/.vimrc.local
+endif
+
 " for some reason this has to go in .vimrc
 let perl_fold = 1
 let perl_fold_anonymous_subs = 1
@@ -278,10 +282,6 @@ endif
 
 " allow writing files as root
 command! W silent w !sudo tee % > /dev/null
-
-if filereadable(expand("~/.vimrc.local"))
-    source ~/.vimrc.local
-endif
 
 " http://stackoverflow.com/questions/7400743/create-a-mapping-for-vims-command-line-that-escapes-the-contents-of-a-register-b
 cnoremap <c-x> <c-r>=<SID>PasteEscaped()<cr>
