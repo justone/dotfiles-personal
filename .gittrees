@@ -30,10 +30,6 @@
 	url = https://github.com/tyru/regbuf.vim.git
 	path = .vim/bundle/regbuf
 	branch = master
-[subtree ".vim/bundle/syntastic"]
-	url = https://github.com/scrooloose/syntastic.git
-	path = .vim/bundle/syntastic
-	branch = master
 [subtree ".vim/bundle/tabular"]
 	url = https://github.com/godlygeek/tabular.git
 	path = .vim/bundle/tabular
