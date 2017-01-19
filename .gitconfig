@@ -49,6 +49,8 @@
 	path = ~/.gitconfig.local
 [credential "https://github.com"]
 	username = justone
+[credential "https://bitbucket.org"]
+	username = newgnus
 [credential]
 	helper = cache --timeout=3600
 [log]
