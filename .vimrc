@@ -141,7 +141,8 @@ let g:pymode_rope_complete_on_dot = 0
 
 " enable pathogen
 filetype off
-call pathogen#runtime_append_all_bundles()
+" let g:pathogen_blacklist = ['tagbar']
+call pathogen#infect()
 call pathogen#helptags()
 
 set bg=dark
