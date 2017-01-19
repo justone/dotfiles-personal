@@ -11,6 +11,7 @@
 [alias]
 	a = add
 	br = branch
+	rbr = branch --sort=-committerdate
 	st = status
 	ss = status --short
 	ci = commit
@@ -55,3 +56,5 @@
 	helper = cache --timeout=3600
 [log]
 	date = iso8601
+[hub]
+	protocol = https
