@@ -4,7 +4,7 @@
 " Author:      Jan Larres <jan@majutsushi.net>
 " Licence:     Vim licence
 " Website:     http://majutsushi.github.com/tagbar/
-" Version:     2.6.1
+" Version:     2.7
 " Note:        This plugin was heavily inspired by the 'Taglist' plugin by
 "              Yegappan Lakshmanan and uses a small amount of code from it.
 "
@@ -1076,7 +1076,7 @@ function! s:CreateAutocommands() abort
         autocmd BufReadPost,BufEnter,CursorHold,FileType * call
                     \ s:AutoUpdate(fnamemodify(expand('<afile>'), ':p'), 0)
         autocmd BufDelete,BufWipeout *
-                    \ nested call s:HandleBufDelete(expand('<afile>'))
+                    \ nested call s:HandleBufDelete(expand('<afile>'), expand('<abuf>'))
 
         " Suspend Tagbar while grep commands are running, since we don't want
         " to process files that only get loaded temporarily to search them
@@ -1150,6 +1150,9 @@ function! s:CheckForExCtags(silent) abort
 
     let ctags_output = s:ExecuteCtags(ctags_cmd)
 
+    call s:debug("Command output:\n" . ctags_output)
+    call s:debug("Exit code: " . v:shell_error)
+
     if v:shell_error || ctags_output !~# '\(Exuberant\|Universal\) Ctags'
         let errmsg = 'Tagbar: Ctags doesn''t seem to be Exuberant Ctags!'
         let infomsg = 'BSD ctags will NOT WORK.' .
@@ -1182,13 +1185,6 @@ function! s:CtagsErrMsg(errmsg, infomsg, silent, ...) abort
     let exit_code_set = a:0 > 2
     if exit_code_set
         let exit_code = a:3
-    endif
-
-    if ctags_output != ''
-        call s:debug("Command output:\n" . ctags_output)
-    endif
-    if exit_code_set
-        call s:debug("Exit code: " . exit_code)
     endif
 
     if !a:silent
@@ -1259,7 +1255,7 @@ endfunction
 
 " s:GetSupportedFiletypes() {{{2
 function! s:GetSupportedFiletypes() abort
-    call s:debug('Getting filetypes sypported by Exuberant Ctags')
+    call s:debug('Getting filetypes supported by Exuberant Ctags')
 
     let ctags_cmd = s:EscapeCtagsCmd(g:tagbar_ctags_bin, '--list-languages')
     if ctags_cmd == ''
@@ -1277,7 +1273,9 @@ function! s:GetSupportedFiletypes() abort
     let types = split(ctags_output, '\n\+')
 
     for type in types
-        let s:ctags_types[tolower(type)] = 1
+        if match(type, '\[disabled\]') == -1
+            let s:ctags_types[tolower(type)] = 1
+        endif
     endfor
 
     let s:checked_ctags_types = 1
@@ -4163,7 +4161,13 @@ function! s:HandleOnlyWindow() abort
 endfunction
 
 " s:HandleBufDelete() {{{2
-function! s:HandleBufDelete(bufname) abort
+function! s:HandleBufDelete(bufname, bufnr) abort
+    " Ignore autocmd events generated for "set nobuflisted",
+    let nr = str2nr(a:bufnr)
+    if bufexists(nr) && !buflisted(nr)
+        return
+    endif
+
     let tagbarwinnr = bufwinnr(s:TagbarBufName())
     if tagbarwinnr == -1 || a:bufname =~ '__Tagbar__.*'
         return
@@ -4191,11 +4195,15 @@ function! s:HandleBufDelete(bufname) abort
                     enew
                 endif
             else
+                " Save a local copy as the global value will change
+                " during buffer switching
+                let last_alt_bufnr = s:last_alt_bufnr
+
                 " Ignore the buffer we're switching to for now, it will get
                 " processed due to the OpenWindow() call anyway
-                call setbufvar(s:last_alt_bufnr, 'tagbar_ignore', 1)
-                execute 'keepalt buffer' s:last_alt_bufnr
-                call setbufvar(s:last_alt_bufnr, 'tagbar_ignore', 0)
+                call setbufvar(last_alt_bufnr, 'tagbar_ignore', 1)
+                execute 'keepalt buffer' last_alt_bufnr
+                call setbufvar(last_alt_bufnr, 'tagbar_ignore', 0)
             endif
 
             " Reset Tagbar window-local options
