@@ -234,3 +234,7 @@
 	url = https://github.com/fxn/vim-monochrome.git
 	path = .vim/bundle/vim-monochrome
 	branch = master
+[subtree ".vim/bundle/syntastic"]
+	url = https://github.com/vim-syntastic/syntastic.git
+	path = .vim/bundle/syntastic
+	branch = master
