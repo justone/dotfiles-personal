@@ -6,7 +6,7 @@ use FindBin qw($RealScript $Script $RealBin);
 use File::Path qw(make_path);
 use File::Basename;
 
-my $version = 'v0.3.0-pre5';
+my $version = 'v0.3.0-pre7';
 
 my $base_url = 'https://github.com/holen-app/holen/releases/download';
 my $os       = $^O;
@@ -128,5 +128,7 @@ sub INFO {
 }
 
 __END__
-04b0659bb4f4b0b5a08f18d6d9cd3fc1  holen_darwin_amd64
-7a3b15e23756d0a70681b592d20c55ed  holen_linux_amd64
+ac63cca593a32dd79dbf61091d089129  holen_darwin_amd64
+4b07a99b64ce5eeb2a5bc3a7b99f2e6e  holen_linux_amd64
+f9a9b130b0bd48eca3f1979f13aef0af  holen_linux_arm
+b32ea9a15dce96e9ed5ded79e70beb90  holen_windows_amd64.exe
