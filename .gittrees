@@ -238,3 +238,7 @@
 	url = https://github.com/vim-syntastic/syntastic.git
 	path = .vim/bundle/syntastic
 	branch = master
+[subtree ".vim/bundle/gv.vim"]
+	url = https://github.com/junegunn/gv.vim.git
+	path = .vim/bundle/gv.vim
+	branch = master
