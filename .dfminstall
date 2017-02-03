@@ -3,6 +3,7 @@ README.md skip
 .ssh recurse
 .config recurse
 .lein recurse
+.local recurse
 .gittrees skip
 .nd skip
 css skip
