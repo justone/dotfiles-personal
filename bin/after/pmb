@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-my $version = '2017-01-22-0801-4abebbd';
+my $version = '2017-02-15-1850-4e77d66';
 
 my $base_url = 'http://get.pmb.io';
 my $os       = $^O;
@@ -115,7 +115,7 @@ sub INFO {
 }
 
 __END__
-a9e34fb9a1b4414e7cbf02448eed9f74  pmb_darwin_amd64
-68aca41fb246adda7d1796b1dc196780  pmb_linux_amd64
-304f24bcbb56303f52cce55f199c69e4  pmb_linux_arm
-f508f3d4ced36147f731d6834d381595  pmb_windows_amd64.exe
+35f5f2269fa8d285f06eff42e81ac109  pmb_darwin_amd64
+049d5a954428fc3b42621a7d1d452982  pmb_linux_amd64
+f9f6e41b243a83756ae152cb2e3d7fe5  pmb_linux_arm
+1090fda45e63a3f6cbb94563f8b62dad  pmb_windows_amd64.exe
