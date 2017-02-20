@@ -28,10 +28,41 @@ describe 'themes'
 
   it 'should pass args through correctly'
     let hl = airline#themes#get_highlight('Foo', 'bold', 'italic')
-    Expect hl == ['', '', 0, 1, 'bold,italic']
+    Expect hl == ['', '', 'NONE', 'NONE', 'bold,italic']
 
     let hl = airline#themes#get_highlight2(['Foo','bg'], ['Foo','fg'], 'italic', 'bold')
-    Expect hl == ['', '', 1, 0, 'italic,bold']
+    Expect hl == ['', '', 'NONE', 'NONE', 'italic,bold']
+  end
+
+  it 'should generate color map with mirroring'
+    let map = airline#themes#generate_color_map(
+          \ [ 1, 1, 1, 1, '1' ],
+          \ [ 2, 2, 2, 2, '2' ],
+          \ [ 3, 3, 3, 3, '3' ],
+          \ )
+    Expect map.airline_a[0] == 1
+    Expect map.airline_b[0] == 2
+    Expect map.airline_c[0] == 3
+    Expect map.airline_x[0] == 3
+    Expect map.airline_y[0] == 2
+    Expect map.airline_z[0] == 1
+  end
+
+  it 'should generate color map with full set of colors'
+    let map = airline#themes#generate_color_map(
+          \ [ 1, 1, 1, 1, '1' ],
+          \ [ 2, 2, 2, 2, '2' ],
+          \ [ 3, 3, 3, 3, '3' ],
+          \ [ 4, 4, 4, 4, '4' ],
+          \ [ 5, 5, 5, 5, '5' ],
+          \ [ 6, 6, 6, 6, '6' ],
+          \ )
+    Expect map.airline_a[0] == 1
+    Expect map.airline_b[0] == 2
+    Expect map.airline_c[0] == 3
+    Expect map.airline_x[0] == 4
+    Expect map.airline_y[0] == 5
+    Expect map.airline_z[0] == 6
   end
 end
 
