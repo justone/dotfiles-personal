@@ -99,7 +99,7 @@
 	path = .vim/bundle/vim-pandoc
 	branch = master
 [subtree ".vim/bundle/ctrlp.vim"]
-	url = https://github.com/kien/ctrlp.vim.git
+	url = https://github.com/ctrlpvim/ctrlp.vim.git
 	path = .vim/bundle/ctrlp.vim
 	branch = master
 [subtree ".vim/bundle/vim-airline"]
