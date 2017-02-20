@@ -103,7 +103,7 @@
 	path = .vim/bundle/ctrlp.vim
 	branch = master
 [subtree ".vim/bundle/vim-airline"]
-	url = https://github.com/bling/vim-airline.git
+	url = https://github.com/vim-airline/vim-airline.git
 	path = .vim/bundle/vim-airline
 	branch = master
 [subtree ".vim/bundle/vim-clojure-static"]
