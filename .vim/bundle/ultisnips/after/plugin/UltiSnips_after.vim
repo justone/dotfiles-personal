@@ -1,14 +1,8 @@
-" File: UltiSnips_after.vim
-" Author: Holger Rapp <SirVer@gmx.de>
-" Description: Called after everything else to reclaim keys (Needed for
-"              Supertab)
-" Last Modified: July 27, 2009
+" Called after everything else to reclaim keys (Needed for Supertab)
 
-if exists('did_UltiSnips_vim_after') || &cp || version < 700 || !exists("did_UltiSnips_vim") || !has("python")
-	finish
+if exists("b:did_after_plugin_ultisnips_after") || !exists("g:_uspy")
+   finish
 endif
+let b:did_after_plugin_ultisnips_after = 1
 
-call UltiSnips_MapKeys()
-
-let did_UltiSnips_vim_after=1
-
+call UltiSnips#map_keys#MapKeys()
