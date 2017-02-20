@@ -250,3 +250,7 @@
 	url = https://github.com/ryanoasis/vim-devicons.git
 	path = .vim/bundle/vim-devicons
 	branch = master
+[subtree ".vim/bundle/vim-snippets"]
+	url = https://github.com/honza/vim-snippets.git
+	path = .vim/bundle/vim-snippets
+	branch = master
