@@ -1,5 +1,7 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2016 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
+
+scriptencoding utf-8
 
 if !exists('*bufferline#get_status_string')
   finish
@@ -15,7 +17,7 @@ function! airline#extensions#bufferline#init(ext)
     let g:bufferline_active_highlight = 'bufferline_selected'
     let g:bufferline_active_buffer_left = ''
     let g:bufferline_active_buffer_right = ''
-    let g:bufferline_separator = ' '
+    let g:bufferline_separator = g:airline_symbols.space
   endif
 
   call airline#parts#define_raw('file', '%{bufferline#refresh_status()}'.bufferline#get_status_string())

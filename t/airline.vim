@@ -1,7 +1,7 @@
 let g:airline_theme = 'dark'
-call airline#init#bootstrap()
-call airline#init#sections()
+
 source plugin/airline.vim
+doautocmd VimEnter
 
 function! MyFuncref(...)
   call a:1.add_raw('hello world')
@@ -49,7 +49,7 @@ describe 'airline'
   it 'should allow users to redefine sections'
     let g:airline_section_a = airline#section#create(['mode', 'mode'])
     call airline#update_statusline()
-    Expect airline#statusline(1) =~ '%{airline#util#wrap(airline#parts#mode(),0)}%{airline#util#wrap(airline#parts#mode(),0)}'
+    Expect airline#statusline(1) =~ '%{airline#util#wrap(airline#parts#mode(),0)}%#airline_a#%#airline_a_bold#%{airline#util#wrap(airline#parts#mode(),0)}%#airline_a#'
   end
 
   it 'should remove funcrefs properly'

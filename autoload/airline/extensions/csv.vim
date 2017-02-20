@@ -1,7 +1,9 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2016 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
 
-if !get(g:, 'loaded_csv', 0)
+scriptencoding utf-8
+
+if !get(g:, 'loaded_csv', 0) && !exists(':Table')
   finish
 endif
 

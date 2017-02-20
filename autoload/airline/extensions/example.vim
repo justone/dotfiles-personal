@@ -1,8 +1,14 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2016 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
+
+scriptencoding utf-8
 
 " we don't actually want this loaded :P
 finish
+
+" Due to some potential rendering issues, the use of the `space` variable is
+" recommended.
+let s:spc = g:airline_symbols.space
 
 " Extension specific variables can be defined the usual fashion.
 if !exists('g:airline#extensions#example#number_of_cats')
@@ -35,7 +41,7 @@ function! airline#extensions#example#apply(...)
     let w:airline_section_c = get(w:, 'airline_section_c', g:airline_section_c)
 
     " Then we just append this extenion to it, optionally using separators.
-    let w:airline_section_c .= ' '.g:airline_left_alt_sep.' %{airline#extensions#example#get_cats()}'
+    let w:airline_section_c .= s:spc.g:airline_left_alt_sep.s:spc.'%{airline#extensions#example#get_cats()}'
   endif
 endfunction
 

@@ -1,9 +1,11 @@
-" MIT License. Copyright (c) 2013 Bailey Ling.
+" MIT License. Copyright (c) 2013-2016 Bailey Ling.
 " vim: et ts=2 sts=2 sw=2
+
+scriptencoding utf-8
 
 let g:airline_statusline_funcrefs = get(g:, 'airline_statusline_funcrefs', [])
 
-let s:sections = ['a','b','c','gutter','x','y','z','warning']
+let s:sections = ['a','b','c','gutter','x','y','z', 'error', 'warning']
 let s:inactive_funcrefs = []
 
 function! airline#add_statusline_func(name)
@@ -11,6 +13,12 @@ function! airline#add_statusline_func(name)
 endfunction
 
 function! airline#add_statusline_funcref(function)
+  if index(g:airline_statusline_funcrefs, a:function) >= 0
+    echohl WarningMsg
+    echo 'The airline statusline funcref '.string(a:function).' has already been added.'
+    echohl NONE
+    return
+  endif
   call add(g:airline_statusline_funcrefs, a:function)
 endfunction
 
@@ -26,13 +34,11 @@ function! airline#add_inactive_statusline_func(name)
 endfunction
 
 function! airline#load_theme()
-  call airline#highlighter#load_theme()
-  call airline#extensions#load_theme()
-endfunction
+  if exists('*airline#themes#{g:airline_theme}#refresh')
+    call airline#themes#{g:airline_theme}#refresh()
+  endif
 
-function! airline#switch_theme(name)
-  let g:airline_theme = a:name
-  let palette = g:airline#themes#{g:airline_theme}#palette "also lazy loads the theme
+  let palette = g:airline#themes#{g:airline_theme}#palette
   call airline#themes#patch(palette)
 
   if exists('g:airline_theme_patch_func')
@@ -40,21 +46,50 @@ function! airline#switch_theme(name)
     call Fn(palette)
   endif
 
-  let w:airline_lastmode = ''
+  call airline#highlighter#load_theme()
+  call airline#extensions#load_theme()
   call airline#update_statusline()
+endfunction
+
+function! airline#switch_theme(name)
+  try
+    let palette = g:airline#themes#{a:name}#palette "also lazy loads the theme
+    let g:airline_theme = a:name
+  catch
+    echohl WarningMsg | echo 'The specified theme cannot be found.' | echohl NONE
+    if exists('g:airline_theme')
+      return
+    else
+      let g:airline_theme = 'dark'
+    endif
+  endtry
+
+  let w:airline_lastmode = ''
   call airline#load_theme()
+
+  silent doautocmd User AirlineAfterTheme
+
+  " this is required to prevent clobbering the startup info message, i don't know why...
+  call airline#check_mode(winnr())
 endfunction
 
 function! airline#switch_matching_theme()
   if exists('g:colors_name')
+    let existing = g:airline_theme
+    let theme = substitute(g:colors_name, '-', '_', 'g')
     try
-      let palette = g:airline#themes#{g:colors_name}#palette
-      call airline#switch_theme(g:colors_name)
+      let palette = g:airline#themes#{theme}#palette
+      call airline#switch_theme(theme)
       return 1
     catch
       for map in items(g:airline_theme_map)
         if match(g:colors_name, map[0]) > -1
-          call airline#switch_theme(map[1])
+          try
+            let palette = g:airline#themes#{map[1]}#palette
+            call airline#switch_theme(map[1])
+          catch
+            call airline#switch_theme(existing)
+          endtry
           return 1
         endif
       endfor
@@ -64,17 +99,20 @@ function! airline#switch_matching_theme()
 endfunction
 
 function! airline#update_statusline()
+  if airline#util#getwinvar(winnr(), 'airline_disabled', 0)
+    return
+  endif
   for nr in filter(range(1, winnr('$')), 'v:val != winnr()')
+    if airline#util#getwinvar(nr, 'airline_disabled', 0)
+      continue
+    endif
     call setwinvar(nr, 'airline_active', 0)
     let context = { 'winnr': nr, 'active': 0, 'bufnr': winbufnr(nr) }
     call s:invoke_funcrefs(context, s:inactive_funcrefs)
   endfor
 
-  unlet! w:airline_render_left
-  unlet! w:airline_render_right
-  for section in s:sections
-    unlet! w:airline_section_{section}
-  endfor
+  unlet! w:airline_render_left w:airline_render_right
+  exe 'unlet! ' 'w:airline_section_'. join(s:sections, ' w:airline_section_')
 
   let w:airline_active = 1
   let context = { 'winnr': winnr(), 'active': 1, 'bufnr': winbufnr(winnr()) }
@@ -96,7 +134,12 @@ function! s:invoke_funcrefs(context, funcrefs)
 endfunction
 
 function! airline#statusline(winnr)
-  return '%{airline#check_mode('.a:winnr.')}'.s:contexts[a:winnr].line
+  if has_key(s:contexts, a:winnr)
+    return '%{airline#check_mode('.a:winnr.')}'.s:contexts[a:winnr].line
+  endif
+
+  " in rare circumstances this happens...see #276
+  return ''
 endfunction
 
 function! airline#check_mode(winnr)
@@ -110,6 +153,8 @@ function! airline#check_mode(winnr)
       let l:mode = ['replace']
     elseif l:m =~# '\v(v|V||s|S|)'
       let l:mode = ['visual']
+    elseif l:m ==# "t"
+      let l:mode = ['terminal']
     else
       let l:mode = ['normal']
     endif
@@ -119,23 +164,32 @@ function! airline#check_mode(winnr)
     let w:airline_current_mode = get(g:airline_mode_map, '__')
   endif
 
-  if g:airline_detect_modified
-    if &modified
-      call add(l:mode, 'modified')
-    endif
+  if g:airline_detect_modified && &modified
+    call add(l:mode, 'modified')
   endif
 
   if g:airline_detect_paste && &paste
     call add(l:mode, 'paste')
   endif
 
+  if g:airline_detect_crypt && exists("+key") && !empty(&key)
+    call add(l:mode, 'crypt')
+  endif
+
+  if g:airline_detect_spell && &spell
+    call add(l:mode, 'spell')
+  endif
+
+  if &readonly || ! &modifiable
+    call add(l:mode, 'readonly')
+  endif
+
   let mode_string = join(l:mode)
   if get(w:, 'airline_lastmode', '') != mode_string
     call airline#highlighter#highlight_modified_inactive(context.bufnr)
-    call airline#highlighter#highlight(l:mode)
+    call airline#highlighter#highlight(l:mode, context.bufnr)
     let w:airline_lastmode = mode_string
   endif
 
   return ''
 endfunction
-
