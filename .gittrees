@@ -242,3 +242,7 @@
 	url = https://github.com/junegunn/gv.vim.git
 	path = .vim/bundle/gv.vim
 	branch = master
+[subtree ".vim/bundle/nerdtree"]
+	url = https://github.com/scrooloose/nerdtree.git
+	path = .vim/bundle/nerdtree
+	branch = master
