@@ -1,0 +1,15 @@
+#!/usr/bin/env holen
+---
+desc: AWS Pricing Lookup Helper
+strategies:
+    binary:
+        base_url: http://dl.endot.org/awsprice/awsprice_{{.OSArch}}_{{.Version}}
+        versions:
+          - version: '0.0.0.1'
+            os_arch:
+                linux_arm:
+                    sha256sum: e5b1790bcc442e9af25330f78bc9850e93558b23a3e573ad784dbdbf62dfad56
+                linux_amd64:
+                    sha256sum: c3f438ad78373f857783bfc3d7450afc7041e2695df2de61becd193340a76514
+                darwin_amd64:
+                    sha256sum: f031f28f7732d00358634c86bed61c2c95a7933d96a8b51e9e80c05c0f9a93aa
