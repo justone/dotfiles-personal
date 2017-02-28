@@ -1,0 +1,41 @@
+#!/bin/bash
+
+## Manage a jupyter notebook container automatically.
+##    start (or by default if no arg is given)
+##      Checks to see if the container is started
+##      If so, leaves it running, else, starts it
+##      Prints the ssh command to connect to it
+##
+##    clean
+#       Finds the container, stops, removes it
+
+
+WORKDIR=$HOME/work/notebooks
+CONTAINERNAME="${USER}_notebook"
+
+clean() {
+   echo "Cleaning up container"
+   docker stop $CONTAINERNAME
+   docker rm $CONTAINERNAME
+}
+
+launch() {
+    RUNNING=$(docker inspect --format="{{ .State.Running }}" $CONTAINERNAME 2> /dev/null)
+    if [ "$RUNNING" != "true" ];then
+	    echo "Container not running, starting up"
+	    mkdir -p $WORKDIR
+	    sudo chgrp 100 $WORKDIR
+	    docker run -d -v $WORKDIR:/home/jovyan/work --name $CONTAINERNAME jupyter/datascience-notebook start-notebook.sh
+    else
+	    echo "Container already running"
+    fi
+    IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' $CONTAINERNAME)
+    echo "Open up http://${IP}:8888/"
+    echo -e "When you're done, save system resources by running\n\t$0 clean"
+}
+
+if [ "$1" == "clean" ]; then
+    clean
+else
+    launch
+fi
