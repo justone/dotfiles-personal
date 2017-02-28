@@ -1,0 +1,11 @@
+#!/usr/bin/env holen
+---
+desc: Literate time logs
+strategies:
+    docker:
+        image: neumann/treadmill:{{.Version}}
+        pwd_workdir: true
+        mount_pwd: true
+        versions:
+          - version: 'latest'
+...
