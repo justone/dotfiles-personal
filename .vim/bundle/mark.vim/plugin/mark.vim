@@ -374,12 +374,6 @@ endif
 if !hasmapto('<Plug>MarkSearchAnyPrev', 'n')
 	nmap <unique> <Leader>? <Plug>MarkSearchAnyPrev
 endif
-if !hasmapto('<Plug>MarkSearchNext', 'n')
-	nmap <unique> * <Plug>MarkSearchNext
-endif
-if !hasmapto('<Plug>MarkSearchPrev', 'n')
-	nmap <unique> # <Plug>MarkSearchPrev
-endif
 " No default mapping for <Plug>MarkSearchOrCurNext
 " No default mapping for <Plug>MarkSearchOrCurPrev
 " No default mapping for <Plug>MarkSearchOrAnyNext
