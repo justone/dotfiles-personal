@@ -1,3 +1,4 @@
 [link]
-    bin_path = ~/bin/holens
+    bin_path    = ~/bin/holens
+    only_latest = true
 
