@@ -374,7 +374,9 @@ nnoremap <leader>l :SidewaysRight<cr>
 
 " pandoc
 nmap <leader>vv :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/pandoc.css "%" \|bcat<cr><cr>
+nmap <leader>vtv :!pandoc -t html -T 'Pandoc Generated - "%"' --toc --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/pandoc.css "%" \|bcat<cr><cr>
 nmap <leader>vp :!pandoc -t html -T 'Pandoc Generated - "%"' --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/buttondown.css "%" \|bcat<cr><cr>
+nmap <leader>vtp :!pandoc -t html -T 'Pandoc Generated - "%"' --toc --smart --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/buttondown.css "%" \|bcat<cr><cr>
 
 " vim-pandoc and vim-pandoc-syntax
 let g:pandoc#folding#fdc=0
