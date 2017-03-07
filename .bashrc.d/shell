@@ -55,3 +55,8 @@ function sync_pmb_key() {
         export PMB_KEY
     fi
 }
+
+if [ "$OS" == "Linux" ]
+then
+    export BROWSER='pmb openurl'
+fi
