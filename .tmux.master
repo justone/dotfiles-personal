@@ -29,4 +29,4 @@ bind-key -n M-C-n select-pane -t :.-
 bind-key -n M-C-p select-pane -t :.+
 
 # include date/time at master level
-set -g status-right '#[fg=green]] [#[fg=blue]%Y-%m-%d #[fg=white]#(date +"%l:%M %p")#[default]#[fg=green]]'
+set -g status-right '#[fg=green]] [#[fg=yellow]%Y-%m-%d #[fg=white]#(date +"%l:%M %p")#[default]#[fg=green]]'
