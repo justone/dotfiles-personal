@@ -6,14 +6,14 @@ use FindBin qw($RealScript $Script $RealBin);
 use File::Path qw(make_path);
 use File::Basename;
 
-my $version = 'v0.3.0-pre11';
+my $version = 'v0.3.0-pre12';
 
 my $base_url = 'https://github.com/holen-app/holen/releases/download';
 my $os       = $^O;
 my $bits     = `uname -m`;
 
 my $local_dir = "$ENV{HOME}/.local/share/holen/bin";
-if(length($ENV{XDG_DATA_HOME})) {
+if(exists($ENV{XDG_DATA_HOME}) && length($ENV{XDG_DATA_HOME})) {
     $local_dir = "$ENV{XDG_DATA_HOME}/holen/bin";
 }
 make_path($local_dir);
@@ -128,7 +128,7 @@ sub INFO {
 }
 
 __END__
-0b7a5198e3436f7bb90a4ddea1ff0826  holen_darwin_amd64
-c188a9184918d8595b1cb690b48d4c03  holen_linux_amd64
-f1ecb5da90cd50aef5b8cd891ab76856  holen_linux_arm
-e1c8b64d31494d1e54cb993179c89b23  holen_windows_amd64.exe
+cf276a98518012624191b6a6d70a29be  holen_darwin_amd64
+2065c22b8d336b8b6c9f961076adcfda  holen_linux_amd64
+625d04ae45e9f1534969b41a10b52784  holen_linux_arm
+6806b25c4295fa3eee023f8880158fce  holen_windows_amd64.exe
