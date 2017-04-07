@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+
+# script to test jinja2 templates, takes a json doc as first argument and the
+# template file as second
+
+import json
+from jinja2 import Environment, FileSystemLoader
+import sys
+
+data = sys.argv[1]
+template = sys.argv[2]
+
+env = Environment(loader=FileSystemLoader(searchpath="."))
+
+with open(data) as f:
+    json_data = json.load(f)
+
+template = env.get_template(template)
+
+print template.render(json_data)
