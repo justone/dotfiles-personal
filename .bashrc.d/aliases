@@ -60,9 +60,6 @@ alias tc='./Build testcover'
 # cleaning up downloads folder
 alias clean_downloads="find ~/Downloads -mtime +30 -maxdepth 1 -print -exec rmtrash '{}' ';'"
 
-# one line webserver
-alias olw="python -m SimpleHTTPServer"
-
 # make it easy to strace quickly
 alias ss="sudo strace -s 1024 -p "
 

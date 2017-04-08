@@ -1,0 +1,20 @@
+#!/usr/bin/env holen
+---
+desc: Simple webserver for the current directory
+strategies:
+    binary:
+        base_url: https://github.com/justone/olw/releases/download/v{{.Version}}/olw_{{.OSArch}}{{.OSArchData.fileext}}
+        os_arch:
+            windows_amd64:
+                fileext: .exe
+        versions:
+          - version: '0.0.3'
+            os_arch:
+                linux_arm:
+                    sha256sum: f5b863022039dba3271741312d1532f6dc535d29818f015556a3b0b1c1078b95
+                linux_amd64:
+                    sha256sum: f227cae52bf2117a42655c134fdff06a553ed3b373b94326b052abc94ccf5704
+                darwin_amd64:
+                    sha256sum: 68efff44277f8e51c142b7c983c95c2ad46a1aef4f205967aa70088bfaa46773
+                windows_amd64:
+                    sha256sum: ae731726c6b340391a5e683171318b3e5c218877064d0610501d3a5e1405b54b
