@@ -1,8 +1,2 @@
-#!/bin/bash
-
-if [[ ! -e ~/bin/excluded/jq ]]; then
-    wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -q -O ~/bin/excluded/jq
-    chmod +x ~/bin/excluded/jq
-fi
-
-exec "~/bin/excluded/jq" "$@"
+#!/bin/sh
+exec holen run jq -- "$@"
