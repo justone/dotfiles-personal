@@ -1,3 +1,10 @@
-#!/bin/bash
-
-docker run --rm -v `pwd`:/o nate/octodock $*
+#!/usr/bin/env holen
+---
+desc: Build my blog
+strategies:
+    docker:
+        image: nate/octodock:{{.Version}}
+        mount_pwd_as: /o
+        versions:
+          - version: 'latest'
+...
