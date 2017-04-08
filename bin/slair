@@ -1,0 +1,20 @@
+#!/usr/bin/env holen
+---
+desc: Slack profile editing, with flair
+strategies:
+    binary:
+        base_url: https://github.com/justone/slair/releases/download/v{{.Version}}/slair_{{.OSArch}}{{.OSArchData.fileext}}
+        os_arch:
+            windows_amd64:
+                fileext: .exe
+        versions:
+          - version: '0.1'
+            os_arch:
+                linux_arm:
+                    sha256sum: c40657fdc1e0ab4cba075e72a7759e3416f699587e567455b444fe8a5a85c0cd
+                linux_amd64:
+                    sha256sum: bf49ead0bdfae2e82e993cbfa572e3f2c3b52290e42cbc310691cfebade24475
+                darwin_amd64:
+                    sha256sum: 01821c0fb44712724da2ea752beebc9666ef92fdc4f75281eed16b601c33ebd0
+                windows_amd64:
+                    sha256sum: e6de854f9d824fdfdd3184de277f08bd931e466b29d6b1bcbc0b8ac88bfadf55
