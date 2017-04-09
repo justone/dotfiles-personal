@@ -1,5 +1,5 @@
 [General]
-  snippetfile = "/home/nate/.config/pet/snippet.toml"
+  snippetfile = "$HOME/.config/pet/snippet.toml"
   editor = "vim"
   column = 40
   selectcmd = "fzf -1 --ansi"
