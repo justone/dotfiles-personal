@@ -358,11 +358,13 @@ if strlen($TMUX)
 endif
 
 " vim-test config
-if has('nvim')
-  let test#strategy = "neovim"
-else
+" vimux config
+if strlen($TMUX)
   let test#strategy = "vimux"
+elseif has('nvim')
+  let test#strategy = "neovim"
 endif
+let g:test#python#pytest#options = '--verbose'
 noremap <leader>tn :TestNearest<CR>
 noremap <leader>tf :TestFile<CR>
 noremap <leader>ta :TestSuite<CR>
