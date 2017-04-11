@@ -1,6 +1,6 @@
 [[snippets]]
   description = "Check HTTPS certificate expiration"
-  command = "echo | openssl s_client -connect <domain>:443 2>/dev/null |openssl x509 -dates -noout"
+  command = "echo | openssl s_client -connect <domain>:<port=443> 2>/dev/null |openssl x509 -dates -noout"
   output = ""
 
 [[snippets]]
