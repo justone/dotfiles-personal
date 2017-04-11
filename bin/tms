@@ -1,3 +1,4 @@
 #!/bin/bash
 
-tmux switch-client -t $(tmux list-sessions -F "#{session_name}" | fzf -1 -q "$1")
+session=$(tmux list-sessions -F "#{session_name}" | fzf -1 -q "$1") || exit
+tmux switch-client -t $session
