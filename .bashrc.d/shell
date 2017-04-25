@@ -60,3 +60,22 @@ if [ "$OS" == "Linux" ]
 then
     export BROWSER='pmb openurl'
 fi
+
+# check if fzf is installed
+function guard_fzf()
+{
+    if type fzf &> /dev/null; then
+        return 0
+    fi
+
+    echo "No 'fzf' found"
+    return 1
+}
+
+# quick switcher for git worktrees
+function wts()
+{
+    guard_fzf || return 1
+    dir=$(git worktree list | awk '{ print $1 }' | fzf -1 -q "$1") &&
+    cd "$dir"
+}
