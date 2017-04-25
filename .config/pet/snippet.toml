@@ -7,3 +7,13 @@
   description = "Download and bootstrap dotfiles"
   command = "eval $(curl d.ndj.la | bash)"
   output = ""
+
+[[snippets]]
+  description = "AWS KMS Decrypt CLI"
+  command = "aws kms decrypt --region <region=us-west-2> --ciphertext-blob fileb://<file=encrypted> --query Plaintext --output text | base64 --decode"
+  output = ""
+
+[[snippets]]
+  description = "AWS KMS Encrypt CLI"
+  command = "aws kms encrypt --region <region=us-west-2> --key-id <keyid=alias/Key> --plaintext <plaintext=datatoencrypt> --query CiphertextBlob --output text | base64 --decode > <file=encrypted>"
+  output = ""
