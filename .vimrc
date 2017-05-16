@@ -386,6 +386,7 @@ let g:pandoc#folding#fdc=0
 " clojure rainbow parens
 au BufEnter *.clj RainbowParenthesesActivate
 au BufEnter *.cljs RainbowParenthesesActivate
+au BufEnter *.cljc RainbowParenthesesActivate
 au Syntax clojure RainbowParenthesesLoadRound
 au Syntax clojure RainbowParenthesesLoadSquare
 au Syntax clojure RainbowParenthesesLoadBraces
