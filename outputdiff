@@ -72,6 +72,7 @@ sub run_outputdiff {
 
         # initialize git repo
         run_git( { wd => $full_repo_path }, qw(init) );
+        run_git( { wd => $full_repo_path }, qw(config commit.gpgsign false) );
         run_git( { wd => $full_repo_path },
             qw(commit --message empty --allow-empty) );
 

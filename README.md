@@ -48,10 +48,15 @@ For a puppet run that adds a firewall rule allowing access to port 8080:
           -l --last <name>          Show most recent diff again.
              --log <name>           Show log of captured output.
              --clean <name>         Remove a comparison.  If no comparison specified, remove all.
+             --undo <name>          Undo comparison.  Use --skip to undo more than the
+                                    default (1).
              --list                 List all comparisons.
+             --output               Show the last output.  Specify previous output with --skip.
              --vimdiff              Use vimdiff to show differences.  Only works with
                                     --last, not --compare.
              --no-diff              Don't show a diff.  Used with --compare to suppress output.
+             --skip <count>         Skip a number of commits other than the default.
+                                    Applies to --output and --undo.
 
          Documentation options:
           -v --verbose              Print more details about what the script is doing.
