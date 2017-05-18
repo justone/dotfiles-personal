@@ -143,6 +143,11 @@ let g:pymode_run = 0
 let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'pylint']
 let g:pymode_rope_complete_on_dot = 0
 
+" configure vim-table-mode
+let g:table_mode_realign_map = '<Leader>tR'
+au FileType rst let g:table_mode_header_fillchar='='
+au FileType rst let g:table_mode_corner_corner='+'
+
 " enable pathogen
 filetype off
 " let g:pathogen_blacklist = ['tagbar']
