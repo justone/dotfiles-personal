@@ -254,3 +254,7 @@
 	url = https://github.com/honza/vim-snippets.git
 	path = .vim/bundle/vim-snippets
 	branch = master
+[subtree ".vim/bundle/vim-table-mode"]
+	url = https://github.com/dhruvasagar/vim-table-mode.git
+	path = .vim/bundle/vim-table-mode
+	branch = master
