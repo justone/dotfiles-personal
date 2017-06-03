@@ -8,6 +8,16 @@ strategies:
             windows_amd64:
                 fileext: .exe
         versions:
+          - version: '0.2'
+            os_arch:
+                linux_arm:
+                    sha256sum: 008fbdd2337631af1518ab78cb47f66e2fbc95083a6b1dc0faaf4f1e6f514864
+                linux_amd64:
+                    sha256sum: 48776b129c1173fe30c6580bb700ad48c5f568bfd7845fb6b8680e8de0e8aff9
+                darwin_amd64:
+                    sha256sum: 8e7332197257f68c272df98d13e7817971c54c7c7abd530cf2c933292575f628
+                windows_amd64:
+                    sha256sum: ac29cdc8efd4a9e1284230764fd91766f4df97938a88a933ee62742742bfe70d
           - version: '0.1'
             os_arch:
                 linux_arm:
