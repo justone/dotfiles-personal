@@ -147,6 +147,8 @@ let g:pymode_rope_complete_on_dot = 0
 let g:table_mode_realign_map = '<Leader>tR'
 au FileType rst let g:table_mode_header_fillchar='='
 au FileType rst let g:table_mode_corner_corner='+'
+au FileType markdown let g:table_mode_corner='|'
+au FileType pandoc let g:table_mode_corner='|'
 
 " enable pathogen
 filetype off
