@@ -23,6 +23,9 @@ function clearkey() {
 # let's not grep the svn dir
 alias grep='grep --exclude="*.svn*" '
 
+# alias for ignored-host-key ssh
+alias sshn="ssh -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+
 # no vi please
 if [ "$OS" == "Darwin" ]
 then
