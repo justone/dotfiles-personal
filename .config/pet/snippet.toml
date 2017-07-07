@@ -17,3 +17,8 @@
   description = "AWS KMS Encrypt CLI"
   command = "aws kms encrypt --region <region=us-west-2> --key-id <keyid=alias/Key> --plaintext <plaintext=datatoencrypt> --query CiphertextBlob --output text | base64 --decode > <file=encrypted>"
   output = ""
+
+[[snippets]]
+  description = "Get Instance User Data"
+  command = "curl -s http://169.254.169.254/latest/user-data | less"
+  output = ""
