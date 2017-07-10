@@ -13,9 +13,6 @@ unbind [
 bind Escape copy-mode
 unbind p
 bind p paste-buffer
-if-shell '[ $(echo "$(tmux -V | cut -d" " -f2) >= 2.4" | bc) -eq 1 ]' \
-    "bind-key -T copy-mode-vi 'v' send -X begin-selection; bind-key -T copy-mode-vi 'y' send -X copy-selection-and-cancel" \
-    "bind-key -t vi-copy 'v' begin-selection; bind-key -t vi-copy 'y' copy-selection"
 
 # when sharing a session, don't lock entire session to shared screen size
 setw -g aggressive-resize on
@@ -63,10 +60,6 @@ set -s escape-time 0
 ## setting up status bar
 ## mostly horked from http://www.linuxized.com/2010/05/switching-from-gnu-screen-to-tmux/
 
-# only need this for versions <= 2.1
-if-shell '[ $(echo "$(tmux -V | cut -d" " -f2) <= 2.1" | bc) -eq 1 ]' \
-    'set-option -g status-utf8 on'
-
 # set-option -g status-justify centre
 set-option -g status-justify left
 set-option -g status-bg colour16
@@ -92,3 +85,11 @@ set -g status-left '#[fg=green][ #[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green
 #set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
 #set -g status-right '#[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
 set -g status-right '#[fg=green]]'
+
+if-shell '[ $(echo "$(tmux -V | cut -d" " -f2) >= 2.4" | bc) -eq 1 ]' \
+    "bind-key -T copy-mode-vi 'v' send -X begin-selection; bind-key -T copy-mode-vi 'y' send -X copy-selection-and-cancel" \
+    "bind-key -t vi-copy 'v' begin-selection; bind-key -t vi-copy 'y' copy-selection"
+
+# only need this for versions <= 2.1
+if-shell '[ $(echo "$(tmux -V | cut -d" " -f2) <= 2.1" | bc) -eq 1 ]' \
+    'set-option -g status-utf8 on'
