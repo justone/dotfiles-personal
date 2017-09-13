@@ -439,8 +439,3 @@ endfunction
 
 " open web browser, mostly for vim-fugitive
 command! -nargs=1 Browse call OpenURL(<f-args>)
-
-" Autosave taskpaper files
-" thanks to https://serialized.net/2016/07/taskpaper-%2B-vim-%2B-dropbox-%2B-editorial-checklist-perfection/
-" autocmd filetype taskpaper let g:auto_save = 1
-autocmd filetype taskpaper :WatchForChanges!
