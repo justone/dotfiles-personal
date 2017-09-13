@@ -17,4 +17,4 @@ with open(data) as f:
 
 template = env.get_template(template)
 
-print template.render(json_data)
+print(template.render(json_data))
