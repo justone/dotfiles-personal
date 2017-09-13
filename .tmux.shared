@@ -81,6 +81,15 @@ set -g visual-activity off
 bind m setw monitor-activity off
 bind M setw monitor-activity on
 
+# mouse support, for those days I'm lazy
+setw -g mode-mouse off
+set -g mouse-select-pane off
+set -g mouse-resize-pane off
+set -g mouse-select-window off
+
+# moar history
+set -g history-limit 30000
+
 set -g status-left '#[fg=green][ #[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
 #set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
 #set -g status-right '#[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
