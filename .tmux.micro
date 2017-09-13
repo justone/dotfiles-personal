@@ -1,0 +1,23 @@
+# micro client conf
+
+source-file ~/.tmux.shared
+
+# change bind key to C-a
+set-option -g prefix C-a
+
+# prefix again goes to last window
+bind-key C-a last-window
+
+# reload
+bind r source-file ~/.tmux.master \; display-message "Config reloaded."
+
+# keybindings to make resizing easier
+bind -r C-h resize-pane -L
+bind -r C-j resize-pane -D
+bind -r C-k resize-pane -U
+bind -r C-l resize-pane -R
+
+# make it so that I can hold down prefix key for these
+bind-key C-d detach
+bind-key C-n next-window
+bind-key C-p previous-window

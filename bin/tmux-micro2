@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tmux-sess -s micro2 -f ~/.tmux.micro $*
