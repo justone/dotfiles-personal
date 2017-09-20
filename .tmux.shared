@@ -14,6 +14,9 @@ bind Escape copy-mode
 unbind p
 bind p paste-buffer
 
+# Disable suspend
+unbind C-z
+
 # when sharing a session, don't lock entire session to shared screen size
 setw -g aggressive-resize on
 
