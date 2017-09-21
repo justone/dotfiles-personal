@@ -72,6 +72,9 @@ if filereadable("/etc/redhat-release")
     endif
 endif
 
+" settings for mark.vim
+let g:mwDefaultHighlightingPalette = 'maximum'
+
 " Easy searching within a range:
 " step 1: Visual highlight the lines to search
 " step 2: Type ,/
