@@ -262,3 +262,7 @@
 	url = https://github.com/stevearc/vim-arduino.git
 	path = .vim/bundle/vim-arduino
 	branch = master
+[subtree ".vim/bundle/webapi-vim"]
+	url = https://github.com/mattn/webapi-vim.git
+	path = .vim/bundle/webapi-vim
+	branch = master
