@@ -258,3 +258,7 @@
 	url = https://github.com/dhruvasagar/vim-table-mode.git
 	path = .vim/bundle/vim-table-mode
 	branch = master
+[subtree ".vim/bundle/vim-arduino"]
+	url = https://github.com/stevearc/vim-arduino.git
+	path = .vim/bundle/vim-arduino
+	branch = master
