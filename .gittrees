@@ -266,3 +266,7 @@
 	url = https://github.com/mattn/webapi-vim.git
 	path = .vim/bundle/webapi-vim
 	branch = master
+[subtree ".vim/bundle/gist-vim"]
+	url = https://github.com/mattn/gist-vim.git
+	path = .vim/bundle/gist-vim
+	branch = master
