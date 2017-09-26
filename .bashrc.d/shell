@@ -79,3 +79,18 @@ function wts()
     dir=$(git worktree list | awk '{ print $1 }' | fzf -1 -q "$1") &&
     cd "$dir"
 }
+
+# binding to select snippet in pet
+function pet-select() {
+  BUFFER=$(pet search --query "$READLINE_LINE")
+  READLINE_LINE=$BUFFER
+  READLINE_POINT=${#BUFFER}
+}
+bind -x '"\C-x\C-r": pet-select'
+
+# binding to prefix with pmb run
+function pmb-run-prefix() {
+  READLINE_LINE="pmb run -- $READLINE_LINE"
+  READLINE_POINT=${#READLINE_LINE}
+}
+bind -x '"\C-x\C-p": pmb-run-prefix'
