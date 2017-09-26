@@ -22,3 +22,8 @@
   description = "Get Instance User Data"
   command = "curl -s http://169.254.169.254/latest/user-data | less"
   output = ""
+
+[[snippets]]
+  description = "Short docker status"
+  command = "docker ps --format \"table {{.Names}}\\t{{.Status}}\""
+  output = ""
