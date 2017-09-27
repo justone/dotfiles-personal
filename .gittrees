@@ -270,3 +270,7 @@
 	url = https://github.com/mattn/gist-vim.git
 	path = .vim/bundle/gist-vim
 	branch = master
+[subtree ".vim/bundle/undotree"]
+	url = https://github.com/mbbill/undotree.git
+	path = .vim/bundle/undotree
+	branch = master
