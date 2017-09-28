@@ -192,6 +192,7 @@ au FileType go setlocal foldmethod=syntax
 au FileType go setlocal foldnestmax=1
 " use goimports for formatting
 let g:go_fmt_command = "goimports"
+let g:go_fmt_experimental=1
 
 map <F2> :map<CR>
 map <F7> :call ToggleSyntax()<CR>
