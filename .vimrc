@@ -189,6 +189,7 @@ filetype indent on
 " settings for go
 " fold go files with syntax
 au FileType go setlocal foldmethod=syntax
+au FileType go setlocal foldnestmax=1
 " use goimports for formatting
 let g:go_fmt_command = "goimports"
 
