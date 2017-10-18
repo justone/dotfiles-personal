@@ -54,7 +54,7 @@ let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_rst_checkers = ['sphinx']
 let g:syntastic_mode_map = { 'mode': 'active',
-            \ 'passive_filetypes': ['puppet', 'rst'] }
+            \ 'passive_filetypes': ['python', 'puppet', 'rst'] }
 nmap <leader>st :SyntasticToggleMode<CR>
 
 let g:UltiSnipsExpandTrigger="<tab>"
