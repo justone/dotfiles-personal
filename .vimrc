@@ -379,7 +379,7 @@ if strlen($TMUX)
 
         noremap <Leader>tp :VimuxPromptCommand<CR>
         noremap <Leader>tr :VimuxRunLastCommand<CR>
-        noremap <Leader>tt :call InterruptRunnerAndRunLastCommand()<CR>
+        noremap <Leader>ty :call InterruptRunnerAndRunLastCommand()<CR>
         noremap <Leader>ti :VimuxInspectRunner<CR>
         noremap <Leader>tx :VimuxCloseRunner<CR>
         noremap <Leader>tc :VimuxInterruptRunner<CR>
