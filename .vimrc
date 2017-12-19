@@ -2,6 +2,8 @@ set nocp
 set ai to shell=/bin/bash terse nowarn sm ruler sw=4 ts=4
 if !has('nvim')
   set redraw
+else
+  set inccommand=nosplit
 endif
 "set noremap
 set hls
