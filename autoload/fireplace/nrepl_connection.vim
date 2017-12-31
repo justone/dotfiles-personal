@@ -8,7 +8,7 @@ let g:autoloaded_nrepl_fireplace_connection = 1
 let s:python_dir = fnamemodify(expand("<sfile>"), ':p:h:h:h') . '/python'
 
 function! s:function(name) abort
-  return function(substitute(a:name,'^s:',matchstr(expand('<sfile>'), '<SNR>\d\+_'),''))
+  return function(substitute(a:name,'^s:',matchstr(expand('<sfile>'), '.*\zs<SNR>\d\+_'),''))
 endfunction
 
 " Bencode {{{1
@@ -21,7 +21,11 @@ function! fireplace#nrepl_connection#bencode(value) abort
   elseif type(a:value) == type([])
     return 'l'.join(map(copy(a:value),'fireplace#nrepl_connection#bencode(v:val)'),'').'e'
   elseif type(a:value) == type({})
-    return 'd'.join(values(map(copy(a:value),'fireplace#nrepl_connection#bencode(v:key).fireplace#nrepl_connection#bencode(v:val)')),'').'e'
+    return 'd'.join(map(
+          \ sort(keys(a:value)),
+          \ 'fireplace#nrepl_connection#bencode(v:val) . ' .
+          \ 'fireplace#nrepl_connection#bencode(a:value[v:val])'
+          \ ),'').'e'
   else
     throw "Can't bencode ".string(a:value)
   endif
