@@ -6,7 +6,7 @@ endif
 let g:autoloaded_fireplace_nrepl = 1
 
 function! s:function(name) abort
-  return function(substitute(a:name,'^s:',matchstr(expand('<sfile>'), '<SNR>\d\+_'),''))
+  return function(substitute(a:name,'^s:',matchstr(expand('<sfile>'), '.*\zs<SNR>\d\+_'),''))
 endfunction
 
 if !exists('s:id')
@@ -180,14 +180,43 @@ function! s:nrepl_eval(expr, ...) dict abort
   return response
 endfunction
 
+function! s:process_stacktrace_entry(entry) abort
+  if !has_key(a:entry, 'class')
+    return ''
+  endif
+  let str = a:entry.class.'.'.a:entry.method
+  if !empty(get(a:entry, 'file'))
+    let str .= '('.a:entry.file.':'.a:entry.line.')'
+  endif
+  return str
+endfunction
+
 function! s:extract_last_stacktrace(nrepl, session) abort
   if a:nrepl.has_op('stacktrace')
-    let stacktrace = filter(a:nrepl.message({'op': 'stacktrace', 'session': a:session}), 'has_key(v:val, "file")')
+    let stacktrace = a:nrepl.message({'op': 'stacktrace', 'session': a:session})
+    if len(stacktrace) > 0 && has_key(stacktrace[0], 'stacktrace')
+      let stacktrace = stacktrace[0].stacktrace
+    endif
+
+    call map(stacktrace, 's:process_stacktrace_entry(v:val)')
+    call filter(stacktrace, '!empty(v:val)')
     if !empty(stacktrace)
-      return map(stacktrace, 'v:val.class.".".v:val.method."(".v:val.file.":".v:val.line.")"')
+      return stacktrace
     endif
   endif
-  let format_st = '(symbol (str "\n\b" (apply str (interleave (repeat "\n") (map str (.getStackTrace *e)))) "\n\b\n"))'
+  let format_st =
+        \ '(let [st (or (when (= "#''cljs.core/str" (str #''str))' .
+        \               ' (.-stack *e))' .
+        \             ' (.getStackTrace *e))]' .
+        \  ' (symbol' .
+        \    ' (str "\n\b"' .
+        \         ' (if (string? st)' .
+        \           ' st' .
+        \           ' (let [parts (if (= "class [Ljava.lang.StackTraceElement;" (str (type st)))' .
+        \                         ' (map str st)' .
+        \                         ' (seq (amap st idx ret (str (aget st idx)))))]' .
+        \             ' (apply str (interleave (repeat "\n") parts))))' .
+        \         ' "\n\b\n")))'
   let response = a:nrepl.process({'op': 'eval', 'code': '['.format_st.' *3 *2 *1]', 'ns': 'user', 'session': a:session})
   try
     let stacktrace = split(get(split(response.value[0], "\n\b\n"), 1, ""), "\n")
