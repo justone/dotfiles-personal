@@ -20,7 +20,7 @@ let g:sexp_loaded = 1
 """ Global State {{{1
 
 if !exists('g:sexp_filetypes')
-    let g:sexp_filetypes = 'clojure,scheme,lisp'
+    let g:sexp_filetypes = 'clojure,scheme,lisp,timl'
 endif
 
 if !exists('g:sexp_enable_insert_mode_mappings')
@@ -50,6 +50,14 @@ let s:sexp_mappings = {
     \ 'sexp_move_to_next_element_head': '<M-w>',
     \ 'sexp_move_to_prev_element_tail': 'g<M-e>',
     \ 'sexp_move_to_next_element_tail': '<M-e>',
+    \ 'sexp_flow_to_prev_close':        '<M-[>',
+    \ 'sexp_flow_to_next_open':         '<M-]>',
+    \ 'sexp_flow_to_prev_open':         '<M-{>',
+    \ 'sexp_flow_to_next_close':        '<M-}>',
+    \ 'sexp_flow_to_prev_leaf_head':    '<M-S-b>',
+    \ 'sexp_flow_to_next_leaf_head':    '<M-S-w>',
+    \ 'sexp_flow_to_prev_leaf_tail':    '<M-S-g>',
+    \ 'sexp_flow_to_next_leaf_tail':    '<M-S-e>',
     \ 'sexp_move_to_prev_top_element':  '[[',
     \ 'sexp_move_to_next_top_element':  ']]',
     \ 'sexp_select_prev_element':       '[e',
@@ -71,6 +79,7 @@ let s:sexp_mappings = {
     \ 'sexp_insert_at_list_head':       '<LocalLeader>h',
     \ 'sexp_insert_at_list_tail':       '<LocalLeader>l',
     \ 'sexp_splice_list':               '<LocalLeader>@',
+    \ 'sexp_convolute':                 '<LocalLeader>?',
     \ 'sexp_raise_list':                '<LocalLeader>o',
     \ 'sexp_raise_element':             '<LocalLeader>O',
     \ 'sexp_swap_list_backward':        '<M-k>',
@@ -83,18 +92,12 @@ let s:sexp_mappings = {
     \ 'sexp_capture_next_element':      '<M-S-l>',
     \ }
 
-" XXX: Removed mappings
-call extend(s:sexp_mappings, {
-    \ 'sexp_lift_list':                 '<LocalLeader>o',
-    \ 'sexp_lift_element':              '<LocalLeader>O',
-    \ })
-
-augroup sexp_filetypes
-    autocmd!
-    if !empty(g:sexp_filetypes)
+if !empty(g:sexp_filetypes)
+    augroup sexp_filetypes
+        autocmd!
         execute 'autocmd FileType ' . g:sexp_filetypes . ' call s:sexp_create_mappings()'
-    endif
-augroup END
+    augroup END
+endif
 
 " Autoload and detect repeat.vim
 silent! call repeat#set('')
@@ -131,11 +134,6 @@ function! s:defplug(flags, mapmode, name, ...)
         execute lhs . ' ' . rhs
         return 1
     endif
-
-    " XXX: REMOVE unparenthesized <Plug> maps
-    execute a:mapmode . ' <silent> <Plug>' . a:name . ' '
-          \ . ':<C-u>call sexp#alert("`<Plug>' . a:name . '` has been renamed to'
-          \ . '`<Plug>(' . a:name . ')`. Please update your mappings.")<CR>'
 
     " Common mapping prefix
     " RE: vv
@@ -204,28 +202,30 @@ function! s:sexp_create_mappings()
         endif
     endfor
 
-    for plug in ['sexp_indent', 'sexp_indent_top']
+    for plug in ['sexp_indent',              'sexp_indent_top',
+               \ 'sexp_insert_at_list_head', 'sexp_insert_at_list_tail',
+	       \ 'sexp_convolute',           'sexp_splice_list']
         let lhs = get(g:sexp_mappings, plug, s:sexp_mappings[plug])
         if !empty(lhs)
             execute 'nmap <silent><buffer> ' . lhs . ' <Plug>(' . plug . ')'
         endif
     endfor
 
-    " XXX: REMOVE sexp_lift_*
     for plug in ['sexp_round_head_wrap_list',     'sexp_round_tail_wrap_list',
                \ 'sexp_square_head_wrap_list',    'sexp_square_tail_wrap_list',
                \ 'sexp_curly_head_wrap_list',     'sexp_curly_tail_wrap_list',
                \ 'sexp_round_head_wrap_element',  'sexp_round_tail_wrap_element',
                \ 'sexp_square_head_wrap_element', 'sexp_square_tail_wrap_element',
                \ 'sexp_curly_head_wrap_element',  'sexp_curly_tail_wrap_element',
-               \ 'sexp_insert_at_list_head',      'sexp_insert_at_list_tail',
-               \ 'sexp_splice_list',
-               \ 'sexp_lift_list',                'sexp_lift_element',
                \ 'sexp_raise_list',               'sexp_raise_element',
                \ 'sexp_swap_list_backward',       'sexp_swap_list_forward',
                \ 'sexp_swap_element_backward',    'sexp_swap_element_forward',
                \ 'sexp_emit_head_element',        'sexp_emit_tail_element',
-               \ 'sexp_capture_prev_element',     'sexp_capture_next_element']
+               \ 'sexp_capture_prev_element',     'sexp_capture_next_element',
+               \ 'sexp_flow_to_prev_close',       'sexp_flow_to_next_open',
+               \ 'sexp_flow_to_prev_open',        'sexp_flow_to_next_close',
+               \ 'sexp_flow_to_prev_leaf_head',   'sexp_flow_to_next_leaf_head',
+               \ 'sexp_flow_to_prev_leaf_tail',   'sexp_flow_to_next_leaf_tail']
         let lhs = get(g:sexp_mappings, plug, s:sexp_mappings[plug])
         if !empty(lhs)
             execute 'nmap <silent><buffer> ' . lhs . ' <Plug>(' . plug . ')'
@@ -234,14 +234,14 @@ function! s:sexp_create_mappings()
     endfor
 
     if g:sexp_enable_insert_mode_mappings
-        imap <buffer> (    <Plug>(sexp_insert_opening_round)
-        imap <buffer> [    <Plug>(sexp_insert_opening_square)
-        imap <buffer> {    <Plug>(sexp_insert_opening_curly)
-        imap <buffer> )    <Plug>(sexp_insert_closing_round)
-        imap <buffer> ]    <Plug>(sexp_insert_closing_square)
-        imap <buffer> }    <Plug>(sexp_insert_closing_curly)
-        imap <buffer> "    <Plug>(sexp_insert_double_quote)
-        imap <buffer> <BS> <Plug>(sexp_insert_backspace)
+        imap <silent><buffer> (    <Plug>(sexp_insert_opening_round)
+        imap <silent><buffer> [    <Plug>(sexp_insert_opening_square)
+        imap <silent><buffer> {    <Plug>(sexp_insert_opening_curly)
+        imap <silent><buffer> )    <Plug>(sexp_insert_closing_round)
+        imap <silent><buffer> ]    <Plug>(sexp_insert_closing_square)
+        imap <silent><buffer> }    <Plug>(sexp_insert_closing_curly)
+        imap <silent><buffer> "    <Plug>(sexp_insert_double_quote)
+        imap <silent><buffer> <BS> <Plug>(sexp_insert_backspace)
     endif
 endfunction
 
@@ -303,6 +303,26 @@ DefplugN  nnoremap sexp_move_to_next_element_tail sexp#move_to_adjacent_element(
 DEFPLUG   xnoremap sexp_move_to_next_element_tail <Esc>:<C-u>call sexp#move_to_adjacent_element('v', v:prevcount, 1, 1, 0)<CR>
 DefplugN! onoremap sexp_move_to_next_element_tail sexp#move_to_adjacent_element('o', v:count, 1, 1, 0)
 
+" List flow commands
+Defplug   nnoremap sexp_flow_to_prev_close sexp#list_flow('n', v:count, 0, 1)
+DEFPLUG   xnoremap sexp_flow_to_prev_close <Esc>:<C-u>call sexp#list_flow('v', v:prevcount, 0, 1)<CR>
+Defplug   nnoremap sexp_flow_to_prev_open sexp#list_flow('n', v:count, 0, 0)
+DEFPLUG   xnoremap sexp_flow_to_prev_open <Esc>:<C-u>call sexp#list_flow('v', v:prevcount, 0, 0)<CR>
+Defplug   nnoremap sexp_flow_to_next_open sexp#list_flow('n', v:count, 1, 0)
+DEFPLUG   xnoremap sexp_flow_to_next_open <Esc>:<C-u>call sexp#list_flow('v', v:prevcount, 1, 0)<CR>
+Defplug   nnoremap sexp_flow_to_next_close sexp#list_flow('n', v:count, 1, 1)
+DEFPLUG   xnoremap sexp_flow_to_next_close <Esc>:<C-u>call sexp#list_flow('v', v:prevcount, 1, 1)<CR>
+
+" Leaf flow commands
+DefplugN  nnoremap sexp_flow_to_prev_leaf_head sexp#leaf_flow('n', v:count, 0, 0)
+DEFPLUG   xnoremap sexp_flow_to_prev_leaf_head <Esc>:<C-u>call sexp#leaf_flow('v', v:prevcount, 0, 0)<CR>
+DefplugN  nnoremap sexp_flow_to_next_leaf_head sexp#leaf_flow('n', v:count, 1, 0)
+DEFPLUG   xnoremap sexp_flow_to_next_leaf_head <Esc>:<C-u>call sexp#leaf_flow('v', v:prevcount, 1, 0)<CR>
+DefplugN  nnoremap sexp_flow_to_prev_leaf_tail sexp#leaf_flow('n', v:count, 0, 1)
+DEFPLUG   xnoremap sexp_flow_to_prev_leaf_tail <Esc>:<C-u>call sexp#leaf_flow('v', v:prevcount, 0, 1)<CR>
+DefplugN  nnoremap sexp_flow_to_next_leaf_tail sexp#leaf_flow('n', v:count, 1, 1)
+DEFPLUG   xnoremap sexp_flow_to_next_leaf_tail <Esc>:<C-u>call sexp#leaf_flow('v', v:prevcount, 1, 1)<CR>
+
 " Adjacent top element
 Defplug  nnoremap sexp_move_to_prev_top_element sexp#move_to_adjacent_element('n', v:count, 0, 0, 1)
 DEFPLUG  xnoremap sexp_move_to_prev_top_element <Esc>:<C-u>call sexp#move_to_adjacent_element('v', v:prevcount, 0, 0, 1)<CR>
@@ -358,9 +378,7 @@ Defplug  xnoremap sexp_curly_tail_wrap_element  sexp#wrap('v', '{', '}', 1, g:se
 
 " Insert at list terminal
 Defplug! nnoremap sexp_insert_at_list_head sexp#insert_at_list_terminal(0)
-Defplug  xnoremap sexp_insert_at_list_head sexp#insert_at_list_terminal(0)
 Defplug! nnoremap sexp_insert_at_list_tail sexp#insert_at_list_terminal(1)
-Defplug  xnoremap sexp_insert_at_list_tail sexp#insert_at_list_terminal(1)
 
 " Raise list
 Defplug! nnoremap sexp_raise_list    sexp#docount(v:count, 'sexp#raise', 'n', 'sexp#select_current_list', 'n', 0, 0)
@@ -368,9 +386,12 @@ Defplug  xnoremap sexp_raise_list    sexp#docount(v:count, 'sexp#raise', 'v', ''
 Defplug! nnoremap sexp_raise_element sexp#docount(v:count, 'sexp#raise', 'n', 'sexp#select_current_element', 'n', 1)
 Defplug  xnoremap sexp_raise_element sexp#docount(v:count, 'sexp#raise', 'v', '')
 
+" Convolute
+" Note: convolute takes pains to preserve cursor position: hence, 'nojump'.
+DefplugN! nnoremap sexp_convolute sexp#convolute(v:count, 'n')
+
 " Splice list
 Defplug! nnoremap sexp_splice_list sexp#splice_list(v:count)
-Defplug  xnoremap sexp_splice_list sexp#splice_list(v:count)
 
 " Swap list
 Defplug! nnoremap sexp_swap_list_backward sexp#docount(v:count, 'sexp#swap_element', 'n', 0, 1)
@@ -411,13 +432,6 @@ inoremap <silent><expr> <Plug>(sexp_insert_double_quote) sexp#quote_insertion('"
 
 " Delete paired delimiters
 inoremap <silent><expr> <Plug>(sexp_insert_backspace) sexp#backspace_insertion()
-
-""" XXX: Removed Mappings {{{1
-
-Defplug! nnoremap sexp_lift_list    sexp#alert('<Plug>(sexp_lift_list) has been renamed to <Plug>(sexp_raise_list)')
-Defplug  xnoremap sexp_lift_list    sexp#alert('<Plug>(sexp_lift_list) has been renamed to <Plug>(sexp_raise_list)')
-Defplug! nnoremap sexp_lift_element sexp#alert('<Plug>(sexp_lift_element) has been renamed to <Plug>(sexp_raise_element)')
-Defplug  xnoremap sexp_lift_element sexp#alert('<Plug>(sexp_lift_element) has been renamed to <Plug>(sexp_raise_element)')
 
 """ Cleanup {{{1
 
