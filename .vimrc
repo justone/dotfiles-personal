@@ -153,7 +153,7 @@ let g:ctrlp_prompt_mappings = {
   \ 'PrtDeleteWord()':     ['<F2>']
   \ }
 let g:ctrlp_custom_ignore = {
-  \ 'dir':  '\v[\/](local|blib)$'
+  \ 'dir':  '\v[\/](local|blib|target)$'
   \ }
 let g:ctrlp_map = '<leader>ff'
 noremap <leader>fg :CtrlPRoot<CR>
