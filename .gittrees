@@ -274,3 +274,7 @@
 	url = https://github.com/mbbill/undotree.git
 	path = .vim/bundle/undotree
 	branch = master
+[subtree ".vim/bundle/vim-fubitive"]
+	url = https://github.com/tommcdo/vim-fubitive.git
+	path = .vim/bundle/vim-fubitive
+	branch = master
