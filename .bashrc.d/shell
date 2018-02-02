@@ -97,3 +97,10 @@ function pmb-run-prefix() {
   READLINE_POINT=${#READLINE_LINE}
 }
 bind -x '"\C-x\C-p": pmb-run-prefix'
+
+# binding to suffix with less pipe
+function less-suffix() {
+  READLINE_LINE="$READLINE_LINE | less -RS"
+  READLINE_POINT=${#READLINE_LINE}
+}
+bind -x '"\C-x\C-l": less-suffix'
