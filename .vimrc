@@ -418,12 +418,16 @@ let g:pandoc#folding#fdc=0
 " let g:pandoc#syntax#conceal#urls=1
 
 " clojure rainbow parens
-au BufEnter *.clj RainbowParenthesesActivate
-au BufEnter *.cljs RainbowParenthesesActivate
-au BufEnter *.cljc RainbowParenthesesActivate
-au Syntax clojure RainbowParenthesesLoadRound
-au Syntax clojure RainbowParenthesesLoadSquare
-au Syntax clojure RainbowParenthesesLoadBraces
+let g:rainbow_active = 1
+let g:rainbow_conf = {
+      \  'guifgs': ['royalblue3', 'darkorange3', 'seagreen3', 'firebrick'],
+      \  'ctermfgs': ['lightblue', 'lightyellow', 'lightcyan', 'lightmagenta'],
+      \  'parentheses': ['start=/(/ end=/)/ fold', 'start=/\[/ end=/\]/ fold', 'start=/{/ end=/}/ fold'],
+      \  'separately': {
+      \      '*': 0,
+      \      'clojure': {},
+      \  }
+      \}
 
 " support mapping from old version of vim-surround
 xmap s <Plug>VSurround
