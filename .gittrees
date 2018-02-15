@@ -282,3 +282,7 @@
 	url = https://github.com/luochen1990/rainbow.git
 	path = .vim/bundle/rainbow
 	branch = master
+[subtree ".vim/bundle/taboo.vim"]
+	url = https://github.com/gcmt/taboo.vim.git
+	path = .vim/bundle/taboo.vim
+	branch = master
