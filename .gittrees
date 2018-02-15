@@ -278,3 +278,7 @@
 	url = https://github.com/tommcdo/vim-fubitive.git
 	path = .vim/bundle/vim-fubitive
 	branch = master
+[subtree ".vim/bundle/rainbow"]
+	url = https://github.com/luochen1990/rainbow.git
+	path = .vim/bundle/rainbow
+	branch = master
