@@ -32,6 +32,12 @@ let perl_fold_anonymous_subs = 1
 set laststatus=2
 let g:airline_powerline_fonts = 1
 
+" Enable global session caching (for Taboo)
+set sessionoptions+=globals
+" add tab number to tabs
+let g:taboo_renamed_tab_format = " %N [%l]%m "
+let g:taboo_tab_format = " %N %f%m "
+
 " show current function/module/etc in airline
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline#extensions#tagbar#flags = 'f'
