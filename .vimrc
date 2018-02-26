@@ -214,6 +214,12 @@ map <F10> :diffu<CR>
 map <F11> :echo 'Current change: ' . changenr()<CR>
 map <F12> :noh<CR>
 
+" a few extra mappings for fireplace
+" evaluate top level form
+au BufEnter *.clj nnoremap <buffer> cpt :Eval<CR>
+" show last evaluation in temp file
+au BufEnter *.clj nnoremap <buffer> cpl :Last<CR>
+
 map <leader>nt :NERDTreeToggle<CR>
 map <leader>nf :NERDTreeFind<CR>
 
