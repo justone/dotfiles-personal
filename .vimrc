@@ -32,6 +32,9 @@ let perl_fold_anonymous_subs = 1
 set laststatus=2
 let g:airline_powerline_fonts = 1
 
+" for gitgutter
+set updatetime=100
+
 " Enable global session caching (for Taboo)
 set sessionoptions+=globals
 " add tab number to tabs
