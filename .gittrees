@@ -290,3 +290,7 @@
 	url = https://github.com/pangloss/vim-javascript.git
 	path = .vim/bundle/vim-javascript
 	branch = master
+[subtree ".vim/bundle/vim-jsx"]
+	url = https://github.com/mxw/vim-jsx.git
+	path = .vim/bundle/vim-jsx
+	branch = master
