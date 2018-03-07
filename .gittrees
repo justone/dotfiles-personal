@@ -286,3 +286,7 @@
 	url = https://github.com/gcmt/taboo.vim.git
 	path = .vim/bundle/taboo.vim
 	branch = master
+[subtree ".vim/bundle/vim-javascript"]
+	url = https://github.com/pangloss/vim-javascript.git
+	path = .vim/bundle/vim-javascript
+	branch = master
