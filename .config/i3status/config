@@ -1,0 +1,71 @@
+general {
+        output_format = "i3bar"
+        interval = 5
+}
+
+# order += "ipv6"
+order += "disk /"
+order += "run_watch DHCP"
+# order += "run_watch VPNC"
+# order += "path_exists VPN"
+order += "wireless wlp4s0"
+order += "ethernet enp2s0"
+order += "battery 1"
+order += "cpu_temperature 0"
+order += "load"
+order += "tztime local"
+
+wireless wlp4s0 {
+        format_up = "W: (%quality at %essid, %bitrate) %ip"
+        format_down = "W: down"
+}
+
+ethernet enp2s0 {
+        # if you use %speed, i3status requires the cap_net_admin capability
+        format_up = "E: %ip (%speed)"
+        format_down = "E: down"
+}
+
+battery 1 {
+        format = "%status %percentage %remaining %emptytime"
+        integer_battery_capacity = true
+        hide_seconds = true
+        format_down = "No battery"
+        status_chr = "B: ⚡ CHR"
+        status_bat = "B: 🔋 BAT"
+        status_full = "B: ☻ FULL"
+        path = "/sys/class/power_supply/BAT%d/uevent"
+        low_threshold = 10
+}
+
+run_watch DHCP {
+        pidfile = "/var/run/dhclient*.pid"
+}
+
+run_watch VPNC {
+        # file containing the PID of a vpnc process
+        pidfile = "/var/run/vpnc/pid"
+}
+
+path_exists VPN {
+        # path exists when a VPN tunnel launched by nmcli/nm-applet is active
+        path = "/proc/sys/net/ipv4/conf/tun0"
+}
+
+tztime local {
+        format = "%Y-%m-%d %H:%M:%S"
+}
+
+load {
+        # format = "%5min"
+        format = "L: %1min, %5min, %15min"
+}
+
+cpu_temperature 0 {
+        format = "T: %degrees °C"
+        path = "/sys/devices/platform/coretemp.0/hwmon/hwmon4/temp1_input"
+}
+
+disk "/" {
+        format = "D: %avail / %total"
+}
