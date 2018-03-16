@@ -227,6 +227,9 @@ au BufEnter *.clj nnoremap <buffer> cpt :Eval<CR>
 " show last evaluation in temp file
 au BufEnter *.clj nnoremap <buffer> cpl :Last<CR>
 
+" remove trailing whitespace when writing
+autocmd BufWritePre * :%s/\s\+$//e
+
 map <leader>nt :NERDTreeToggle<CR>
 map <leader>nf :NERDTreeFind<CR>
 
