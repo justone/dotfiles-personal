@@ -459,7 +459,7 @@ let g:vimpipe_invoke_map="<leader>w"
 let g:vimpipe_close_map="<leader>W"
 
 " configure clojure folding
-let g:clojure_foldwords = "defn,defmacro,defmethod"
+let g:clojure_foldwords = "def,defn,defmacro,defmethod,defschema,defprotocol,defrecord"
 
 let g:vim_json_syntax_conceal = 0
 au FileType json setlocal foldmethod=syntax
