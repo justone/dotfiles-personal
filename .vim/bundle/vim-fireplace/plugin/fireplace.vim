@@ -25,7 +25,24 @@ function! s:map(mode, lhs, rhs, ...) abort
   if flags =~# '<unique>' && !empty(mapcheck(a:lhs, a:mode))
     return
   endif
-  execute a:mode.'map <buffer>' flags a:lhs a:rhs
+  let head = a:lhs
+  let tail = ''
+  let keys = get(g:, a:mode.'remap', {})
+  if type(keys) != type({})
+    return
+  endif
+  while !empty(head)
+    if has_key(keys, head)
+      let head = keys[head]
+      if empty(head)
+        return
+      endif
+      break
+    endif
+    let tail = matchstr(head, '<[^<>]*>$\|.$') . tail
+    let head = substitute(head, '<[^<>]*>$\|.$', '', '')
+  endwhile
+  exe a:mode.'map <buffer>' flags head.tail a:rhs
 endfunction
 
 " Section: Escaping
@@ -63,7 +80,7 @@ function! fireplace#jar_contents(path) abort
     endif
   endif
 
-  if !has_key(s:jar_contents, a:path) && has('python')
+  if !has_key(s:jar_contents, a:path) && has('python') && !$FIREPLACE_NO_IF_PYTHON
     python import vim, zipfile
     python vim.command("let s:jar_contents[a:path] = split('" + "\n".join(zipfile.ZipFile(vim.eval('a:path')).namelist()) + "', \"\n\")")
   elseif !has_key(s:jar_contents, a:path) && !empty(s:zipinfo)
