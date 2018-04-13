@@ -48,8 +48,6 @@
 	excludesfile = ~/.gitignore.global
 [github]
 	user = justone
-[include]
-	path = ~/.gitconfig.local
 [credential "https://github.com"]
 	username = justone
 [credential "https://bitbucket.org"]
@@ -60,3 +58,5 @@
 	date = iso8601
 [hub]
 	protocol = https
+[include]
+	path = ~/.gitconfig.local
