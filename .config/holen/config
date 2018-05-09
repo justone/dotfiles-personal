@@ -2,3 +2,6 @@
     bin_path    = ~/bin/holens
     only_latest = true
 
+[source]
+    personal = https://github.com/justone/holens.git
+
