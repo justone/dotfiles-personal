@@ -2,16 +2,13 @@ let s:go_stack = []
 let s:go_stack_level = 0
 
 function! go#def#Jump(mode) abort
-  let old_gopath = $GOPATH
-  let $GOPATH = go#path#Detect()
-
   let fname = fnamemodify(expand("%"), ':p:gs?\\?/?')
 
   " so guru right now is slow for some people. previously we were using
   " godef which also has it's own quirks. But this issue come up so many
   " times I've decided to support both. By default we still use guru as it
   " covers all edge cases, but now anyone can switch to godef if they wish
-  let bin_name = get(g:, 'go_def_mode', 'guru')
+  let bin_name = go#config#DefMode()
   if bin_name == 'godef'
     if &modified
       " Write current unsaved buffer to a temp file and use the modified content
@@ -20,24 +17,16 @@ function! go#def#Jump(mode) abort
       let fname = l:tmpname
     endif
 
-    let bin_path = go#path#CheckBinPath("godef")
-    if empty(bin_path)
-      let $GOPATH = old_gopath
-      return
-    endif
-    let command = printf("%s -f=%s -o=%s -t", bin_path, fname, go#util#OffsetCursor())
-    let out = go#util#System(command)
+    let [l:out, l:err] = go#util#Exec(['godef',
+          \ '-f=' . l:fname,
+          \ '-o=' . go#util#OffsetCursor(),
+          \ '-t'])
     if exists("l:tmpname")
       call delete(l:tmpname)
     endif
-  elseif bin_name == 'guru'
-    let bin_path = go#path#CheckBinPath("guru")
-    if empty(bin_path)
-      let $GOPATH = old_gopath
-      return
-    endif
 
-    let cmd = [bin_path]
+  elseif bin_name == 'guru'
+    let cmd = [bin_name, '-tags', go#config#BuildTags()]
     let stdin_content = ""
 
     if &modified
@@ -46,18 +35,12 @@ function! go#def#Jump(mode) abort
       call add(cmd, "-modified")
     endif
 
-    if exists('g:go_guru_tags')
-      let tags = get(g:, 'go_guru_tags')
-      call extend(cmd, ["-tags", tags])
-    endif
-
-    let fname = fname.':#'.go#util#OffsetCursor()
-    call extend(cmd, ["definition", fname])
+    call extend(cmd, ["definition", fname . ':#' . go#util#OffsetCursor()])
 
     if go#util#has_job()
       let l:spawn_args = {
             \ 'cmd': cmd,
-            \ 'custom_cb': function('s:jump_to_declaration_cb', [a:mode, bin_name]),
+            \ 'complete': function('s:jump_to_declaration_cb', [a:mode, bin_name]),
             \ }
 
       if &modified
@@ -70,24 +53,22 @@ function! go#def#Jump(mode) abort
       return
     endif
 
-    let command = join(cmd, " ")
     if &modified
-      let out = go#util#System(command, stdin_content)
+      let [l:out, l:err] = go#util#Exec(l:cmd, stdin_content)
     else
-      let out = go#util#System(command)
+      let [l:out, l:err] = go#util#Exec(l:cmd)
     endif
   else
     call go#util#EchoError('go_def_mode value: '. bin_name .' is not valid. Valid values are: [godef, guru]')
     return
   endif
 
-  if go#util#ShellError() != 0
+  if l:err
     call go#util#EchoError(out)
     return
   endif
 
   call go#def#jump_to_declaration(out, a:mode, bin_name)
-  let $GOPATH = old_gopath
 endfunction
 
 function! s:jump_to_declaration_cb(mode, bin_name, job, exit_status, data) abort
@@ -96,6 +77,7 @@ function! s:jump_to_declaration_cb(mode, bin_name, job, exit_status, data) abort
   endif
 
   call go#def#jump_to_declaration(a:data[0], a:mode, a:bin_name)
+  call go#util#EchoSuccess(fnamemodify(a:data[0], ":t"))
 endfunction
 
 function! go#def#jump_to_declaration(out, mode, bin_name) abort
@@ -142,7 +124,7 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
   if filename != fnamemodify(expand("%"), ':p:gs?\\?/?')
     " jump to existing buffer if, 1. we have enabled it, 2. the buffer is loaded
     " and 3. there is buffer window number we switch to
-    if get(g:, 'go_def_reuse_buffer', 0) && bufloaded(filename) != 0 && bufwinnr(filename) != -1
+    if go#config#DefReuseBuffer() && bufloaded(filename) != 0 && bufwinnr(filename) != -1
       " jumpt to existing buffer if it exists
       execute bufwinnr(filename) . 'wincmd w'
     else
@@ -153,9 +135,11 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
       endif
 
       if a:mode == "tab"
-        let &switchbuf = "usetab"
+        let &switchbuf = "useopen,usetab,newtab"
         if bufloaded(filename) == 0
           tab split
+        else
+           let cmd = 'sbuf'
         endif
       elseif a:mode == "split"
         split
@@ -164,7 +148,7 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
       endif
 
       " open the file and jump to line and column
-      exec cmd filename
+      exec cmd fnameescape(fnamemodify(filename, ':.'))
     endif
   endif
   call cursor(line, col)
@@ -294,15 +278,11 @@ function! go#def#Stack(...) abort
 endfunction
 
 function s:def_job(args) abort
-  function! s:error_info_cb(job, exit_status, data) closure
-    " do not print anything during async definition search&jump
-  endfunction
-
-  let a:args.error_info_cb = funcref('s:error_info_cb')
   let callbacks = go#job#Spawn(a:args)
 
   let start_options = {
         \ 'callback': callbacks.callback,
+        \ 'exit_cb': callbacks.exit_cb,
         \ 'close_cb': callbacks.close_cb,
         \ }
 

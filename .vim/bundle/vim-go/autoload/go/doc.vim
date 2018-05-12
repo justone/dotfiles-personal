@@ -4,22 +4,14 @@
 
 let s:buf_nr = -1
 
-if !exists("g:go_doc_command")
-  let g:go_doc_command = "godoc"
-endif
-
-if !exists("g:go_doc_options")
-  let g:go_doc_options = ""
-endif
-
 function! go#doc#OpenBrowser(...) abort
   " check if we have gogetdoc as it gives us more and accurate information.
   " Only supported if we have json_decode as it's not worth to parse the plain
   " non-json output of gogetdoc
   let bin_path = go#path#CheckBinPath('gogetdoc')
   if !empty(bin_path) && exists('*json_decode')
-    let json_out = s:gogetdoc(1)
-    if go#util#ShellError() != 0
+    let [l:json_out, l:err] = s:gogetdoc(1)
+    if l:err
       call go#util#EchoError(json_out)
       return
     endif
@@ -33,12 +25,11 @@ function! go#doc#OpenBrowser(...) abort
     let name = out["name"]
     let decl = out["decl"]
 
-    let godoc_url = "https://godoc.org/" . import
+    let godoc_url = go#config#DocUrl()
+    let godoc_url .= "/" . import
     if decl !~ "^package"
       let godoc_url .= "#" . name
     endif
-
-    echo godoc_url
 
     call go#tool#OpenBrowser(godoc_url)
     return
@@ -53,25 +44,27 @@ function! go#doc#OpenBrowser(...) abort
   let exported_name = pkgs[1]
 
   " example url: https://godoc.org/github.com/fatih/set#Set
-  let godoc_url = "https://godoc.org/" . pkg . "#" . exported_name
+  let godoc_url = go#config#DocUrl() . "/" . pkg . "#" . exported_name
   call go#tool#OpenBrowser(godoc_url)
 endfunction
 
 function! go#doc#Open(newmode, mode, ...) abort
+  " With argument: run "godoc [arg]".
   if len(a:000)
-    " check if we have 'godoc' and use it automatically
-    let bin_path = go#path#CheckBinPath('godoc')
-    if empty(bin_path)
+    if empty(go#path#CheckBinPath(go#config#DocCommand()[0]))
       return
     endif
 
-    let command = printf("%s %s", bin_path, join(a:000, ' '))
-    let out = go#util#System(command)
+    let [l:out, l:err] = go#util#Exec(go#config#DocCommand() + a:000)
+  " Without argument: run gogetdoc on cursor position.
   else
-    let out = s:gogetdoc(0)
+    let [l:out, l:err] = s:gogetdoc(0)
+    if out == -1
+      return
+    endif
   endif
 
-  if go#util#ShellError() != 0
+  if l:err
     call go#util#EchoError(out)
     return
   endif
@@ -81,6 +74,7 @@ endfunction
 
 function! s:GodocView(newposition, position, content) abort
   " reuse existing buffer window if it exists otherwise create a new one
+  let is_visible = bufexists(s:buf_nr) && bufwinnr(s:buf_nr) != -1
   if !bufexists(s:buf_nr)
     execute a:newposition
     sil file `="[Godoc]"`
@@ -92,20 +86,23 @@ function! s:GodocView(newposition, position, content) abort
     execute bufwinnr(s:buf_nr) . 'wincmd w'
   endif
 
-  if a:position == "split"
-    " cap buffer height to 20, but resize it for smaller contents
-    let max_height = 20
-    let content_height = len(split(a:content, "\n"))
-    if content_height > max_height
-      exe 'resize ' . max_height
+  " if window was not visible then resize it
+  if !is_visible
+    if a:position == "split"
+      " cap window height to 20, but resize it for smaller contents
+      let max_height = go#config#DocMaxHeight()
+      let content_height = len(split(a:content, "\n"))
+      if content_height > max_height
+        exe 'resize ' . max_height
+      else
+        exe 'resize ' . content_height
+      endif
     else
-      exe 'resize ' . content_height
+      " set a sane maximum width for vertical splits. In this case the minimum
+      " that fits the godoc for package http without extra linebreaks and line
+      " numbers on
+      exe 'vertical resize 84'
     endif
-  else
-    " set a sane maximum width for vertical splits. In this case the minimum
-    " that fits the godoc for package http without extra linebreaks and line
-    " numbers on
-    exe 'vertical resize 84'
   endif
 
   setlocal filetype=godoc
@@ -131,43 +128,20 @@ function! s:GodocView(newposition, position, content) abort
 endfunction
 
 function! s:gogetdoc(json) abort
-  " check if we have 'gogetdoc' and use it automatically
-  let bin_path = go#path#CheckBinPath('gogetdoc')
-  if empty(bin_path)
-    return -1
-  endif
-
-  let cmd =  [bin_path]
-
-  let offset = go#util#OffsetCursor()
-  let fname = expand("%:p:gs!\\!/!")
-  let pos = shellescape(fname.':#'.offset)
-
-  let cmd += ["-pos", pos]
+  let l:cmd = [
+        \ 'gogetdoc',
+        \ '-tags', go#config#BuildTags(),
+        \ '-pos', expand("%:p:gs!\\!/!") . ':#' . go#util#OffsetCursor()]
   if a:json
-    let cmd += ["-json"]
+    let l:cmd += ['-json']
   endif
-
-  let command = join(cmd, " ")
 
   if &modified
-    " gogetdoc supports the same archive format as guru for dealing with
-    " modified buffers.
-    "   use the -modified flag
-    "   write each archive entry on stdin as:
-    "     filename followed by newline
-    "     file size followed by newline
-    "     file contents
-    let in = ""
-    let content = join(go#util#GetLines(), "\n")
-    let in = fname . "\n" . strlen(content) . "\n" . content
-    let command .= " -modified"
-    let out = go#util#System(command, in)
-  else
-    let out = go#util#System(command)
+    let l:cmd += ['-modified']
+    return go#util#Exec(l:cmd, go#util#archive())
   endif
 
-  return out
+  return go#util#Exec(l:cmd)
 endfunction
 
 " returns the package and exported name. exported name might be empty.
@@ -211,14 +185,5 @@ function! s:godocWord(args) abort
 
   return [pkg, exported_name]
 endfunction
-
-function! s:godocNotFound(content) abort
-  if len(a:content) == 0
-    return 1
-  endif
-
-  return a:content =~# '^.*: no such file or directory\n$'
-endfunction
-
 
 " vim: sw=2 ts=2 et
