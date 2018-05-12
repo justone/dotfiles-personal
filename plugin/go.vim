@@ -4,44 +4,75 @@ if exists("g:go_loaded_install")
 endif
 let g:go_loaded_install = 1
 
+" Not using the has('patch-7.4.1689') syntax because that wasn't added until
+" 7.4.237, and we want to be sure this works for everyone (this is also why
+" we're not using utils#EchoError()).
+"
+" Version 7.4.1689 was chosen because that's what the most recent Ubuntu LTS
+" release (16.04) uses.
+if
+      \ go#config#VersionWarning() != 0 &&
+      \ (v:version < 704 || (v:version == 704 && !has('patch1689')))
+      \ && !has('nvim')
+  echohl Error
+  echom "vim-go requires Vim 7.4.1689 or Neovim, but you're using an older version."
+  echom "Please update your Vim for the best vim-go experience."
+  echom "If you really want to continue you can set this to make the error go away:"
+  echom "    let g:go_version_warning = 0"
+  echom "Note that some features may error out or behave incorrectly."
+  echom "Please do not report bugs unless you're using Vim 7.4.1689 or newer."
+  echohl None
+
+  " Make sure people see this.
+  sleep 2
+endif
+
 " these packages are used by vim-go and can be automatically installed if
 " needed by the user with GoInstallBinaries
-let s:packages = [
-      \ "github.com/nsf/gocode",
-      \ "github.com/alecthomas/gometalinter",
-      \ "golang.org/x/tools/cmd/goimports",
-      \ "golang.org/x/tools/cmd/guru",
-      \ "golang.org/x/tools/cmd/gorename",
-      \ "github.com/golang/lint/golint",
-      \ "github.com/rogpeppe/godef",
-      \ "github.com/kisielk/errcheck",
-      \ "github.com/jstemmer/gotags",
-      \ "github.com/klauspost/asmfmt/cmd/asmfmt",
-      \ "github.com/fatih/motion",
-      \ "github.com/fatih/gomodifytags",
-      \ "github.com/zmb3/gogetdoc",
-      \ "github.com/josharian/impl",
-      \ ]
+let s:packages = {
+      \ 'asmfmt':        ['github.com/klauspost/asmfmt/cmd/asmfmt'],
+      \ 'dlv':           ['github.com/derekparker/delve/cmd/dlv'],
+      \ 'errcheck':      ['github.com/kisielk/errcheck'],
+      \ 'fillstruct':    ['github.com/davidrjenni/reftools/cmd/fillstruct'],
+      \ 'gocode':        ['github.com/mdempsky/gocode', {'windows': ['-ldflags', '-H=windowsgui']}],
+      \ 'godef':         ['github.com/rogpeppe/godef'],
+      \ 'gogetdoc':      ['github.com/zmb3/gogetdoc'],
+      \ 'goimports':     ['golang.org/x/tools/cmd/goimports'],
+      \ 'golint':        ['github.com/golang/lint/golint'],
+      \ 'gometalinter':  ['github.com/alecthomas/gometalinter'],
+      \ 'gomodifytags':  ['github.com/fatih/gomodifytags'],
+      \ 'gorename':      ['golang.org/x/tools/cmd/gorename'],
+      \ 'gotags':        ['github.com/jstemmer/gotags'],
+      \ 'guru':          ['golang.org/x/tools/cmd/guru'],
+      \ 'impl':          ['github.com/josharian/impl'],
+      \ 'keyify':        ['github.com/dominikh/go-tools/cmd/keyify'],
+      \ 'motion':        ['github.com/fatih/motion'],
+\ }
 
 " These commands are available on any filetypes
-command! GoInstallBinaries call s:GoInstallBinaries(-1)
-command! GoUpdateBinaries call s:GoInstallBinaries(1)
+command! -nargs=* -complete=customlist,s:complete GoInstallBinaries call s:GoInstallBinaries(-1, <f-args>)
+command! -nargs=* -complete=customlist,s:complete GoUpdateBinaries  call s:GoInstallBinaries(1, <f-args>)
 command! -nargs=? -complete=dir GoPath call go#path#GoPath(<f-args>)
 
-" GoInstallBinaries downloads and install all necessary binaries stated in the
-" packages variable. It uses by default $GOBIN or $GOPATH/bin as the binary
-" target install directory. GoInstallBinaries doesn't install binaries if they
-" exist, to update current binaries pass 1 to the argument.
-function! s:GoInstallBinaries(updateBinaries)
-  if $GOPATH == "" && go#util#gopath() == ""
-    echohl Error
-    echomsg "vim.go: $GOPATH is not set"
-    echohl None
+fun! s:complete(lead, cmdline, cursor)
+  return filter(keys(s:packages), 'strpart(v:val, 0, len(a:lead)) == a:lead')
+endfun
+
+" GoInstallBinaries downloads and installs binaries defined in s:packages to
+" $GOBIN or $GOPATH/bin. GoInstallBinaries will update already installed
+" binaries only if updateBinaries = 1. By default, all packages in s:packages
+" will be installed, but the set can be limited by passing the desired
+" packages in the unnamed arguments.
+function! s:GoInstallBinaries(updateBinaries, ...)
+  let err = s:CheckBinaries()
+  if err != 0
     return
   endif
 
-  let err = s:CheckBinaries()
-  if err != 0
+  if go#path#Default() == ""
+    echohl Error
+    echomsg "vim.go: $GOPATH is not set and 'go env GOPATH' returns empty"
+    echohl None
     return
   endif
 
@@ -66,38 +97,56 @@ function! s:GoInstallBinaries(updateBinaries)
     set noshellslash
   endif
 
-  let cmd = "go get -v "
+  let l:cmd = ['go', 'get', '-v']
   if get(g:, "go_get_update", 1) != 0
-    let cmd .= "-u "
+    let l:cmd += ['-u']
   endif
 
-  let s:go_version = matchstr(go#util#System("go version"), '\d.\d.\d')
-
-  " https://github.com/golang/go/issues/10791
-  if s:go_version > "1.4.0" && s:go_version < "1.5.0"
-    let cmd .= "-f "
+  " Filter packages from arguments (if any).
+  let l:packages = {}
+  if a:0 > 0
+    for l:bin in a:000
+      let l:pkg = get(s:packages, l:bin, [])
+      if len(l:pkg) == 0
+        call go#util#EchoError('unknown binary: ' . l:bin)
+        return
+      endif
+      let l:packages[l:bin] = l:pkg
+    endfor
+  else
+    let l:packages = s:packages
   endif
 
-  for pkg in s:packages
-    let basename = fnamemodify(pkg, ":t")
-    let binname = "go_" . basename . "_bin"
+  let l:platform = ''
+  if go#util#IsWin()
+    let l:platform = 'windows'
+  endif
 
-    let bin = basename
+  for [binary, pkg] in items(l:packages)
+    let l:importPath = pkg[0]
+
+    let l:run_cmd = copy(l:cmd)
+    if len(l:pkg) > 1 && get(l:pkg[1], l:platform, '') isnot ''
+      let l:run_cmd += get(l:pkg[1], l:platform, '')
+    endif
+
+    let binname = "go_" . binary . "_bin"
+
+    let bin = binary
     if exists("g:{binname}")
       let bin = g:{binname}
     endif
 
     if !executable(bin) || a:updateBinaries == 1
       if a:updateBinaries == 1
-        echo "vim-go: Updating ". basename .". Reinstalling ". pkg . " to folder " . go_bin_path
+        echo "vim-go: Updating " . binary . ". Reinstalling ". importPath . " to folder " . go_bin_path
       else
-        echo "vim-go: ". basename ." not found. Installing ". pkg . " to folder " . go_bin_path
+        echo "vim-go: ". binary ." not found. Installing ". importPath . " to folder " . go_bin_path
       endif
 
-
-      let out = go#util#System(cmd . shellescape(pkg))
-      if go#util#ShellError() != 0
-        echo "Error installing ". pkg . ": " . out
+      let [l:out, l:err] = go#util#Exec(l:run_cmd + [l:importPath])
+      if l:err
+        echom "Error installing " . l:importPath . ": " . l:out
       endif
     endif
   endfor
@@ -209,6 +258,19 @@ augroup vim-go
   " in the same window doesn't highlight the most recently matched
   " identifier's positions.
   autocmd BufWinEnter *.go call go#guru#ClearSameIds()
-augroup END
+
+  autocmd BufEnter *.go
+        \  if go#config#AutodetectGopath() && !exists('b:old_gopath')
+        \|   let b:old_gopath = exists('$GOPATH') ? $GOPATH : -1
+        \|   let $GOPATH = go#path#Detect()
+        \| endif
+  autocmd BufLeave *.go
+        \  if exists('b:old_gopath')
+        \|   if b:old_gopath isnot -1
+        \|     let $GOPATH = b:old_gopath
+        \|   endif
+        \|   unlet b:old_gopath
+        \| endif
+augroup end
 
 " vim: sw=2 ts=2 et
