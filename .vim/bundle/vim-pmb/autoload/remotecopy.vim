@@ -37,18 +37,42 @@ function! remotecopy#copyreg()
 endfunction
 
 function! remotecopy#clearkey()
+    let s:key = ''
     let $PMB_KEY = ''
+    let output = system("pmb key clear")
+    echo "Key cleared."
 endfunction
 
 function! remotecopy#getkey()
-    if strlen($PMB_KEY) == 0
-        let output = system("pmb copy-key")
-        let $PMB_KEY = input("Input key: ")
+    let s:key = ""
+    while strlen(s:key) == 0
+        let output = system("pmb key copy")
+        let s:key = input("Input key: ")
+        let output = system("pmb key check -f -", s:key)
+        if v:shell_error != 0
+            let s:key = ''
+        endif
+    endwhile
+endfunction
+
+function! remotecopy#storekey()
+    if strlen(s:key) > 0
+        let output = system("pmb key store -f -", s:key)
+        if v:shell_error != 0
+            let $PMB_KEY = s:key
+        endif
     endif
 endfunction
 
 function remotecopy#rcopy(data)
-    call remotecopy#getkey()
+    if strlen($PMB_KEY) == 0
+        let output = system("pmb key get -l")
+        if v:shell_error != 0
+            call remotecopy#getkey()
+            call remotecopy#storekey()
+        endif
+    endif
+
     let output = system("pmb remotecopy", a:data)
     echo "Remote copied."
 endfunction
