@@ -22,9 +22,6 @@ function! s:map(mode, lhs, rhs, ...) abort
     return
   endif
   let flags = (a:0 ? a:1 : '') . (a:rhs =~# '^<Plug>' ? '' : '<script>')
-  if flags =~# '<unique>' && !empty(mapcheck(a:lhs, a:mode))
-    return
-  endif
   let head = a:lhs
   let tail = ''
   let keys = get(g:, a:mode.'remap', {})
@@ -42,7 +39,9 @@ function! s:map(mode, lhs, rhs, ...) abort
     let tail = matchstr(head, '<[^<>]*>$\|.$') . tail
     let head = substitute(head, '<[^<>]*>$\|.$', '', '')
   endwhile
-  exe a:mode.'map <buffer>' flags head.tail a:rhs
+  if flags !~# '<unique>' || empty(mapcheck(head.tail, a:mode))
+    exe a:mode.'map <buffer>' flags head.tail a:rhs
+  endif
 endfunction
 
 " Section: Escaping
@@ -308,7 +307,8 @@ function! s:repl.piggieback(arg, ...) abort
 
   let connection = s:conn_try(self.connection, 'clone')
   if empty(a:arg)
-    let arg = '(cljs.repl.rhino/repl-env)'
+    call connection.eval("(require 'cljs.repl.nashorn)")
+    let arg = '(cljs.repl.nashorn/repl-env)'
   elseif a:arg =~# '^\d\{1,5}$'
     let replns = 'weasel.repl.websocket'
     if has_key(connection.eval("(require '" . replns . ")"), 'ex')
@@ -320,7 +320,9 @@ function! s:repl.piggieback(arg, ...) abort
   else
     let arg = a:arg
   endif
-  let response = connection.eval('(cemerick.piggieback/cljs-repl'.' '.arg.')')
+  let response = connection.eval("((or (resolve 'cider.piggieback/cljs-repl)"
+        \ ."(resolve 'cemerick.piggieback/cljs-repl))"
+        \ .' '.arg.')')
 
   if empty(get(response, 'ex'))
     call insert(self.piggiebacks, extend({'connection': connection}, deepcopy(s:piggieback)))
@@ -1652,7 +1654,7 @@ augroup END
 " Section: Formatting
 
 function! fireplace#format(lnum, count, char) abort
-  if mode() =~# '[iR]'
+  if mode() =~# '[iR]' || getline(a:lnum) =~# '^\s*;'
     return -1
   endif
   let reg_save = @@
