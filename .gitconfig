@@ -16,6 +16,7 @@
 	ss = status --short
 	ci = commit
 	di = diff
+	cdi = diff --cached
 	co = checkout
 	w = whatchanged
 	vimdiff = difftool --tool=vimdiff -y
