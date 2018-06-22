@@ -14,10 +14,6 @@
 	url = https://github.com/mileszs/ack.vim.git
 	path = .vim/bundle/ack
 	branch = master
-[subtree ".vim/bundle/bufexplorer"]
-	url = https://github.com/vim-scripts/bufexplorer.zip.git
-	path = .vim/bundle/bufexplorer
-	branch = master
 [subtree ".vim/bundle/bufkill"]
 	url = https://github.com/vim-scripts/bufkill.vim.git
 	path = .vim/bundle/bufkill
