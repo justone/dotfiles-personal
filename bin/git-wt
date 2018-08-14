@@ -1,0 +1,172 @@
+#!/bin/bash
+
+# An opinionated wrapper around "git worktree"
+#
+# This script manages a main repository and several worktrees.  The main
+# repository should always have the master branch checked out.  New worktrees
+# are created as siblings of the master repo, named after the branch that they
+# hold.
+#
+# Here is the typical flow:
+#
+#  /path/to/repo $ git wt new my-work-branch
+#  /path/to/repo $ cd $(git wt show -d my-work-branch)
+#  /path/to/repo.my-work-branch $ # do normal git work, committing as needed
+#  /path/to/repo.my-work-branch $ cd $(git wt show -d master)
+#  /path/to/repo $ git merge my-work-branch 
+#  /path/to/repo $ git wt destroy my-work-branch
+
+read -r -d '' USAGE <<'USAGEEND'
+git-wt - git worktree magic
+Options:
+    -h                  This help text.
+    create|new <branch> Create a new worktree with the specified branch
+    show <branch>       Show information about the worktree for the specified branch
+    destroy|rm <branch> Destroy the worktree for the specified branch safely
+
+Examples:
+
+    Create new worktree for a new or existing local or remote branch
+    $ git wt new branch_name
+    Destroy the current worktree
+    $ git wt destroy
+    Destroy the current worktree
+    $ git wt show branch_name -d
+USAGEEND
+
+# Make sure a worktree exists, including the requisite branch
+_ensure_worktree() {
+    if [ $# -lt 1 ]; then
+        echo "$USAGE"
+        exit 1
+    fi
+
+    branch=$1
+
+    branch_dir=$(_get_info -d $branch)
+    if [ -d "$branch_dir" ]; then
+        echo "worktree $branch_dir found"
+    else
+        master=$(_get_info -d master)
+
+        # clean branch name of slashes by replacing with percent
+        clean_branch=$(echo "${branch}" | tr / %)
+        branch_dir="${master}.${clean_branch}"
+
+        echo "creating worktree for ${branch}"
+
+        root=$(git rev-parse --show-toplevel)
+        if [ -d "$root/$branch" ]; then
+            echo "cannot have branch name same as top level directory"
+            exit 1
+        fi
+
+        if git checkout $branch; then
+            echo "found local branch (or new from remote)"
+            git checkout -
+        elif git branch $branch; then
+            echo "created new branch $branch"
+        else
+            echo "error creating branch $branch"
+            exit 1
+        fi
+
+        git worktree add "$branch_dir" $branch
+    fi
+}
+
+# Destroy a worktree, pruning it from the list
+_cleanup_worktree() {
+    # TODO this only works if the -f s before the branch name
+    local FORCE OPTIND
+    while getopts f flag; do
+        case $flag in
+            f)
+                FORCE=1;;
+        esac
+    done
+    shift $(expr $OPTIND - 1 )
+
+    if [ $# -lt 1 ]; then
+        raw_branch=$(git symbolic-ref HEAD)
+        branch=${raw_branch##refs/heads/}
+    else
+        branch=$1
+    fi
+
+    if [ "$branch" = "master" ]; then
+        echo "not destroying master worktree"
+        exit 1
+    fi
+
+    branch_dir=$(_get_info -d $branch)
+    if [ -d "$branch_dir" ]; then
+        status=$(git --git-dir  $branch_dir/.git --work-tree $branch_dir status --porcelain)
+        if [ -n "$status" -a -z "$FORCE" ]; then
+            echo "worktree has modifications, not deleting (use -f to override):"
+            echo "$status"
+            exit 1
+        fi
+
+        # change out of about-to-be-deleted worktree
+        if [ "${PWD##$branch_dir}" != "$PWD" ]; then
+            cd $(_get_info -d master)
+        fi
+
+        echo "removing worktree $branch_dir"
+        rm -rf "$branch_dir"
+        git worktree prune -v
+    fi
+}
+
+_get_info() {
+    if [ $# -lt 1 ]; then
+        echo "$USAGE"
+        exit 1
+    fi
+
+    # TODO this only works if the options are before the branch name
+    local SHOW_DIR OPTIND
+    while getopts d flag; do
+        case $flag in
+            d)
+                SHOW_DIR=1;;
+        esac
+    done
+    shift $(expr $OPTIND - 1 )
+
+    branch=$1
+
+    worktree=
+    git worktree list --porcelain | while read line; do
+        if [ -n "$line" ]; then
+            IFS='	' read -ra DAT <<< $line
+            set $DAT
+            key=$1
+            val=$2
+            if [ "$key" = "branch" ]; then
+                if [ "$branch" = "${val##refs/heads/}" ]; then
+                    if [ -n "$SHOW_DIR" ]; then
+                        echo "$worktree"
+                    fi
+                fi
+            elif [ "$key" = "worktree" ]; then
+                worktree=$val
+            fi
+        fi
+    done
+
+}
+
+if [ $# -lt 1 ]; then
+    echo "$USAGE"
+    exit 1
+fi
+
+command=$1; shift
+
+case $command in
+    create|new) _ensure_worktree "$@";;
+    destroy|rm) _cleanup_worktree "$@";;
+    show) _get_info "$@";;
+esac
