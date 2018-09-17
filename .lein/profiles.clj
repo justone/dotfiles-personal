@@ -4,4 +4,5 @@
                    [lein-pprint  "1.1.1"]]
          ; :dependencies [[vvvvalvalval/scope-capture "0.1.4"]]
          ; :injections [(require 'sc.api)]
+         :repl-options {:timeout 120000}
          }}
