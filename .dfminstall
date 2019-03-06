@@ -2,6 +2,7 @@ README.md skip
 .mjolnir recurse
 .ssh recurse
 .config recurse
+.clojure recurse
 .lein recurse
 .local recurse
 .gittrees skip
