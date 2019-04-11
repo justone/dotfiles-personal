@@ -39,6 +39,8 @@ is "args" and for the "q" commands is "quickfix".
 *]t*     |:tnext|
 *[T*     |:tfirst|
 *]T*     |:tlast|
+*[<C-T>* |:ptprevious|
+*]<C-T>* |:ptnext|
 
                                                 *[f*
 [f                      Go to the file preceding the current one
@@ -49,12 +51,12 @@ is "args" and for the "q" commands is "quickfix".
                         alphabetically in the current file's directory.
 
                                                 *[n*
-[n                      Go to the previous SCM conflict marker.  Try d[n
-                        inside a conflict.
+[n                      Go to the previous SCM conflict marker or diff/patch
+                        hunk.  Try d[n inside a conflict.
 
                                                 *]n*
-]n                      Go to the next SCM conflict marker.  Try d]n inside a
-                        conflict.
+]n                      Go to the next SCM conflict marker or diff/patch hunk.
+                        Try d]n inside a conflict.
 
 LINE OPERATIONS                                 *unimpaired-lines*
 
@@ -73,25 +75,42 @@ LINE OPERATIONS                                 *unimpaired-lines*
 OPTION TOGGLING                                 *unimpaired-toggling*
 
 On	Off	Toggle	Option
-*[oc*	*]oc*	*coc*	'cursorline'
-*[od*	*]od*	*cod*	'diff' (actually |:diffthis| / |:diffoff|)
-*[oh*	*]oh*	*coh*	'hlsearch'
-*[oi*	*]oi*	*coi*	'ignorecase'
-*[ol*	*]ol*	*col*	'list'
-*[on*	*]on*	*con*	'number'
-*[or*	*]or*	*cor*	'relativenumber'
-*[os*	*]os*	*cos*	'spell'
-*[ou*	*]ou*	*cou*	'cursorcolumn'
-*[ow*	*]ow*	*cow*	'wrap'
-*[ox*	*]ox*	*cox*	'cursorline' 'cursorcolumn' (x as in crosshairs)
+*[ob*	*]ob*	*yob*	'background' (dark is off, light is on)
+*[oc*	*]oc*	*yoc*	'cursorline'
+*[od*	*]od*	*yod*	'diff' (actually |:diffthis| / |:diffoff|)
+*[oh*	*]oh*	*yoh*	'hlsearch'
+*[oi*	*]oi*	*yoi*	'ignorecase'
+*[ol*	*]ol*	*yol*	'list'
+*[on*	*]on*	*yon*	'number'
+*[or*	*]or*	*yor*	'relativenumber'
+*[os*	*]os*	*yos*	'spell'
+*[ou*	*]ou*	*you*	'cursorcolumn'
+*[ov*	*]ov*	*yov*	'virtualedit'
+*[ow*	*]ow*	*yow*	'wrap'
+*[ox*	*]ox*	*yox*	'cursorline' 'cursorcolumn' (x as in crosshairs)
 
-                                                *yp* *yP* *yo* *yO* *yI* *yA*
+The mnemonic for y is that if you tilt it a bit it looks like a switch.
+
+PASTING                                         *unimpaired-pasting*
+
+These are experimental:
+
+*>p*    Paste after linewise, increasing indent.
+*>P*    Paste before linewise, increasing indent.
+*<p*    Paste after linewise, decreasing indent.
+*<P*    Paste before linewise, decreasing indent.
+*=p*    Paste after linewise, reindenting.
+*=P*    Paste before linewise, reindenting.
+
+|]p|, |[p|, |[P|, and |]P| have also been remapped to force linewise pasting,
+while preserving their usual indent matching behavior.
+
+                                                *[op* *]op* *yop*
 A toggle has not been provided for 'paste' because the typical use case of
-wrapping of a solitary insertion is so wasteful:  You toggle twice, but
-you only paste once (YOPO).  Instead, press yp or yP to invoke |a| or |i| with
-'paste' already set.  Leaving insert mode sets 'nopaste' automatically.  You
-can also use yo, yO, yI, or yA to do the same operation with |o|, |O|,
-|I|, or |A|.
+wrapping of a solitary insertion is inefficient:  You toggle twice, but
+you only paste once (YOPO).  Instead, press [op, ]op, or yop to invoke |O|,
+|o|, or |0||C| with 'paste' already set.  Leaving insert mode sets 'nopaste'
+automatically.
 
 ENCODING AND DECODING                           *unimpaired-encoding*
 
@@ -99,11 +118,11 @@ Each of these operations has a map that takes a motion, a map that
 targets [count] lines, and a visual mode map.  The linewise variant integrates
 with repeat.vim.
 
-Mnenomic: encoding always comes before decoding; "[" always comes before "]".
+Mnemonic: encoding always comes before decoding; "[" always comes before "]".
 
                                                 *[x* *[xx* *v_[x*
 [x{motion}              XML encode.
-[xx                     <foo bar="baz"> => &lt;foo bar=&quot;baz&quot&gt;
+[xx                     <foo bar="baz"> => &lt;foo bar=&quot;baz&quot;&gt;
 {Visual}[x
 
                                                 *]x* *]xx* *v_]x*
@@ -130,9 +149,5 @@ Mnenomic: encoding always comes before decoding; "[" always comes before "]".
 ]y{motion}              C String decode.
 ]yy
 {Visual}]y
-
-TODO                                            *unimpaired-todo*
-
-Avoid munging null characters when encoding and decoding.
 
  vim:tw=78:et:ft=help:norl:
