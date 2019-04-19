@@ -14,3 +14,8 @@ fzf --ansi --no-sort --reverse --tiebreak=index \
     --bind "enter:execute(echo {} | cut -d: -f1 | head -1 |
                xargs -I % sh -c 'git stash apply %')+abort"
 
+# TODO: figure out how to support dropping and re-execute the stash list
+               # \
+    # --bind "ctrl-r:execute(echo {} | cut -d: -f1 | head -1 |
+               # xargs -I % sh -c 'git stash drop %')"
+
