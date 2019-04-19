@@ -1,0 +1,12 @@
+#!/bin/bash
+
+POST=cat
+FORMAT="%C(yellow)%D%Creset %Cgreen(%cr)%Creset %C(bold blue)%an%Creset"
+if type xsv &> /dev/null; then
+    FORMAT="\"%C(yellow)%D%Creset\",\"%Cgreen(%cr)%Creset\",\"%C(bold blue)%an%Creset\""
+    POST="xsv table"
+fi
+
+for branch in `git for-each-ref --count=30 --sort=-committerdate refs/remotes/ --format="%(refname:short)"`; do
+    echo `git show --color=always --format="$FORMAT" $branch | head -n 1`
+done | uniq | $POST
