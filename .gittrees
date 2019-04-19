@@ -294,3 +294,7 @@
 	url = https://github.com/jlanzarotta/bufexplorer.git
 	path = .vim/bundle/bufexplorer
 	branch = master
+[subtree ".vim/bundle/syntastic-joker"]
+	url = https://github.com/aclaimant/syntastic-joker.git
+	path = .vim/bundle/syntastic-joker
+	branch = master
