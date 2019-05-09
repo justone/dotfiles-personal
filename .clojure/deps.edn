@@ -3,6 +3,9 @@
            :try {:extra-deps {deps-try {:git/url "https://gitlab.com/eval/deps-try"
                                         :sha "9c5eb7d54fadbfc8f5c8b312678c7fee3cc69050"}}
                  :main-opts ["-m" "deps-try.main"]}
+           :repl {:extra-deps {cljdev {:git/url "https://github.com/justone/cljdev.git"
+                                       :sha "5a84476302ace6b89c0f8c2afe27ab9459220f61"}}
+                  :main-opts  ["-m" "cljdev.repl"]}
            :new {:extra-deps {seancorfield/clj-new {:mvn/version "0.5.5"}}
                  :main-opts ["-m" "clj-new.create"]}
            }
