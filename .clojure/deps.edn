@@ -1,11 +1,9 @@
 {
  :aliases {
-		   :try {:extra-deps {deps-try
-							  {:git/url "https://gitlab.com/eval/deps-try",
-							   :sha "9c5eb7d54fadbfc8f5c8b312678c7fee3cc69050"}},
-				 :main-opts ["-m" "deps-try.main"]}
-		   :new {:extra-deps {seancorfield/clj-new
-							  {:mvn/version "0.5.5"}}
-				 :main-opts ["-m" "clj-new.create"]}
-		   }
+           :try {:extra-deps {deps-try {:git/url "https://gitlab.com/eval/deps-try"
+                                        :sha "9c5eb7d54fadbfc8f5c8b312678c7fee3cc69050"}}
+                 :main-opts ["-m" "deps-try.main"]}
+           :new {:extra-deps {seancorfield/clj-new {:mvn/version "0.5.5"}}
+                 :main-opts ["-m" "clj-new.create"]}
+           }
  }
