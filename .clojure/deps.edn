@@ -8,5 +8,9 @@
                   :main-opts  ["-m" "cljdev.repl"]}
            :new {:extra-deps {seancorfield/clj-new {:mvn/version "0.5.5"}}
                  :main-opts ["-m" "clj-new.create"]}
+           :re-find {:extra-deps {MageMasher/re-find.fx
+                                  {:git/url "https://github.com/MageMasher/re-find.fx"
+                                   :sha "b29bde3519f7632b63eb71415943bf8a7cfa1462"}}
+                     :main-opts ["-m" "re-find.fx"]}
            }
  }
