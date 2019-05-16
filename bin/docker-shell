@@ -5,4 +5,4 @@
 IMAGE=$1
 SHELL=${2:-/bin/bash}
 
-docker run --rm -i -t $IMAGE $SHELL
+docker run --rm -i -t --entrypoint $SHELL $IMAGE
