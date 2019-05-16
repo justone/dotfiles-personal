@@ -13,11 +13,23 @@ set $mod Mod1
 
 # Font for window titles. Will also be used by the bar unless a different font
 # is used in the bar {} block below.
-font pango:monospace 8
+font pango:monospace 14
+
+for_window [class="copyq"] floating enable
+for_window [class="Shutter"] floating enable
+for_window [class="qjackctl"] floating enable
+for_window [class="java"] floating enable
+bindsym $mod+Control+v exec copyq show
+
+bindsym $mod+Control+k move workspace to output up
+bindsym $mod+Control+j move workspace to output down
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
 #font pango:DejaVu Sans Mono 8
+
+bindsym $mod+Control+p exec shutter -s
+bindsym $mod+Control+Shift+p exec shutter -f
 
 # Before i3 v4.8, we used to recommend this one as the default:
 # font -misc-fixed-medium-r-normal--13-120-75-75-C-70-iso10646-1
@@ -36,11 +48,14 @@ bindsym $mod+Return exec i3-sensible-terminal
 bindsym $mod+Shift+q kill
 
 # start dmenu (a program launcher)
-bindsym $mod+d exec dmenu_run
+bindsym $mod+space exec dmenu_run
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
+
+# lock
+bindsym Mod4+l exec i3lock -c 002244
 
 # change focus
 bindsym $mod+h focus left
@@ -49,10 +64,10 @@ bindsym $mod+k focus up
 bindsym $mod+l focus right
 
 # alternatively, you can use the cursor keys:
-bindsym $mod+Left focus left
-bindsym $mod+Down focus down
-bindsym $mod+Up focus up
-bindsym $mod+Right focus right
+# bindsym $mod+Left focus left
+# bindsym $mod+Down focus down
+# bindsym $mod+Up focus up
+# bindsym $mod+Right focus right
 
 # move focused window
 bindsym $mod+Shift+h move left
@@ -61,10 +76,10 @@ bindsym $mod+Shift+k move up
 bindsym $mod+Shift+l move right
 
 # alternatively, you can use the cursor keys:
-bindsym $mod+Shift+Left move left
-bindsym $mod+Shift+Down move down
-bindsym $mod+Shift+Up move up
-bindsym $mod+Shift+Right move right
+# bindsym $mod+Shift+Left move left
+# bindsym $mod+Shift+Down move down
+# bindsym $mod+Shift+Up move up
+# bindsym $mod+Shift+Right move right
 
 # split in horizontal orientation
 #bindsym $mod+s split h
@@ -83,8 +98,11 @@ bindsym $mod+e layout toggle split
 # toggle tiling / floating
 bindsym $mod+Shift+space floating toggle
 
+# toggle sticky
+bindsym $mod+Shift+s sticky toggle
+
 # change focus between tiling / floating windows
-bindsym $mod+space focus mode_toggle
+bindsym $mod+Shift+t focus mode_toggle
 
 # focus the parent container
 bindsym $mod+a focus parent
@@ -121,7 +139,8 @@ bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 bindsym $mod+Shift+r restart
 # exit i3 (logs you out of your X session)
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+#bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+bindsym $mod+Shift+e exec "gnome-session-quit"
 
 # resize window (you can also use the mouse for that)
 mode "resize" {
@@ -149,9 +168,36 @@ mode "resize" {
 
 bindsym $mod+r mode "resize"
 
+# start polybar
+exec_always --no-startup-id $HOME/.config/polybar/launch.sh
+
+# Resizing windows in i3 using keyboard only
+# https://unix.stackexchange.com/q/255344/150597
+
+# Resizing by 1
+bindsym $mod+Ctrl+Right resize shrink width 1 px or 1 ppt
+bindsym $mod+Ctrl+Up resize grow height 1 px or 1 ppt
+bindsym $mod+Ctrl+Down resize shrink height 1 px or 1 ppt
+bindsym $mod+Ctrl+Left resize grow width 1 px or 1 ppt
+
+# Resizing by 10
+bindsym $mod+Ctrl+Shift+Right resize shrink width 10 px or 10 ppt
+bindsym $mod+Ctrl+Shift+Up resize grow height 10 px or 10 ppt
+bindsym $mod+Ctrl+Shift+Down resize shrink height 10 px or 10 ppt
+bindsym $mod+Ctrl+Shift+Left resize grow width 10 px or 10 ppt
+
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
-bar {
-        status_command i3status -c ~/.config/i3status/config
-        tray_output primary
-}
+# bar {
+#         status_command i3status -c ~/.config/i3status/config
+#         tray_output primary
+# }
+
+exec --no-startup-id dbus-send \
+    --session \
+    --print-reply=literal \
+    --dest=org.gnome.SessionManager \
+    "/org/gnome/SessionManager" \
+    org.gnome.SessionManager.RegisterClient \
+    "string:i3" \
+    "string:$DESKTOP_AUTOSTART_ID"
