@@ -5,3 +5,6 @@
 [source]
     personal = https://github.com/justone/holens.git
 
+[strategy]
+    jq.xpriority = binary
+
