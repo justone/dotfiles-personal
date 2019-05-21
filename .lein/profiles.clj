@@ -17,4 +17,11 @@
  :dev-resources {:resource-paths ["scratch/dev-resources"]}
 
  ;; allow specifying a bigger JVM
- :hefty {:jvm-opts ^:replace ["-server" "-XX:MaxMetaspaceSize=1024m" "-Xmx3072m" "-XX:+UseG1GC"]}}
+ :hefty {:jvm-opts ^:replace ["-server" "-XX:MaxMetaspaceSize=1024m" "-Xmx3072m" "-XX:+UseG1GC"]}
+
+ ;; pretty printing exceptions
+ :pretty {:plugins [[io.aviso/pretty "0.1.37"]]
+          :dependencies [[io.aviso/pretty "0.1.37"]]
+          :middleware [io.aviso.lein-pretty/inject]}
+
+ }
