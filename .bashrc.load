@@ -27,8 +27,6 @@ then
     . $HOME/.bashrc.d/completion
 fi
 
-. $HOME/.bashrc.d/pmb
-
 # load up host specific files, either
 # ~/.bashrc.d/host.d/hostname.com
 #  -- or --
