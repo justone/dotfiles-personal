@@ -1,3 +1,3 @@
 [broker]
-    uri = amqps://nate:Ol-rIg-Nan-in-@mq.ndj.la/
+    uri = wss://pmb.ndj.la/pmb/3f595cd5-18e9-4bef-87aa-d0ae2bcc466c/
 
