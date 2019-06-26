@@ -16,6 +16,13 @@
  ;; allow specifying resources without leaving them modified
  :dev-resources {:resource-paths ["scratch/dev-resources"]}
 
+ ;; add in REBL
+ :rebl {:resource-paths ["/home/nate/REBL-0.9.168/REBL-0.9.168.jar"]}
+
+ ;; add in Punk
+ :punk {:dependencies
+        [[lilactown/punk-adapter-jvm "0.0.8"]]}
+
  ;; allow specifying a bigger JVM
  :hefty {:jvm-opts ^:replace ["-server" "-XX:MaxMetaspaceSize=1024m" "-Xmx3072m" "-XX:+UseG1GC"]}
 
