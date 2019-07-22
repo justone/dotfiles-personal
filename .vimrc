@@ -71,10 +71,12 @@ let g:conjure_fold_multiline_results = 1
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_rst_checkers = ['sphinx']
-let g:syntastic_clojure_checkers = ['joker']
+let g:syntastic_clojure_checkers = ['joker', 'clj_kondo']
 let g:syntastic_mode_map = { 'mode': 'active',
-            \ 'passive_filetypes': ['python', 'puppet', 'rst', 'clojure'] }
+            \ 'passive_filetypes': ['python', 'puppet', 'rst'] }
 nmap <leader>st :SyntasticToggleMode<CR>
+
+au BufNewFile,BufRead */fiddle/* let b:syntastic_mode="passive"
 
 let g:UltiSnipsExpandTrigger="<tab>"
 let g:UltiSnipsJumpForwardTrigger="<tab>"
