@@ -60,6 +60,13 @@ let g:airline_section_z = '%{airline#util#wrap(airline#extensions#obsession#get_
 let g:airline_symbols = {}
 let g:airline_symbols.branch = ''
 
+" conjure
+let g:conjure_log_direction = "horizontal"
+let g:conjure_log_size_large = 100
+let g:conjure_log_auto_close = 0
+let g:conjure_log_auto_open = ["doc", "error"]
+let g:conjure_fold_multiline_results = 1
+
 " configure syntastic
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
