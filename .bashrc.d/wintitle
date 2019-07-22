@@ -11,11 +11,9 @@
 # Comment in the above and uncomment this below for a color prompt
 #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
-if [ -e /usr/local/git/contrib/completion/git-completion.bash ]; then
-    #echo "file exists"
-    . /usr/local/git/contrib/completion/git-completion.bash
+if [ -e /usr/lib/git-core/git-sh-prompt ]; then
+    . /usr/lib/git-core/git-sh-prompt
 else
-    #echo "file does not exist"
     __git_ps1 ()
     {
         printf ""
