@@ -65,3 +65,5 @@
 	protocol = https
 [include]
 	path = ~/.gitconfig.local
+[branch]
+	sort = authordate
