@@ -1,1 +1,2 @@
-{:key-map :viins}
+{:key-map :viins
+ :key-bindings {:viins [["^M" :clojure-force-accept-line]]}}
