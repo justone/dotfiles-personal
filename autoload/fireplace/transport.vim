@@ -6,23 +6,19 @@ if exists('g:autoloaded_fireplace_transport')
 endif
 let g:autoloaded_fireplace_transport = 1
 
-let s:python_dir = fnamemodify(expand("<sfile>"), ':p:h:h:h') . '/python'
+let s:python_dir = fnamemodify(expand("<sfile>"), ':p:h:h:h') . '/pythonx'
 if !exists('g:fireplace_python_executable')
   let g:fireplace_python_executable = executable('python3') ? 'python3' : 'python'
 endif
 
-if !exists('s:keepalive')
-  let s:keepalive = tempname()
-  call writefile([getpid()], s:keepalive)
-endif
-
 if !exists('s:id')
-  let s:vim_id = localtime()
+  let s:vim_id = 'fireplace-' . hostname() . '-' . localtime()
   let s:id = 0
 endif
 function! fireplace#transport#id() abort
   let s:id += 1
-  return 'fireplace-'.hostname().'-'.s:vim_id.'-'.s:id
+  let sha = sha256(s:vim_id . '-' . s:id . '-' . reltimestr(reltime()))
+  return printf('%s-%s-4%s-%s-%s', sha[0:7], sha[8:11], sha[13:15], sha[16:19], sha[20:31])
 endfunction
 
 function! fireplace#transport#combine(responses) abort
@@ -149,7 +145,9 @@ function! s:json_callback(url, state, requests, sessions, job, msg) abort
 endfunction
 
 function! s:exit_callback(url, state, requests, sessions, job, status) abort
-  call remove(s:urls, a:url)
+  if has_key(s:urls, a:url)
+    call remove(s:urls, a:url)
+  endif
   let a:state.exit = a:status
 endfunction
 
@@ -165,33 +163,34 @@ augroup fireplace_transport
 augroup END
 
 function! fireplace#transport#connect(arg) abort
-  let arg = substitute(a:arg, '^nrepl://', '', '')
-  if arg =~# '^\d\+$'
-    let host = 'localhost'
-    let port = arg
-  elseif arg =~# '^[^:/@]\+:\d\+\%(/\|$\)'
-    let host = matchstr(a:arg, '^[^:/@]\+')
-    let port = matchstr(a:arg, ':\zs\d\+')
-  else
+  let url = substitute(a:arg, '#.*', '', '')
+  if url =~# '^\d\+$'
+    let url = 'nrepl://localhost:' . url
+  elseif url =~# '^[^:/@]\+\(:\d\+\)\=$'
+    let url = 'nrepl://' . url
+  elseif url !~# '^\a\+://'
     throw "Fireplace: invalid connection string " . string(a:arg)
   endif
-  let url = 'nrepl://' . host . ':' . port
+  let url = substitute(url, '^\a\+://[^/]*\zs$', '/', '')
+  let url = substitute(url, '^nrepl://[^/:]*\zs/', ':7888/', '')
   if has_key(s:urls, url)
     return s:urls[url].transport
   endif
-  let command = [g:fireplace_python_executable,
-        \ s:python_dir.'/nrepl_fireplace.py',
-        \ host,
-        \ port,
-        \ s:keepalive,
-        \ 'tunnel']
+  let scheme = matchstr(url, '^\a\+')
+  if scheme ==# 'nrepl'
+    let command = [g:fireplace_python_executable, s:python_dir.'/fireplace.py']
+  elseif exists('g:fireplace_argv_' . scheme)
+    let command = g:fireplace_argv_{scheme}
+  else
+    throw 'Fireplace: unsupported protocol ' . scheme
+  endif
   let transport = deepcopy(s:transport)
   let transport.url = url
   let transport.state = {}
   let transport.sessions = {}
   let transport.requests = {}
   let cb_args = [url, transport.state, transport.requests, transport.sessions]
-  let transport.job = s:json_start(command, function('s:json_callback', cb_args), function('s:exit_callback', cb_args))
+  let transport.job = s:json_start(command + [url], function('s:json_callback', cb_args), function('s:exit_callback', cb_args))
   while !has_key(transport.state, 'status') && transport.alive()
     sleep 1m
   endwhile
@@ -199,7 +198,7 @@ function! fireplace#transport#connect(arg) abort
     let s:urls[transport.url] = {'transport': transport}
     let transport.describe = transport.message({'op': 'describe', 'verbose?': 1}, v:t_dict)
     if transport.has_op('classpath')
-      let response = transport.message({'op': 'classpath', 'session': ''})[0]
+      let response = transport.message({'op': 'classpath', 'session': ''}, v:t_dict)
       if type(get(response, 'classpath')) == type([])
         let transport._path = response.classpath
       endif
@@ -247,6 +246,9 @@ function! s:transport_has_op(op) dict abort
 endfunction
 
 function! s:transport_message(request, ...) dict abort
+  if !a:0
+    throw 'Fireplace: change .message({...}) to .message({...}, v:t_list)'
+  endif
   let request = copy(a:request)
   if empty(get(request, 'id'))
     let request.id = fireplace#transport#id()
@@ -257,6 +259,7 @@ function! s:transport_message(request, ...) dict abort
   if empty(get(request, 'ns', 1))
     unlet request.ns
   endif
+  let message = {'id': request.id}
 
   if !a:0 || type(a:1) == v:t_number
     let msgs = []
@@ -268,7 +271,7 @@ function! s:transport_message(request, ...) dict abort
   endif
   call s:json_send(self.job, request)
   if !exists('msgs')
-    return request.id
+    return message
   endif
   try
     while has_key(self.requests, request.id)
@@ -276,7 +279,7 @@ function! s:transport_message(request, ...) dict abort
     endwhile
   finally
     if has_key(self.requests, request.id) && has_key(request, 'session')
-      call s:json_send(self.job, {'op': 'interrupt', 'session': request.session, 'interrupt-id': request.id})
+      call s:json_send(self.job, {'op': 'interrupt', 'id': fireplace#transport#id(), 'session': request.session, 'interrupt-id': request.id})
     endif
   endtry
   if !a:0 || a:1 is# v:t_list
@@ -284,7 +287,7 @@ function! s:transport_message(request, ...) dict abort
   elseif a:1 is# v:t_dict
     return fireplace#transport#combine(msgs)
   else
-    return v:null
+    return message
   endif
 endfunction
 

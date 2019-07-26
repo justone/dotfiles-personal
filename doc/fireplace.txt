@@ -6,8 +6,8 @@ License: Same terms as Vim itself (see |license|)
 This plugin is only available if 'compatible' is not set.
 
                                                 *fireplace*
-While not strictly necessary, this plugin works best with the middleware
-provided by <https://github.com/clojure-emacs/cider-nrepl>.
+While not a hard dependency of Fireplace itself, many features require
+<https://github.com/clojure-emacs/cider-nrepl> for full functionality.
 
 CONNECTING TO A REPL                            *fireplace-connect*
 
@@ -15,12 +15,10 @@ Connecting to lein repl happens automatically.  If you have a different setup,
 you can connect by hand.
 
                                                 *fireplace-:Connect*
-:Connect {proto}://{host}:{port} {path}
+:Connect nrepl://{host}:{port} [path]
+:Connect {port} [path]
                         Connect to a REPL server.  The path is the root of the
-                        project that the REPL applies to.
-
-:Connect                Interactively prompt for the options to connect to a
-                        REPL server.
+                        project that the REPL applies to (try ".").
 
 The REPL is used for the commands below. If no REPL is found for the current
 buffer and 'path' contains at least one jar file, java (or $JAVA_CMD) is
@@ -52,13 +50,18 @@ properly, and that not all operations are supported.
                         environment.
 
 :Piggieback             If no argument is given, :Piggieback defaults to a
-                        Nashorn REPL environment.  This will also happen
-                        automatically on first eval in a ClojureScript buffer
-                        if :Piggieback is not invoked explicitly.  Override
-                        this default with *b:fireplace_cljs_repl* or
-                        *g:fireplace_cljs_repl* .  Use an empty string to
-                        always require an argument.
-
+                        to the ClojureScript environment specified in
+                        *b:fireplace_cljs_repl* or *g:fireplace_cljs_repl* .
+                        If projectionist.vim is installed, the "cljsRepl"
+                        projectionist key is also checked.  This default will
+                        be invoked automatically on first eval in a
+                        ClojureScript buffer if :Piggieback is not invoked
+                        explicitly.  To restore the old behavior of defaulting
+                        to Nashorn, add this line to your vimrc:
+>
+        let g:fireplace_cljs_repl =
+              \ '(cider.piggieback/cljs-repl (cljs.repl.nashorn/repl-env))'
+<
 :Piggieback!            Terminate the most recently created piggieback
                         session.
 
@@ -119,8 +122,7 @@ EVALUATING CODE                                 *fireplace-eval*
 
 All code is evaluated in the namespace of the current file, requiring it if
 necessary.  If the current file sits outside the class path (project.clj, for
-example), the user namespace is used instead.  If an exception occurs, the
-stack trace is loaded into the |location-list|.  Use |:lopen| to view it.
+example), the user namespace is used instead.
 
                                                 *fireplace-:Require*
 :Require [ns]           Require :reload the given/current namespace.
@@ -141,6 +143,14 @@ stack trace is loaded into the |location-list|.  Use |:lopen| to view it.
 
 :[range]Eval! {expr}    Eval the given expression and insert it after
                         the given range or current line.
+
+                                                *fireplace-:CljEval*
+:CljEval [...]          Like :Eval, but always use Clojure, never
+                        ClojureScript.  This command is available globally.
+
+                                                *fireplace-:CljsEval*
+:CljsEval [...]         Like :Eval, but always use ClojureScript, never
+                        Clojure.  This command is available globally.
 
                                                 *fireplace-:RunTests*
 :RunTests [ns] [...]    Call clojure.test/run-tests on the given namespaces
@@ -199,6 +209,10 @@ cq{motion}              Bring up a |command-line-window| with text indicated
                         window.  Use :2Last to get the next-to-last result,
                         and so on.  Once the window is open, cycle to older
                         and newer entries with |:lprevious| and |:lnext|.
+
+                                                *fireplace-:Stacktrace*
+:Stacktrace             Retrieve the most recent Clojure error and load the
+                        stacktrace into the quickfix list.
 
 And insert mode:
 
