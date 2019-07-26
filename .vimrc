@@ -236,8 +236,10 @@ map <F12> :noh<CR>
 " a few extra mappings for fireplace
 " evaluate top level form
 au BufEnter *.clj nnoremap <buffer> cpt :Eval<CR>
+au BufEnter *.cljs nnoremap <buffer> cpt :Eval<CR>
 " show last evaluation in temp file
 au BufEnter *.clj nnoremap <buffer> cpl :Last<CR>
+au BufEnter *.cljs nnoremap <buffer> cpl :Last<CR>
 
 " remove trailing whitespace when writing
 autocmd BufWritePre * :%s/\s\+$//e
