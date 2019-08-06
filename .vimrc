@@ -64,7 +64,7 @@ let g:airline_symbols.branch = ''
 let g:conjure_log_direction = "horizontal"
 let g:conjure_log_size_large = 100
 let g:conjure_log_auto_close = 0
-let g:conjure_log_auto_open = ["doc", "error"]
+let g:conjure_log_blacklist = ["up", "status", "eval", "ret", "load-file", "test"]
 let g:conjure_fold_multiline_results = 1
 
 " configure syntastic
