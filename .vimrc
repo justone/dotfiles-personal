@@ -60,6 +60,13 @@ let g:airline_section_z = '%{airline#util#wrap(airline#extensions#obsession#get_
 let g:airline_symbols = {}
 let g:airline_symbols.branch = ''
 
+let g:loaded_fireplace = v:true
+set completeopt-=preview
+
+if filereadable(expand(".vimrc.project"))
+    source .vimrc.project
+endif
+
 " conjure
 let g:conjure_log_direction = "horizontal"
 let g:conjure_log_size_large = 100
