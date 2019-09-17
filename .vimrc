@@ -172,6 +172,7 @@ au BufNewFile,BufRead *.markdown setfiletype octopress
 let g:ctrlp_default_input = 0
 " set working dir starting at vim's working dir
 let g:ctrlp_working_path_mode = 0
+let g:ctrlp_follow_symlinks = 1
 let g:ctrlp_mruf_relative = 1
 let g:ctrlp_match_window = 'top,order:ttb,min:1,max:10,results:100'
 let g:ctrlp_prompt_mappings = {
