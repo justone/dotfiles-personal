@@ -20,7 +20,7 @@
 	co = checkout
 	w = whatchanged
 	vimdiff = difftool --tool=vimdiff -y
-	vd = difftool --tool=vimdiff -y
+	vd = difftool --tool=neovim -y
 	od = difftool --tool=opendiff -y
 	unstage = reset HEAD
 	lol = log --oneline --graph --decorate
@@ -44,9 +44,13 @@
 	unhide = update-index --no-assume-unchanged
 	hidden = !git ls-files -v | grep \"^[a-z]\"
 [merge]
-	tool = vimdiff
+	tool = neovim
 [diff]
-	tool = vimdiff
+	tool = neovim
+[difftool "neovim"]
+	cmd = nvim -d $LOCAL $REMOTE
+[mergetool "neovim"]
+	cmd = nvim -d $LOCAL $BASE $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
 [difftool]
 	prompt = false
 [core]
