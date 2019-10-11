@@ -2,7 +2,7 @@
 
 VIM="/Applications/MacVim.app/Contents/MacOS/Vim -v"
 
-export TEST=1
+export VIM_GITGUTTER_TEST=1
 
 $VIM -u NONE -U NONE -N                      \
   --cmd 'set rtp+=../'                       \
@@ -10,7 +10,7 @@ $VIM -u NONE -U NONE -N                      \
   --cmd 'source ../plugin/gitgutter.vim'     \
   -S runner.vim                              \
   test_*.vim                                 \
-  $*
+  "$@"
 
 cat messages.log
 

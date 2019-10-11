@@ -60,8 +60,10 @@ function! s:on_stdout_nvim(_job_id, data, _event) dict abort
   endif
 endfunction
 
-function! s:on_stderr_nvim(_job_id, _data, _event) dict abort
-  call self.handler.err(self.buffer)
+function! s:on_stderr_nvim(_job_id, data, _event) dict abort
+  if a:data != ['']  " With Neovim there is always [''] reported on stderr.
+    call self.handler.err(self.buffer)
+  endif
 endfunction
 
 function! s:on_exit_nvim(_job_id, exit_code, _event) dict abort
@@ -77,13 +79,19 @@ endfunction
 
 function! s:on_stderr_vim(channel, _data) dict abort
   call self.handler.err(self.buffer)
-  try
-    call ch_close(a:channel)  " so close_cb and its 'out' handler are not triggered
-  catch /E906/
-    " noop
-  endtry
 endfunction
 
-function! s:on_exit_vim(_channel) dict abort
-  call self.handler.out(self.buffer, join(self.stdoutbuffer, "\n"))
+function! s:on_exit_vim(channel) dict abort
+  let job = ch_getjob(a:channel)
+  while 1
+    if job_status(job) == 'dead'
+      let exit_code = job_info(job).exitval
+      break
+    endif
+    sleep 5m
+  endwhile
+
+  if !exit_code
+    call self.handler.out(self.buffer, join(self.stdoutbuffer, "\n"))
+  endif
 endfunction
