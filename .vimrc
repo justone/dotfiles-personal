@@ -208,6 +208,10 @@ filetype off
 call pathogen#infect()
 call pathogen#helptags()
 
+if (has("termguicolors"))
+  set termguicolors
+endif
+
 set bg=dark
 "let g:solarized_termtrans = 1
 "let g:solarized_termcolors = &t_Co
