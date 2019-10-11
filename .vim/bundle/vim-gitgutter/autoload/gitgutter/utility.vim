@@ -1,5 +1,5 @@
 function! gitgutter#utility#supports_overscore_sign()
-  if s:windows()
+  if gitgutter#utility#windows()
     return &encoding ==? 'utf-8'
   else
     return &termencoding ==? &encoding || &termencoding == ''
@@ -7,22 +7,30 @@ function! gitgutter#utility#supports_overscore_sign()
 endfunction
 
 function! gitgutter#utility#setbufvar(buffer, varname, val)
-  let dict = get(getbufvar(a:buffer, ''), 'gitgutter', {})
+  let buffer = +a:buffer
+  " Default value for getbufvar() was introduced in Vim 7.3.831.
+  let bvars = getbufvar(buffer, '')
+  if empty(bvars)
+    let bvars = {}
+  endif
+  let dict = get(bvars, 'gitgutter', {})
   let needs_setting = empty(dict)
   let dict[a:varname] = a:val
   if needs_setting
-    call setbufvar(a:buffer, 'gitgutter', dict)
+    call setbufvar(buffer, 'gitgutter', dict)
   endif
 endfunction
 
 function! gitgutter#utility#getbufvar(buffer, varname, ...)
-  let dict = get(getbufvar(a:buffer, ''), 'gitgutter', {})
-  if has_key(dict, a:varname)
-    return dict[a:varname]
-  else
-    if a:0
-      return a:1
+  let bvars = getbufvar(a:buffer, '')
+  if !empty(bvars)
+    let dict = get(bvars, 'gitgutter', {})
+    if has_key(dict, a:varname)
+      return dict[a:varname]
     endif
+  endif
+  if a:0
+    return a:1
   endif
 endfunction
 
@@ -47,11 +55,11 @@ endfunction
 " This function does not and should not make any system calls.
 function! gitgutter#utility#is_active(bufnr) abort
   return g:gitgutter_enabled &&
+        \ gitgutter#utility#getbufvar(a:bufnr, 'enabled', 1) &&
         \ !pumvisible() &&
         \ s:is_file_buffer(a:bufnr) &&
         \ s:exists_file(a:bufnr) &&
-        \ s:not_git_dir(a:bufnr) &&
-        \ !s:vimdiff(a:bufnr)
+        \ s:not_git_dir(a:bufnr)
 endfunction
 
 function! s:not_git_dir(bufnr) abort
@@ -108,48 +116,55 @@ function! gitgutter#utility#repo_path(bufnr, shellesc) abort
   return a:shellesc ? gitgutter#utility#shellescape(p) : p
 endfunction
 
-function! gitgutter#utility#set_repo_path(bufnr) abort
+
+let s:set_path_handler = {}
+
+function! s:set_path_handler.out(buffer, path) abort
+  let path = s:strip_trailing_new_line(a:path)
+  call gitgutter#utility#setbufvar(a:buffer, 'path', path)
+
+  if type(self.continuation) == type(function('tr'))
+    call self.continuation()
+  else
+    call call(self.continuation.function, self.continuation.arguments)
+  endif
+endfunction
+
+function! s:set_path_handler.err(buffer) abort
+  call gitgutter#utility#setbufvar(a:buffer, 'path', -2)
+endfunction
+
+
+" continuation - a funcref or hash to call after setting the repo path asynchronously.
+"
+" Returns 'async' if the the path is set asynchronously, 0 otherwise.
+function! gitgutter#utility#set_repo_path(bufnr, continuation) abort
   " Values of path:
   " * non-empty string - path
   " *               -1 - pending
   " *               -2 - not tracked by git
 
   call gitgutter#utility#setbufvar(a:bufnr, 'path', -1)
-  let cmd = gitgutter#utility#cd_cmd(a:bufnr, g:gitgutter_git_executable.' ls-files --error-unmatch --full-name '.gitgutter#utility#shellescape(s:filename(a:bufnr)))
+  let cmd = gitgutter#utility#cd_cmd(a:bufnr, g:gitgutter_git_executable.' '.g:gitgutter_git_args.' ls-files --error-unmatch --full-name -z -- '.gitgutter#utility#shellescape(s:filename(a:bufnr)))
 
-  if g:gitgutter_async && gitgutter#async#available()
-    if has('lambda')
-      call gitgutter#async#execute(cmd, a:bufnr, {
-            \   'out': {bufnr, path -> gitgutter#utility#setbufvar(bufnr, 'path', s:strip_trailing_new_line(path))},
-            \   'err': {bufnr       -> gitgutter#utility#setbufvar(bufnr, 'path', -2)},
-            \ })
-    else
-      call gitgutter#async#execute(cmd, a:bufnr, {
-            \   'out': function('s:set_path'),
-            \   'err': function('s:set_path', [-2])
-            \ })
-    endif
+  if g:gitgutter_async && gitgutter#async#available() && !has('vim_starting')
+    let handler = copy(s:set_path_handler)
+    let handler.continuation = a:continuation
+    call gitgutter#async#execute(cmd, a:bufnr, handler)
+    return 'async'
+  endif
+
+  let path = gitgutter#utility#system(cmd)
+  if v:shell_error
+    call gitgutter#utility#setbufvar(a:bufnr, 'path', -2)
   else
-    let path = gitgutter#utility#system(cmd)
-    if v:shell_error
-      call gitgutter#utility#setbufvar(a:bufnr, 'path', -2)
-    else
-      call gitgutter#utility#setbufvar(a:bufnr, 'path', s:strip_trailing_new_line(path))
-    endif
+    call gitgutter#utility#setbufvar(a:bufnr, 'path', s:strip_trailing_new_line(path))
   endif
 endfunction
 
-function! s:set_path(bufnr, path)
-  if a:bufnr == -2
-    let [bufnr, path] = [a:path, a:bufnr]
-    call gitgutter#utility#setbufvar(bufnr, 'path', path)
-  else
-    call gitgutter#utility#setbufvar(a:bufnr, 'path', s:strip_trailing_new_line(a:path))
-  endif
-endfunction
 
 function! gitgutter#utility#cd_cmd(bufnr, cmd) abort
-  let cd = s:unc_path(a:bufnr) ? 'pushd' : 'cd'
+  let cd = s:unc_path(a:bufnr) ? 'pushd' : (gitgutter#utility#windows() ? 'cd /d' : 'cd')
   return cd.' '.s:dir(a:bufnr).' && '.a:cmd
 endfunction
 
@@ -189,32 +204,15 @@ function! s:exists_file(bufnr) abort
   return filereadable(s:abs_path(a:bufnr, 0))
 endfunction
 
+" Get rid of any trailing new line or SOH character.
+"
+" git ls-files -z produces output with null line termination.
+" Vim's system() replaces any null characters in the output
+" with SOH (start of header), i.e. ^A.
 function! s:strip_trailing_new_line(line) abort
-  return substitute(a:line, '\n$', '', '')
+  return substitute(a:line, '[[:cntrl:]]$', '', '')
 endfunction
 
-" Returns 1 if any of the given buffer's windows has the `&diff` option set,
-" or 0 otherwise.
-if exists('*win_findbuf')
-  function! s:vimdiff(bufnr) abort
-    for winid in win_findbuf(a:bufnr)
-      if getwinvar(winid, '&diff')
-        return 1
-      endif
-    endfor
-    return 0
-  endfunction
-else
-  function! s:vimdiff(bufnr) abort
-    for winnr in range(1, winnr('$'))
-      if winbufnr(winnr) == a:bufnr && getwinvar(winnr, '&diff')
-        return 1
-      endif
-    endfor
-    return 0
-  endfunction
-endif
-
-function! s:windows()
-  return has('win64') || has('win32') || has('win32unix') || has('win16')
+function! gitgutter#utility#windows()
+  return has('win64') || has('win32') || has('win16')
 endfunction
