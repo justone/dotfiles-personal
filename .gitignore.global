@@ -11,3 +11,4 @@ Session*.vim
 nate-scratch/
 znate.vim
 .vimrc.project
+*.log
