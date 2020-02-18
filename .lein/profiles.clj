@@ -5,7 +5,7 @@
          ; :dependencies [[vvvvalvalval/scope-capture "0.1.4"]]
          ; :injections [(require 'sc.api)]
          :repl-options {:timeout 120000}
-         }
+         :dependencies [[olical/propel "1.3.0"]]}
 
  ;; kaocha test runner
  :kaocha {:aliases
