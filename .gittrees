@@ -302,3 +302,7 @@
 	url = https://github.com/neoclide/coc.nvim.git
 	path = .vim/bundle/coc.nvim
 	branch = release
+[subtree ".vim/bundle/vim-signature"]
+	url = https://github.com/kshenoy/vim-signature.git
+	path = .vim/bundle/vim-signature
+	branch = master
