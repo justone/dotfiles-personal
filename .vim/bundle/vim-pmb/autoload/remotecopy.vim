@@ -64,7 +64,7 @@ function! remotecopy#storekey()
     endif
 endfunction
 
-function remotecopy#rcopy(data)
+function remotecopy#cachekey()
     if strlen($PMB_KEY) == 0
         let output = system("pmb key get -l")
         if v:shell_error != 0
@@ -72,6 +72,10 @@ function remotecopy#rcopy(data)
             call remotecopy#storekey()
         endif
     endif
+endfunction
+
+function remotecopy#rcopy(data)
+    call remotecopy#cachekey()
 
     let output = system("pmb remotecopy", a:data)
     echo "Remote copied."
