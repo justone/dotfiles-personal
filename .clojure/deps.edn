@@ -10,9 +10,13 @@
                       :main-opts  ["-m" "depot.outdated.main"]}
            :new {:extra-deps {seancorfield/clj-new {:mvn/version "0.5.5"}}
                  :main-opts ["-m" "clj-new.create"]}
+           :dev-resources {:extra-paths ["nate-scratch/dev-resources"]}
            :re-find {:extra-deps {MageMasher/re-find.fx
                                   {:git/url "https://github.com/MageMasher/re-find.fx"
                                    :sha "b29bde3519f7632b63eb71415943bf8a7cfa1462"}}
                      :main-opts ["-m" "re-find.fx"]}
+           :carve {:extra-deps {borkdude/carve {:git/url "https://github.com/borkdude/carve"
+                                                :sha "e71e820de9bf4cc68441445ae0c6f858b71be42a"}}
+                   :main-opts ["-m" "carve.main"]}
            }
  }
