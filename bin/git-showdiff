@@ -2,4 +2,4 @@
 
 REV=${1:-HEAD}
 
-exec git difftool --tool=vimdiff -y $REV^ $REV
+exec git difftool --tool=neovim -y $REV^ $REV
