@@ -298,3 +298,7 @@
 	url = https://github.com/aclaimant/syntastic-joker.git
 	path = .vim/bundle/syntastic-joker
 	branch = master
+[subtree ".vim/bundle/coc.nvim"]
+	url = https://github.com/neoclide/coc.nvim.git
+	path = .vim/bundle/coc.nvim
+	branch = release
