@@ -74,6 +74,9 @@ let g:conjure_log_auto_close = 0
 let g:conjure_log_blacklist = ["up", "status", "eval", "ret", "load-file", "test"]
 let g:conjure_fold_multiline_results = 1
 
+" coc.vim
+let g:coc_global_extensions = ['coc-conjure']
+
 " configure syntastic
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
