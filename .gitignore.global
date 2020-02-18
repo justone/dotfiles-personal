@@ -12,3 +12,4 @@ nate-scratch/
 znate.vim
 .vimrc.project
 *.log
+.clj-kondo/
