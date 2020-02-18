@@ -225,8 +225,8 @@ filetype plugin on
 filetype indent on
 
 " settings for javascript/jsx
-au FileType javascript setlocal foldmethod=syntax
-au FileType javascript setlocal foldnestmax=1
+au FileType javascript.jsx setlocal foldmethod=syntax
+au FileType javascript.jsx setlocal foldnestmax=1
 
 " settings for go
 " fold go files with syntax
