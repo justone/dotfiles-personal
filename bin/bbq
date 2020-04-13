@@ -1,0 +1,3 @@
+#!/bin/bash
+
+bb -I --stream "$@"
