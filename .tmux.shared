@@ -30,6 +30,12 @@ bind j select-pane -D
 bind k select-pane -U
 bind l select-pane -R
 
+# Create new window
+bind A new-window -a
+
+# Re-shuffle all windows down
+bind R move-window -r
+
 # make it easy to grab a pane and put it into the current window
 bind-key @ command-prompt -p "create pane from:"  "join-pane -s ':%%'"
 
