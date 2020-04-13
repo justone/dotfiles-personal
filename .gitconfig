@@ -71,3 +71,5 @@
 	path = ~/.gitconfig.local
 [branch]
 	sort = authordate
+[rerere]
+	enabled = true
