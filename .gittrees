@@ -306,3 +306,7 @@
 	url = https://github.com/kshenoy/vim-signature.git
 	path = .vim/bundle/vim-signature
 	branch = master
+[subtree ".vim/bundle/ale"]
+	url = https://github.com/dense-analysis/ale.git
+	path = .vim/bundle/ale
+	branch = master
