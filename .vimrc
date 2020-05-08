@@ -25,6 +25,9 @@ if filereadable(expand("~/.vimrc.local"))
     source ~/.vimrc.local
 endif
 
+" Async Lint Engine config
+let g:ale_linters = {'clojure': ['clj-kondo']}
+
 " for some reason this has to go in .vimrc
 let perl_fold = 1
 let perl_fold_anonymous_subs = 1
