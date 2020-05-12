@@ -1,0 +1,38 @@
+#!/usr/bin/env bb
+
+(ns urls
+  (:require
+    [clojure.tools.cli :refer [parse-opts]]
+    [clojure.java.shell :as sh]
+    [clojure.string :as string]
+    ))
+
+(def cli-options
+  [["-l" "--last"]])
+
+(def url-re
+  "From: https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url"
+  #"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)")
+
+(defn get-tmux-pane
+  []
+  (let [{:keys [out exit]} (sh/sh "tmux" "capture-pane" "-p")]
+    (when (zero? exit)
+      out)))
+
+(defn find-urls
+  [text]
+  (when text
+    (->> (string/split text #"\s")
+         (filter #(re-matches url-re %)))))
+
+(defn -main [& args]
+  (let [parsed (parse-opts args cli-options)
+        {:keys [options]} parsed
+        data (get-tmux-pane)]
+    (cond->> (find-urls data)
+      (:last options) (take 1)
+      :always (run! println))))
+
+
+(ns user (:require [urls])) (apply urls/-main *command-line-args*)
