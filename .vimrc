@@ -215,7 +215,7 @@ filetype off
 call pathogen#infect()
 call pathogen#helptags()
 
-if (has("termguicolors"))
+if has('nvim')
   set termguicolors
 endif
 
