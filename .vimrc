@@ -77,6 +77,9 @@ let g:conjure_config = {"clojure.nrepl/eval.auto-require?": v:false, "log.botrig
 " coc.vim
 let g:coc_global_extensions = ['coc-conjure']
 
+" disable syntastic, trying out ALE
+let g:loaded_syntastic_plugin = 1
+
 " configure syntastic
 let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
