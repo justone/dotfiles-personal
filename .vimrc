@@ -72,11 +72,7 @@ if filereadable(expand(".vimrc.project"))
 endif
 
 " conjure
-let g:conjure_log_direction = "horizontal"
-let g:conjure_log_size_large = 100
-let g:conjure_log_auto_close = 0
-let g:conjure_log_blacklist = ["up", "status", "eval", "ret", "load-file", "test"]
-let g:conjure_fold_multiline_results = 1
+let g:conjure_config = {"clojure.nrepl/eval.auto-require?": v:false, "log.botright?": v:true}
 
 " coc.vim
 let g:coc_global_extensions = ['coc-conjure']
