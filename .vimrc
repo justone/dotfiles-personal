@@ -28,6 +28,9 @@ endif
 " Async Lint Engine config
 let g:ale_linters = {'clojure': ['clj-kondo']}
 let g:ale_pattern_options = {'conjure-log.*.cljc': {'ale_enabled': 0}}
+" Easy navigation between errors
+map [w <Plug>(ale_previous_wrap)
+map ]w <Plug>(ale_next_wrap)
 
 " for some reason this has to go in .vimrc
 let perl_fold = 1
