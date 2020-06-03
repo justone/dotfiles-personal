@@ -12,6 +12,7 @@
 	a = add
 	br = branch
 	rbr = branch --sort=-committerdate
+	rd = commit --amend --date=now --no-edit
 	st = status
 	ss = status --short
 	ci = commit
