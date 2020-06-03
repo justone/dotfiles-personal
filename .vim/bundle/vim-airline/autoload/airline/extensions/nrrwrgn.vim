@@ -1,4 +1,5 @@
-" MIT License. Copyright (c) 2013-2016 Bailey Ling.
+" MIT License. Copyright (c) 2013-2019 Bailey Ling, Christian Brabandt et al.
+" Plugin: https://github.com/chrisbra/NrrwRgn
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -19,7 +20,7 @@ function! airline#extensions#nrrwrgn#apply(...)
       let dict=nrrwrgn#NrrwRgnStatus()
       let vmode = { 'v': 'Char ', 'V': 'Line ', '': 'Block '}
       let mode = dict.visual ? vmode[dict.visual] : vmode['V']
-      let winwidth = winwidth(0)
+      let winwidth = airline#util#winwidth()
       if winwidth < 80
         let mode = mode[0]
       endif

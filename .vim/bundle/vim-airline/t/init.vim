@@ -29,12 +29,12 @@ describe 'init sections'
     Expect g:airline_section_b == ''
   end
 
-  it 'section c should be file'
-    Expect g:airline_section_c == '%<%f%m %#__accent_red#%{airline#util#wrap(airline#parts#readonly(),0)}%#__restore__#'
+  it 'section c should be file and coc_status'
+    Expect g:airline_section_c == '%<%f%m %#__accent_red#%{airline#util#wrap(airline#parts#readonly(),0)}%#__restore__#%#__accent_bold#%#__restore__#'
   end
 
   it 'section x should be filetype'
-    Expect g:airline_section_x == '%{airline#util#wrap(airline#parts#filetype(),0)}'
+    Expect g:airline_section_x == '%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#prepend("",0)}%{airline#util#wrap(airline#parts#filetype(),0)}'
   end
 
   it 'section y should be fenc and ff'
@@ -59,12 +59,29 @@ describe 'init sections'
   end
 
   it 'all default statusline extensions should be blank'
+    Expect airline#parts#get('ale_error_count').raw == ''
+    Expect airline#parts#get('ale_warning_count').raw == ''
+    Expect airline#parts#get('lsp_error_count').raw == ''
+    Expect airline#parts#get('lsp_warning_count').raw == ''
     Expect airline#parts#get('hunks').raw == ''
     Expect airline#parts#get('branch').raw == ''
-    Expect airline#parts#get('tagbar').raw == ''
-    Expect airline#parts#get('syntastic').raw == ''
     Expect airline#parts#get('eclim').raw == ''
+    Expect airline#parts#get('neomake_error_count').raw == ''
+    Expect airline#parts#get('neomake_warning_count').raw == ''
+    Expect airline#parts#get('obsession').raw == ''
+    Expect airline#parts#get('syntastic-err').raw == ''
+    Expect airline#parts#get('syntastic-warn').raw == ''
+    Expect airline#parts#get('tagbar').raw == ''
     Expect airline#parts#get('whitespace').raw == ''
+    Expect airline#parts#get('windowswap').raw == ''
+    Expect airline#parts#get('ycm_error_count').raw == ''
+    Expect airline#parts#get('ycm_warning_count').raw == ''
+    Expect airline#parts#get('languageclient_error_count').raw == ''
+    Expect airline#parts#get('languageclient_warning_count').raw == ''
+    Expect airline#parts#get('coc_status').raw == ''
+    Expect airline#parts#get('vista').raw == ''
+    Expect airline#parts#get('coc_warning_count').raw == ''
+    Expect airline#parts#get('coc_error_count').raw == ''
   end
 end
 
@@ -75,4 +92,3 @@ describe 'init parts'
     Expect g:airline_section_z =~ 'bar'
   end
 end
-

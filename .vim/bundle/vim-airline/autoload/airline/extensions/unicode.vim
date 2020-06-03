@@ -1,4 +1,5 @@
-" MIT License. Copyright (c) 2013-2016 Bailey Ling.
+" MIT License. Copyright (c) 2013-2019 Bailey Ling, Christian Brabandt et al.
+" Plugin: https://github.com/chrisbra/unicode.vim
 " vim: et ts=2 sts=2 sw=2
 
 scriptencoding utf-8
@@ -14,7 +15,7 @@ function! airline#extensions#unicode#apply(...)
           \ 'accent': 'bold' })
     let w:airline_section_a = airline#section#create(['unicode'])
     let w:airline_section_b = ''
-    let w:airline_section_c = ''
+    let w:airline_section_c = ' '
     let w:airline_section_y = ''
   endif
 endfunction
