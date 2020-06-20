@@ -4,11 +4,7 @@
   "exec" "bb" "-I" "-O" "$0" "$@"
   )
 
-(defn evaluate
-  [predstr data]
-  (let [pred (eval (read-string predstr))]
-    (filter pred data)))
-
 (if-some [predstr (first *command-line-args*)]
-  (evaluate predstr *input*)
+  (let [pred (eval (read-string predstr))]
+    (filter pred *input*))
   (println "usage: bbf [predicate]"))
