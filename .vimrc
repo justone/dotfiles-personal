@@ -75,7 +75,8 @@ if filereadable(expand(".vimrc.project"))
 endif
 
 " conjure
-let g:conjure_config = {"clojure.nrepl/eval.auto-require?": v:false, "log.botright?": v:true}
+let g:conjure#client#clojure#nrepl#eval#auto_require = v:false
+let g:conjure#log#botright = v:true
 
 " coc.vim
 let g:coc_global_extensions = ['coc-conjure']
