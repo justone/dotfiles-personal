@@ -306,3 +306,7 @@
 	url = https://github.com/dense-analysis/ale.git
 	path = .vim/bundle/ale
 	branch = master
+[subtree ".vim/bundle/vim-bufkill"]
+	url = https://github.com/qpkorr/vim-bufkill.git
+	path = .vim/bundle/vim-bufkill
+	branch = master
