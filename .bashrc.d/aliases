@@ -104,3 +104,7 @@ alias odu="outputdiff --undo"
 
 # deactivate local::lib
 alias deactivate_ll='eval $(perl -Mlocal::lib=--deactivate)'
+
+# burner ssh connections
+alias bssh="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+alias bscp="scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
