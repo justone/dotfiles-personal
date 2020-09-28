@@ -1,10 +1,10 @@
 {
  :aliases {
-           :try {:extra-deps {deps-try {:git/url "https://gitlab.com/eval/deps-try"
-                                        :sha "9c5eb7d54fadbfc8f5c8b312678c7fee3cc69050"}}
+           :try {:extra-deps {deps-try/deps-try {:git/url "https://gitlab.com/eval/deps-try"
+                                                 :sha "9c5eb7d54fadbfc8f5c8b312678c7fee3cc69050"}}
                  :main-opts ["-m" "deps-try.main"]}
-           :repl {:extra-deps {cljdev {:git/url "https://github.com/justone/cljdev.git"
-                                       :sha "8f34defc800f4c5b0d1124c3ebd79c457ce2b943"}}
+           :repl {:extra-deps {cljdev/cljdev {:git/url "https://github.com/justone/cljdev.git"
+                                              :sha "18a1fd036d0d68cfdef678df263c96567a6c5c83"}}
                   :main-opts  ["-m" "cljdev.repl"]}
            :outdated {:extra-deps {olical/depot {:mvn/version "1.8.2"}}
                       :main-opts  ["-m" "depot.outdated.main"]}
