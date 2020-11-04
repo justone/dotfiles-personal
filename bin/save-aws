@@ -1,0 +1,5 @@
+#!/bin/bash
+
+tmux set-environment AWS_SECRET_ACCESS_KEY $AWS_SECRET_ACCESS_KEY
+tmux set-environment AWS_SESSION_TOKEN $AWS_SESSION_TOKEN
+tmux set-environment AWS_ACCESS_KEY_ID $AWS_ACCESS_KEY_ID
