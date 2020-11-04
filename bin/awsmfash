@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+
+echo "Enter MFA code:"
+read mfa_code
+
+mfa_arn=$(aws iam get-user --query User.Arn --output text | sed -e 's%:user/%:mfa/%')
+info=$(aws sts get-session-token --serial-number $mfa_arn --token-code $mfa_code --output text)
+
+AWS_ACCESS_KEY_ID=$(echo "$info" | awk '{ print $2 }')
+AWS_SECRET_ACCESS_KEY=$(echo "$info" | awk '{ print $4 }')
+AWS_SESSION_TOKEN=$(echo "$info" | awk '{ print $5 }')
+EXPIRE=$(echo "$info" | awk '{ print $3 }')
+
+echo "Access expires at $EXPIRE, starting shell..."
+exec env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN bash
