@@ -310,3 +310,7 @@
 	url = https://github.com/qpkorr/vim-bufkill.git
 	path = .vim/bundle/vim-bufkill
 	branch = master
+[subtree ".vim/bundle/vim-repeat"]
+	url = https://github.com/tpope/vim-repeat.git
+	path = .vim/bundle/vim-repeat
+	branch = master
