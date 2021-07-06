@@ -12,7 +12,7 @@
 	a = add
 	br = branch
 	rbr = branch --sort=-committerdate
-	rd = commit --amend --date=now --no-edit
+	rd = !git commit --amend --date=now --no-edit && git show --format=fuller --stat
 	st = status
 	ss = status --short
 	ci = commit
@@ -56,6 +56,7 @@
 	prompt = false
 [core]
 	excludesfile = ~/.gitignore.global
+	attributesfile = ~/.gitattributes.global
 [github]
 	user = justone
 [credential "https://github.com"]
@@ -74,3 +75,7 @@
 	sort = authordate
 [rerere]
 	enabled = true
+[diff "clojure"]
+	xfuncname = (^\\(.*|\\s*\\(defn.*)
+[pull]
+	ff = only
