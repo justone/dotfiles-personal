@@ -39,6 +39,10 @@ if [ "$OS" == "Darwin" ]
 then
     export EDITOR='mvim -v'
 fi
+if [ "$OS" == "Linux" ]
+then
+    export EDITOR='nvim'
+fi
 
 function reconnect_ssh_agent() {
     if [[ -n $TMUX ]]; then
