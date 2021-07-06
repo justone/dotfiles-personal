@@ -77,6 +77,9 @@ endif
 " conjure
 let g:conjure#client#clojure#nrepl#eval#auto_require = v:false
 let g:conjure#log#botright = v:true
+" let g:conjure#client#clojure#nrepl#eval#print_options#length = 100
+" let g:conjure#highlight#enabled = v:true
+" let g:conjure#log#fold#enabled = v:true
 
 " coc.vim
 let g:coc_global_extensions = ['coc-conjure']
@@ -496,6 +499,9 @@ let g:vimpipe_close_map="<leader>W"
 
 " configure clojure folding
 let g:clojure_foldwords = "def,defn,defmacro,defmethod,defschema,defprotocol,defrecord"
+
+" allow formatting longer clojure forms
+let g:clojure_maxlines = 0
 
 let g:vim_json_syntax_conceal = 0
 au FileType json setlocal foldmethod=syntax
