@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rg --no-ignore-vcs --type clojure --type edn "$@"

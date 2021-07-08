@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -t 1 ]; then
+    brisk -t -i $1 | puget | less -RS
+else
+    brisk -t -i $1 | puget --opts '{:print-color false}'
+fi
+

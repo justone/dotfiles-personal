@@ -1,0 +1,5 @@
+#!/bin/bash
+
+tmux select-layout "63b7,254x70,0,0[254x47,0,0,9,254x22,0,48{127x22,0,48[127x18,0,48,10,127x3,0,67,95],126x22,128,48,58}]"
+tmux resize-pane -t 1 -y 2
+tmux resize-pane -t 3 -y 13

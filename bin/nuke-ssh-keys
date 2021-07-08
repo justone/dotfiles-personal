@@ -1,0 +1,12 @@
+#!/bin/bash
+if [ "$1" == "" ]; then
+    echo >&2 "usage: $0 host..."
+    exit 1
+fi
+
+for server in "$@"; do
+    echo $server
+    ssh-keygen -f "$HOME/.ssh/known_hosts" -R $server;
+    ssh-keygen -f "$HOME/.ssh/known_hosts" -R $(host $server | awk '{ print $4 }')
+done
+rm -f "$HOME/.ssh/known_hosts.old"

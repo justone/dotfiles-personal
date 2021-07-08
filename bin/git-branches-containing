@@ -1,0 +1,5 @@
+#!/bin/bash
+
+SHA=$1
+
+git lg $SHA^.. `git for-each-ref --contains $SHA --format "%(refname:strip=2)" | rg -v origin`
