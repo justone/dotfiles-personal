@@ -80,6 +80,9 @@ let g:conjure#log#botright = v:true
 " let g:conjure#client#clojure#nrepl#eval#print_options#length = 100
 " let g:conjure#highlight#enabled = v:true
 " let g:conjure#log#fold#enabled = v:true
+let g:conjure#filetypes = ["clojure", "fennel", "janet", "racket", "pandoc"]
+let g:conjure#filetype#pandoc = 'conjure.client.clojure.nrepl'
+let g:sexp_filetypes = 'clojure,scheme,lisp,timl,pandoc'
 
 " coc.vim
 let g:coc_global_extensions = ['coc-conjure']
