@@ -1,5 +1,7 @@
 import os
+import vim
 from glob import glob
+from itertools import chain
 from subprocess import check_output
 
 bib_extensions = ["bib",
@@ -15,6 +17,9 @@ bib_extensions = ["bib",
 
 class SourceCollator():
     def __init__(self, fname=None, query=None, sources="bcg", extra_sources=([], []), **extra_args):
+        # nvim's python host doesn't change the directory the same way vim does
+        if vim.eval('has("nvim")') == '1':
+            os.chdir(vim.eval('expand("%:p:h")'))
         self.fname = fname
         self.query = query
         self.sources = sources
@@ -48,6 +53,25 @@ class SourceCollator():
             bibfiles = [os.path.abspath(f) for f in relative_bibfiles]
             return bibfiles
 
+        def git_search():
+            """
+            Search for any bibliographies in the git repository.
+            """
+            try:
+                root_dir = check_output(['git', 'rev-parse', '--show-toplevel']).decode().strip()
+            except:
+                return []
+            git_files = check_output(['git', 'ls-tree',
+                                      '-r', '--full-tree', '--name-only',
+                                      'HEAD']).decode().split('\n')
+            relpaths = []
+            for f in git_files:
+                ext = os.path.splitext(f)[1]
+                if ext != '' and ext[1:] in bib_extensions:
+                    relpaths.append(f)
+            bibfiles = [os.path.join(root_dir, f) for f in relpaths]
+            return bibfiles
+
         def pandoc_local_search():
             """
             Search for bibliographies in the pandoc data dirs.
@@ -69,12 +93,12 @@ class SourceCollator():
             Search for bibliographies in the texmf data dirs.
             """
 
-            texmf = check_output(["kpsewhich", "-var-value", "TEXMFHOME"])
+            texmf = check_output(["kpsewhich", "-var-value", "TEXMFHOME"]).rstrip()
 
             if os.path.exists(texmf):
-                search_paths = [texmf + "/*." + f for f in bib_extensions]
-                relative_bibfiles = [glob(f) for f in search_paths]
-                bibfiles = [os.path.abspath(f) for f in relative_bibfiles]
+                search_paths = (texmf.decode() + "/**/*." + f for f in bib_extensions)
+                relative_bibfiles = (glob(f, recursive=True) for f in search_paths)
+                bibfiles = [os.path.abspath(f) for f in chain.from_iterable(relative_bibfiles)]
                 return bibfiles
 
             return []
@@ -91,7 +115,8 @@ class SourceCollator():
                           "c": curdir_all_search,
                           "l": pandoc_local_search,
                           "t": texmf_search,
-                          "g": explicit_global_search}
+                          "g": explicit_global_search,
+                          "G": git_search}
 
 
         bibfiles = []

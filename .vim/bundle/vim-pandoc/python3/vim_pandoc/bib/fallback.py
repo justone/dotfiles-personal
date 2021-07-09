@@ -5,6 +5,7 @@ import os
 import os.path
 import operator
 import subprocess as sp
+import shlex
 from vim_pandoc.bib.collator import SourceCollator
 from vim_pandoc.bib.util import make_title_ascii
 
@@ -32,8 +33,13 @@ def get_bibtex_suggestions(text, query, use_bibtool=False, bib=None):
     if use_bibtool:
         bibtex_id_search = re.compile(".*{\s*(?P<id>.*),")
 
-        args = "-- select{$key title booktitle author editor \"%(query)s\"}'" % {"query": query}
-        text = sp.Popen(["bibtool", "--preserve.key.case=on",  args, bib], stdout=sp.PIPE, stderr=sp.PIPE).communicate()[0]
+        extra_args = shlex.split(vim.vars["pandoc#biblio#bibtool_extra_args"])
+
+        search = ["--", "select{$key title booktitle author editor \"%(query)s\"}" % {"query": query}]
+        cmd = ["bibtool", "--preserve.key.case=on", *extra_args, *search, bib]
+        text = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE).communicate()[0]
+        if isinstance(text, bytes):
+            text = text.decode("utf-8")
     else:
         bibtex_id_search = re.compile(".*{\s*(?P<id>" + query + ".*),")
 
@@ -115,13 +121,13 @@ def get_json_suggestions(text, query):
     def test_entry(entry):
         if type(entry) != dict: return False
         for string in [entry.get(k) for k in string_matches]:
-            if type(string) == unicode and check(string): return True
+            if type(string) == str and check(string): return True
         for names in [entry.get(k) for k in name_matches]:
             if type(names) == list:
                 for person in names:
-                    if type(person.get(family_match)) == unicode:
+                    if type(person.get(family_match)) == str:
                         if check(person[family_match]): return True
-                    elif type(person.get(literal_match)) == unicode:
+                    elif type(person.get(literal_match)) == str:
                         if check(person[literal_match]): return True
 
     for entry in filter(test_entry, data):
