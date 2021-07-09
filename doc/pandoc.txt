@@ -1,24 +1,27 @@
-*vim-pandoc* pandoc integration for Vim
+*pandoc.txt* Pandoc integration and utilities
 
-|vim-pandoc| provides facilities to integrate Vim with the |pandoc| document
-converter and work with documents written in |pandocs-markdown-variant|
+Vim-pandoc provides facilities to integrate Vim with the |pandoc| document
+converter and work with documents written in |pandoc's-markdown-variant|
 variant (although textile documents are also supported). It is the main item
 in |vim-pandoc-project|.
 
- *pandoc*
+- *pandoc*:
     http://johnmacfarlane.net/pandoc/
- *pandoc-markdown-variant*
+
+- *pandoc's-markdown-variant*:
     http://johnmacfarlane.net/pandoc/README.html#pandocs-markdown
-  *vim-pandoc-project*
+
+- *vim-pandoc-project*:
     http://github.com/vim-pandoc
 
-vim-pandoc's goals are
+Vim-pandoc's goals are
 
  1) to provide advanced integration with pandoc,
  2) to offer a comfortable document writing environment,
  3) to allow great configurability.
 
-CONTENTS
+
+CONTENTS                                                           *vim-pandoc*
 
 - REQUIREMENTS |vim-pandoc-requirements|
 - INSTALLATION |vim-pandoc-installation|
@@ -32,31 +35,43 @@ CONTENTS
     - KEYBOARD |vim-pandoc-keyboard-module|
     - BIBLIOGRAPHIES |vim-pandoc-bibliographies-module|
     - COMPLETION |vim-pandoc-completion-module|
+      --  AUTOCOMPLETE |vim-pandoc-complete-auto|
+        -- DEOPLETE |vim-pandoc-complete-deoplete|
+        -- NEOCOMPLETE |vim-pandoc-complete-neocomplete|
+        -- NCM2 |vim-pandoc-complete-ncm2|
+        -- NVIM-COMPLETION-MANAGER |vim-pandoc-complete-ncm|
+        -- YOUCOMPLETEME |vim-pandoc-complete-youcompleteme|
+        -- VIMCOMPLETESME |vim-pandoc-complete-vcm|
     - TOC |vim-pandoc-toc-module|
-    - CHDIR |vim-pandoc-chdir-module|
     - SPELL |vim-pandoc-spell-module|
     - HYPERTEXT |vim-pandoc-hypertext-module|
 - CONFIGURATION
     - SETTINGS |vim-pandoc-settings|
 
 
-REQUIREMENTS			                      *vim-pandoc-requirements*
+REQUIREMENTS                                          *vim-pandoc-requirements*
 
 * Vim 7.4
   Note: On vim versions < 7.4, some modules are automatically disabled (see
   |g:pandoc#modules#disabled|, but vim-vim-pandoc is able to run in a degraded
   mode.
-* python support.
+* python 3 support.
   Note: If python is not available, the features that require it are
   automatically disabled, allowing vim-pandoc to run in a degraded mode.
-  However, vim-pandoc uses the new python API, so in versions under 7.4,
-  even if python is available, some functions might not.
+  However, vim-pandoc uses the new python API, so in versions under 7.4, even
+  if python is available, some functions might not.
 
 To check if the requirements are satisfied, check if
 
-    :echo v:version >= 704 && has("python")
+    :echo v:version >= 704 && has("python3")
 
 outputs "1".
+
+The warning message when modules are automatically disabled can be suppressed
+by using
+>
+    let g:pandoc#modules#warn_disabled = 0
+
 
 INSTALLATION                                          *vim-pandoc-installation*
 
@@ -84,7 +99,8 @@ NeoBundle users should replace `Plugin` in these instructions with
 
 - The repo is pathogen compatible and you can also just drop it in runtimepath.
 
-SYNTAX                                            *vim-pandoc-pandoc-syntax*
+
+SYNTAX                                               *vim-pandoc-pandoc-syntax*
 
 vim-pandoc doesn't provide a syntax file for pandoc markdown files. Please
 use https://github.com/vim-pandoc/vim-pandoc-syntax for this:
@@ -99,13 +115,17 @@ The reason we split the syntax file is it is much cleaner to track issues
 separatedly. It also allows users not to use this syntax file if they want to
 (notice that vim-pandoc-syntax is also configurable).
 
-FILETYPES					          *vim-pandoc-filetypes*
+
+FILETYPES                                                *vim-pandoc-filetypes*
 
 vim-pandoc is not a regular filetype plugin. Although it does define a
-`pandoc` filetype, vim-pandoc can also attach to other filestypes, like
-`markdown`, `rst` and `textile`. In that case, vim-pandoc uses the
-appropiate filetype syntax file, but creates the Pandoc command and loads the
-extra utilities. What filetypes to attach to is determined by the value of the
+`pandoc` filetype, vim-pandoc can also attach to other filetypes, like
+`markdown`, `rst` and `textile`. In that case, vim-pandoc uses the appropriate
+filetype syntax file, but creates the Pandoc command and loads the extra
+utilities. vim-pandoc also provides a convenience `beamer` filetype, that
+simply clones the `pandoc` filetype. The `beamer` filetype is useful for
+managing the behavior of |g:pandoc#command#autoexec_command| (see below). What
+filetypes to attach to is determined by the value of the
 |g:pandoc#filetypes#handled| variable.
 
 Setting `pandoc#filetypes#pandoc_markdown` to 0 will disable all pandoc
@@ -121,7 +141,7 @@ filetype and syntax, use
 Note: vim-pandoc's developers mostly use pandoc's markdown syntax, so
 coverage for it is more complete than for the other filetypes.
 
-MODULES                                                     *vim-pandoc-modules*
+MODULES                                                    *vim-pandoc-modules*
 
 vim-pandoc is split in several modules. They can be enabled and disabled
 independently at startup, by adjusting the values of the
@@ -135,18 +155,19 @@ cases. To disable the module they should put
 
 in their .vimrc.
 
-                                                       *vim-pandoc-modules-list*
+                                                      *vim-pandoc-modules-list*
 
 Now, a description of the available modules
 
-- FORMATTING                                      *vim-pandoc-formatting-module*
+- FORMATTING                                     *vim-pandoc-formatting-module*
 
 Handles basic writing settings, like the use of hard or soft line wraps. It is
 recommended to leave this module enabled.
 
 The module behavior is configured through the |g:pandoc#formatting#mode|
 variable. For example, giving it the value 'ha' will enable hard breaks, and
-autoformatting. The default is to use soft wraps.
+autoformatting. The default is to use soft wraps. Some key maps are different
+in soft and hard wrapping modes, see the info on the KEYBOARD module below.
 
 If you use the hard wraps mode, you could want to adjust the textwidth value.
 This can be done through the |g:pandoc#formatting#textwidth| variable, or
@@ -206,12 +227,16 @@ The "relative" mode counts the number of parents the header has, so
 The "stacked" mode counts all headers as first level, and it can be used to
 view all the headers at once.
 
-The mode can be changed on the fly using the *:PandocFolding* command.
+The mode can be changed on the fly using the *:PandocFolding* command which
+takes as argument the options "syntax", "relative" and "stacked". If no
+argument is given, then automatic folding will be disabled.
 
 Besides this, some extensions are provided:
 
 * If present, fold the document's YAML frontmatter (this is configurable with
   |g:pandoc#folding#fold_yaml|)
+* The foldlevel for YAML frontmatter is 1 by default (this is configurable
+  with |g:pandoc#folding#foldlevel_yaml|)
 * Fold divs of the classes defined in |g:pandoc#folding#fold_div_classes|. For
   example, you might want to create notes for a presentation. pandoc
   understands
@@ -244,14 +269,16 @@ Besides this, some extensions are provided:
 
 * Fold fenced codeblocks. By default, this is disabled, but can be turned on
   by setting |g:pandoc#folding#fold_fenced_codeblocks| to 1.
-
-NOTE: when using split windows, the foldexpr function can get called many more
-times than usual, so in this case the folding function is disabled for
-performance reasons.
+* To avoid the continuous recomputation of folds, in particular in insert mode,
+  set |g:pandoc#folding#fastfolds| to 1 to defer it to the switches between
+  insert and normal mode. For a plug-in that will make Vim recompute the folds
+  only when need be, see https://github.com/konfekt/fastfold . This also
+  disables the calculation of folds when using split windows, where the foldexpr
+  function can get called many more times than usual.
 
 - COMMAND                                            *vim-pandoc-command-module*
 
-Note: This modules requires python support.
+Note: Full functionality of this module requires python support.
 
 The `command` module sets up a buffer-local *:Pandoc* command which handles
 pandoc execution. This command builds an incantation for pandoc using
@@ -274,15 +301,20 @@ will create an incantation like:
 :Pandoc will also use the value of |b:pandoc_biblio_bibs| to pass
 `--bibliography` arguments, so the user shouldn't do that himself.
 
-Once pandoc runs, depending on the value of
-|g:pandoc#command#use_message_buffers| and if some error occurred, a buffer
-will open displaying the command output. You can dismiss this buffer pressing
-'q'. Regardless of pandoc's execution status, the invocation used will be logged so
+In nvim, vim-pandoc will open a terminal buffer and execute pandoc. If the
+value of |g:pandoc#command#use_message_buffers| is 1 and some error occurred,
+a buffer will open displaying the command output (this is unnecessary in nvim,
+because it will always display the command output, so the default value for
+`use_message_buffers' is 0). You can dismiss these buffers pressing 'q'.
+
+Regardless of pandoc's execution status, the invocation used will be logged so
 it can be checked using |:messages|.
 
 If you write a bang ('!') after the command, vim-pandoc will try to open
 the created file in its associated program. This behavior can be customized
-through the |g:pandoc#command#custom_open| variable.
+through the |g:pandoc#command#custom_open| variable. The
+ |g:pandoc#command#prefer_pdf| variable controls whether to prefer pdf files,
+ if they exist.
 
 Note: The pandoc execution is performed asynchronously if vim supports the
 |clientserver| feature and the running instance is a valid server (this is the
@@ -304,6 +336,11 @@ provide a command to execute like so:
 
     let |g:pandoc#command#autoexec_command| = "Pandoc! pdf"
 
+You can use different commands for different filetypes, if needed. For example,
+
+    autocmd FileType beamer let |g:pandoc#command#autoexec_command| = "Pandoc! beamer"
+    autocmd FileType pandoc let |g:pandoc#command#autoexec_command| = "Pandoc! pdf"
+
 You can also use a buffer local variable if you want to override the global
 setting.
 
@@ -312,7 +349,20 @@ setting.
 Notice that vim-pandoc also defines and sets a 'compiler' pandoc that can be
 started by ':make' or ':lmake' and compiles the current file by pandoc.
 
--- TEMPLATES                                       *vim-pandoc-command-templates*
+                                                                *Pandoc-native*
+If you vim doesn't have support for python, you can still use a limited
+version of the Pandoc command, however this will not support autocompletion,
+the convenience abbreviations or the ability to open the file after compiling
+(these features might be supported in the feature). Thus, instead of
+
+    Pandoc pdf
+
+you would need to issue
+
+    Pandoc -o myfile.pdf
+
+
+-- TEMPLATES                                     *vim-pandoc-command-templates*
 
 It might get tedious to reuse the same arguments over and over. For example,
 the user might frequently execute
@@ -327,7 +377,7 @@ Note: templates don't record if a bang was used for the Pandoc command, so once
 #my_usual_article is defined, both ':Pandoc #my_usual_article' and ':Pandoc!
 #my_usual_article' are possible.
 
-                                                                *:PandocTemplate*
+                                                              *:PandocTemplate*
 To save the latest :Pandoc incantation as a template, the user should execute
 
     :PandocTemplate save my_usual_article
@@ -398,6 +448,8 @@ where they are available):
 - *<localleader>lcf*   move to the first list item child [n]
 - *<localleader>lcl*   move to the last list item child [n]
 - *<localleader>lcn*   move to the [count] nth list item child [n]
+- *<localleader>cb*    toggle checkbox or insert empty checkbox in list item [vn]
+- *<localleader>cd*    remove existing checkbox from list item [vn]
 
 For |<localleader>#|, you can decide what header style to use (always atx, use
 setex, append hashes at the end) by setting the
@@ -407,6 +459,11 @@ Some of the reference-related mappings use |mark-motions|. You can configure
 what mark to use by setting the value of |g:pandoc#keyboard#references#mark|,
 in case the default ("r") is not suitable or needs to serve a different
 purpose.
+
+Some key mappings are affected by the editing mode (soft/hard wraps). In soft
+mode, vim-pandoc maps j and k to move across visible lines, not real ones, to
+ease navigation. This is controlled by the |g:pandoc#keyboard#display_motions|
+variable.
 
 - BIBLIOGRAPHIES                               *vim-pandoc-bibliographies-module*
 
@@ -430,10 +487,13 @@ the corresponding flag to give g:pandoc#biblio#sources):
 2) [c] Search for any bibliography in the current dir.
 3) [l] Search for default bibliographies (`default.bib`, `default.ris`, etc.) in pandoc's
     data dir ("$HOME/.pandoc/" in *nix, "%APPDATA%/pandoc/" in Windows)
-4) [t] Search for bibliographies in texmf (requires the `kpsewhich` program)
+4) [t] Search for bibliographies in the local texmf tree (requires the
+   `kpsewhich` program)
 5) [g] Add any bibliographies listed in |g:pandoc#biblio#bibs|.
+6) [y] Add any bibliographies specified in a YAML header.
+7) [G] Add any bibliographies in the current git repository.
 
-The default flags are "bcg". For the 'c' and 'l' flags, the
+The default flags are "bcgyG". For the 'c', 'l', and 't' flags, the
 |g:pandoc#biblio#bib_extensions| is taken into account. You can, of
 course, modify the value of |b:pandoc_biblio_bibs| at any time.
 
@@ -454,10 +514,19 @@ you might retrieve both
 This is off by default, but can be turned on (if `bibtool` is available) by
 setting the |g:pandoc#biblio#use_bibtool| variable to 1.
 
+You can pass extra arguments to `bibtool` by setting
+|g:pandoc#biblio#bibtool_extra_args|. The default is "-r biblatex", which
+enables support for biblatex bibliographies (bibtex bibliographies will still
+work).
+
 TIP: If you use unite.vim, you might want to check https://github.com/msprev/unite-bibtex
 
+- YAML                                                 *vim-pandoc-yaml-module*
 
-- COMPLETION                                       *vim-pandoc-completion-module*
+This module gathers data from YAML headers, if present, and keeps it in the
+*b:pandoc_yaml_data* variable. Other modules might be configured using this.
+
+- COMPLETION                                     *vim-pandoc-completion-module*
 
 Provides |omni-completion|. If the `bibliographies` module is active, it will
 complete bibliographic references from the bibliography sources defined in
@@ -509,6 +578,152 @@ If the 'citeproc' backend is used, extra information can be displayed in the
 preview window, depending on the value of
 |g:pandoc#completion#bib#use_preview|.
 
+-- AUTOCOMPLETE                                        *vim-pandoc-complete-auto*
+
+Vim does not provide automatic completion by itself, but there exist several
+plugins that provide this: |deoplete|, |neocomplete|, |ncm2|,
+|nvim-completion-manager|, and |youcompleteme|. There is also |vimcompletesme|
+that overrides <tab> to trigger different built-in completions, such as
+the omni-completion by |vim-pandoc|, depending on the context. See below for
+descriptions on how to set some of these up with |vim-pandoc|.
+
+-- DEOPLETE                                        *vim-pandoc-complete-deoplete*
+
+|deoplete| is a moder remake of |neocomplete|, and was originally written
+specifically for Neovim, see here: https://github.com/Shougo/deoplete.nvim. It
+is a highly customizable and flexible completion manager.
+
+To configure for `vim-pandoc`, one may use: >
+
+  " This is new style
+  call deoplete#custom#var('omni', 'input_patterns', {
+    \ 'pandoc': '@'
+    \})
+
+  " This is old style (deprecated)
+  if !exists('g:deoplete#omni#input_patterns')
+    let g:deoplete#omni#input_patterns = {}
+  endif
+  let g:deoplete#omni#input_patterns.pandoc = ['@']
+<
+
+-- NEOCOMPLETE                                  *vim-pandoc-complete-neocomplete*
+
+|neocomplete| is also a flexible automatic completion engine for vim, although
+active development has been stopped. Users are recommended to change to
+|deoplete|, see also |vim-pandoc-complete-deoplete|. The plugin is available
+here: https://github.com/Shougo/neovomplete.vim.
+
+The following options may be used to enable automatic completion for pandoc
+documents with |neocomplete| and `vim-pandoc`s omni completion function: >
+
+  if !exists('g:neocomplete#sources#omni#input_patterns')
+    let g:neocomplete#sources#omni#input_patterns = {}
+  endif
+  let g:neocomplete#sources#omni#input_patterns.pandoc =
+    \ '@'
+
+<
+
+-- NCM2                                                *vim-pandoc-complete-ncm2*
+
+|ncm2| is a modern remake and replacement of |nvim-completion-manager| and is
+supposed to be a "Slim, Fast and Hackable Completion Framework for Neovim":
+https://github.com/ncm2/ncm2
+
+The following simple configuration should work well with `vim-pandoc`: >
+
+  " include the following plugins (here using junnegun/vim-plug)
+  Plug 'roxma/nvim-yarp'
+  Plug 'ncm2/ncm2'
+
+  augroup my_cm_setup
+    autocmd!
+    autocmd BufEnter * call ncm2#enable_for_buffer()
+    autocmd Filetype pandoc call ncm2#register_source({
+      \ 'name': 'pandoc',
+      \ 'priority': 8,
+      \ 'scope': ['pandoc'],
+      \ 'mark': 'md',
+      \ 'word_pattern': '\w+',
+      \ 'complete_pattern': ['@'],
+      \ 'on_complete': ['ncm2#on_complete#omni', 'pandoc#completion#Complete'],
+      \ })
+  augroup END
+
+<
+
+-- NVIM-COMPLETION-MANAGER                              *vim-pandoc-complete-ncm*
+
+Note: |nvim-completion-manager| has been replaced by |ncm2|, and users are
+recommended to change. See |vim-pandoc-compete-ncm2| for hints on how to setup
+|ncm2| for |vim-pandoc|.
+
+|nvim-completion-manager| is a fast, extensible, async completion framework
+for neovim (and Vim version 8.0 and above). The project is available here:
+https://github.com/roxma/nvim-completion-manager
+
+To configure for `vim-pandoc`, one can use the following code: >
+
+  augroup my_cm_setup
+    autocmd!
+    autocmd User CmSetup call cm#register_source({
+      \ 'name': 'pandoc',
+      \ 'priority': 8,
+      \ 'scoping': 1,
+      \ 'scopes': ['pandoc'],
+      \ 'abbreviation', 'md',
+      \ 'cm_refresh_patterns': ['@'],
+      \ 'cm_refresh: {'omnifunc': 'pandoc#completion#Complete'},
+      \ })
+  augroup END
+
+<
+
+-- YOUCOMPLETEME                              *vim-pandoc-complete-youcompleteme*
+
+|youcompleteme| is probably the most popular code-completion engine for Vim.
+The github repository is here: https://github.com/Valloric/YouCompleteMe.
+It is described as:
+
+> YouCompleteMe is a fast, as-you-type, fuzzy-search code completion engine
+> for Vim. It has several completion engines: an identifier-based engine that
+> works with every programming language, a semantic, Clang [3]-based engine
+> that provides native semantic code completion for the C-family languages,
+> a Jedi [4]-based completion engine for Python, an OmniSharp [5]-based
+> completion engine for C# and an omnifunc-based completer that uses data from
+> Vim's omnicomplete system to provide semantic completions for many other
+> languages (Ruby, PHP etc.).
+
+To enable automatic completion with |youcompleteme| for `vim-pandoc`, use the
+following options: >
+
+  if !exists('g:ycm_semantic_triggers')
+    let g:ycm_semantic_triggers = {}
+  endif
+  let g:ycm_semantic_triggers.pandoc = ['@']
+
+  let g:ycm_filetype_blacklist = {}
+<
+
+-- VIMCOMPLETESME                                       *vim-pandoc-complete-vcm*
+
+A plugin that maps <tab> to trigger the built-in completion that is most
+suitable to the current context. The plugin is available here:
+https://github.com/ajh17/VimCompletesMe.
+
+The following options may be used to enable completion with the <tab> trigger
+for pandoc documents with |vimcompletesme| and `vim-pandoc`s omni completion
+function: >
+
+  augroup VimCompletesMePandoc
+    autocmd!
+    autocmd FileType pandoc
+      \ let b:vcm_omni_pattern = '@'
+  augroup END
+
+<
+
 - TOC                                                     *vim-pandoc-toc-module*
 
 Provides the *:TOC* command, which displays a table of contents for the
@@ -521,10 +736,8 @@ buffer is closed after this, but this can be circumvented by pressing <C-CR>.
 This behavior can be reversed by setting |g:pandoc#toc#close_after_navigating|
 to 0.
 
-- CHDIR                                                *vim-pandoc-chdir-module*
-
-Changes the current window directory to the one the file is in
-("%:h"). Enabled by default.
+The indentation in the TOC buffer can be tuned by |g:pandoc#toc#shift|
+variable, which definds the shift in number of spaces per level.
 
 - SPELL                                                *vim-pandoc-spell-module*
 
@@ -572,7 +785,8 @@ cluttered with unused variables for users who have disabled some modules.
 A description of the available configuration variables follows:
 
 - *g:pandoc#filetypes#handled*
-  default = ["markdown", "rst", "textile"]
+  default = ["pandoc", "rst", "textile"]
+  	     + ["markdown"] (if |g:pandoc#filetypes#pandoc_markdown| is 1)
 
   A list of the kinds of files vim-pandoc will attach to. 'extra' includes
   .text and .txt files. For what values are valid here, see the
@@ -585,12 +799,12 @@ A description of the available configuration variables follows:
   markdown extensions (*.md, *.mkd, etc)? Since regular markdown and pandoc's
   markdown variant differ, someone might want to restrict those extensions to
   regular markdown. In that case, we use vim's default syntax highlighting for
-  markdown.
+  markdown. See |g:pandoc#filetypes#handled| above.
 
 - *g:pandoc#modules#enabled*
 
   default = ["formatting", "folding", "bibliographies", "completion",
-  "metadata", "menu", "executors", "keyboard", "toc", "chdir", "spell", "hypertext"]
+  "metadata", "menu", "executors", "keyboard", "toc", "spell", "hypertext"]
 
   A list of the modules to enable on the files determined by
   |g:pandoc#filetypes#handled|. See |vim-pandoc-modules|.
@@ -622,7 +836,7 @@ A description of the available configuration variables follows:
   enabled, it might cause some lag.
 
 - *g:pandoc#formatting#equalprg*
-  default = "pandoc -t markdown --reference-links [--columns {g:pandoc#formatting#textwidth}|no-wrap]"
+  default = "pandoc -t markdown [--columns {g:pandoc#formatting#textwidth}|--wrap=none]"
 
   What command to use for equalprg. If set to '', vim's default will be used.
   See |'equalprg'|.
@@ -630,7 +844,7 @@ A description of the available configuration variables follows:
   or soft wraps.
 
 - *g:pandoc#formatting#extra_equalprg*
-  default = ""
+  default = "--reference-links"
 
   Extra arguments to append to the value of equalprg. Useful when the default
   behavior of |g:pandoc#formatting#equalprg| wants to be preserved.
@@ -646,18 +860,58 @@ A description of the available configuration variables follows:
   The LaTeX engine to use with pandoc. 'xelatex' is the default for greater
   unicode compatibility.
 
+- *b:pandoc_command_latex_engine*
+  default = None
+
+  As |g:pandoc#command#latex_engine|, but for the current file.
+
+- *g:pandoc#command#path*
+  default = "pandoc"
+
+  The name of the pandoc command. Can also be an absolute path if the program
+  is not located in the $PATH.
+
 - *g:pandoc#command#custom_open*
   default = ""
 
   A function to be used to open the created file. This function must take an
   argument, for the path of the file created, and return a string with the
-  command that should open the file. For example:
+  command that should open the file. For example: >
 
     let g:pandoc#command#custom_open = "MyPandocOpen"
 
-    function! MyPandocOpen(file)
-        return 'xdg-open ' . shellescape(expand(a:file,':p'))
-    endfunction
+	function! MyPandocOpen(file)
+		let file = shellescape(fnamemodify(a:file, ':p'))
+		let file_extension = fnamemodify(a:file, ':e')
+		if file_extension is? 'pdf'
+			if !empty($PDFVIEWER)
+				return expand('$PDFVIEWER') . ' ' . file
+			elseif executable('zathura')
+				return 'zathura ' . file
+			elseif executable('mupdf')
+				return 'mupdf ' . file
+			endif
+		elseif file_extension is? 'html'
+			if !empty($BROWSER)
+				return expand('$BROWSER') . ' ' . file
+			elseif executable('firefox')
+				return 'firefox ' . file
+			elseif executable('chromium')
+				return 'chromium ' . file
+			endif
+		elseif file_extension is? 'odt' && executable('okular')
+			return 'okular ' . file
+		elseif file_extension is? 'epub' && executable('okular')
+			return 'okular ' . file
+		else
+			return 'xdg-open ' . file
+		endif
+	endfunction
+<
+- *g:pandoc#command#prefer_pdf*
+   default = 0
+
+   Open a pdf file preferrably, if it exists.
 
 - *g:pandoc#command#autoexec_on_writes*
   default = 0
@@ -680,26 +934,47 @@ A description of the available configuration variables follows:
 
   Where to save and retrieve command templates.
 
+- *g:pandoc#compiler#command*
+  default = "{g:pandoc#command#path}"
+
+  The name of the command invoked in |:Pandoc|. Can also be an absolute path
+  if the program is not located in the $PATH.
+
+  The difference to |g:pandoc#command#path| is that the latter is used for
+  internal purposes. For example, if you want to use Panzer: >
+
+    let g:pandoc#compiler#command = "panzer"
+<
+- *g:pandoc#compiler#arguments*
+  default = ''
+
+  Additional arguments for the command invoked in |:Pandoc|.
+  For example, if you're using Panzer this setting is recommended: >
+
+    let g:pandoc#compiler#arguments = "---quiet ---strict"
+<
 - *g:pandoc#biblio#sources*
-  default = "bcg"
+  default = "bcgy"
 
   Where to look for bibliographies:
 
     b: use files with the same name as the current file, in the working dir
     c: use any bibliography in the working dir
     l: look in pandoc's local dir
-    t: look in TeX's texmf
+    t: look in the local texmf tree
     g: append items in |g:pandoc#biblio#bibs|
+    y: look in the current file's YAML header
 
 - *g:pandoc#biblio#bib_extensions*
   default = ["bib", "bibtex", "ris", "mods", "enl", "wos", "medline", "copac"]
 
-  What extensions to look for 'c' and 'l' values in |g:pandoc#biblio#sources|.
+  What extensions to use for 'c', 'l', and 't' values in
+  |g:pandoc#biblio#sources|.
 
 - *g:pandoc#biblio#bibs*
   default = []
 
-  A list of bibliographies to use globally if `g` is in
+  A list of bibliographies to use globally if 'g' is in
   |g:pandoc#biblio#sources|.
 
 - *b:pandoc_biblio_bibs*
@@ -728,7 +1003,7 @@ A description of the available configuration variables follows:
   |preview-window|? Requires the 'citeproc' backend.
 
 - *g:pandoc#keyboard#enabled_submodules*
-  default = ["lists", "references", "styles", "sections", "links"]
+  default = ["lists", "references", "styles", "sections", "links", "checkboxes"]
 
   What mapping groups to enable.
 
@@ -782,7 +1057,7 @@ A description of the available configuration variables follows:
 
   How to decide what level the headers are. Default value follows syntax
   rules, 'relative' uses information about the header parents. For example, in
-  this document
+  this document >
 
       ## header
 
@@ -791,7 +1066,7 @@ A description of the available configuration variables follows:
       #### header
 
       blah blah blah
-
+<
   the level of "## header" is 2 using the default method, but 1 using
   relative, and the level of "#### header" is 4 using the default method, but
   2 using relative.
@@ -803,15 +1078,27 @@ A description of the available configuration variables follows:
 
   Fold YAML frontmatters.
 
+- *g:pandoc#folding#foldlevel_yaml*
+  default = 1
+
+  Foldlevel for YAML frontmatters.
+
 - *g:pandoc#folding#fold_div_classes*
   default = ["notes"]
 
   What div classes to fold. NOTE: you need to end the folds using the
-  `foldend` attribute in the closing tag, like so:
+  `foldend` attribute in the closing tag, like so: >
 
       <div class="notes">
       test
       </div foldend>
+<
+- *g:pandoc#folding#fastfolds*
+  default = 0
+
+  Defer recomputation of folds to the switches between insert and normal mode.
+  For a plug-in that will make Vim recompute the folds only when need be, see
+  https://github.com/konfekt/fastfold
 
 - *g:pandoc#folding#fold_vim_markers*
   default = 1
@@ -844,6 +1131,12 @@ A description of the available configuration variables follows:
   Must the TOC window close after selecting a location? This also controls the
   behavior of the <CR> key. If '1', <CR> navigates and closes the TOC, <C-CR>
   simply navigates. If '0', this behavior is reversed.
+
+- *g:pandoc#toc#shift*
+  default = 2
+
+  Defines the number of spaces per level to indent the higher level
+  positions in TOC buffer.
 
 - *g:pandoc#spell#enabled*
   default = 1
@@ -903,18 +1196,34 @@ A description of the available configuration variables follows:
   To use this for alternate files, the value of
   |g:pandoc#hypertext#open_editable_alternates| should be 1.
 
-
 - *g:pandoc#hypertext#use_default_mappings*
   default = 1
 
   Use default mappings.
 
+FAQ                                                           *vim-pandoc-faq*
+
+Q: On opening a pandoc file the current work dir is not that of the file,
+   what's wrong?
+
+A: Add to your `vimrc` the line
+>
+  autocmd FileType pandoc :lchdir %:p:h
+<
+  As a possible alternative, see also *autochdir* and the plug-in
+>
+  https://github.com/fmoralesc/vim-extended-autochdir
+<
+Q: Editing text is laggy. What's wrong?
+
+A: See |g:pandoc#folding#fastfolds|.
+
 CONTRIBUTE                                              *vim-pandoc-contribute*
 
 vim-pandoc welcomes any contribution, in the form of bug reports, patches,
-code, suggestions, etc. To do so, please open an issue in our issue tracker in
-github, at https://github.com/vim-pandoc/vim-pandoc/issues, or email the
-maintainer (see below).
+code, suggestions, etc. To do so, please open an issue in our issue tracker on
+Github at https://github.com/vim-pandoc/vim-pandoc/issues or email the
+maintainer (see below). See also |vim-pandoc-devel| for documentation.
 
 WHO                                                            *vim-pandoc-who*
 
@@ -928,4 +1237,4 @@ felixSchl, zmanji, lmullen, Propatsch, ivotron, tpoisot, 00Davo. We have
 borrowed from Jeremy Schultz, plasticboy and cirosantilli, too. Many thanks to
 all of them.
 
-vim: set ft=help :
+vim:tw=78:ts=8:noet:ft=help:fdm=marker
