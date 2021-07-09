@@ -6,5 +6,5 @@
 
 (if-some [predstr (first *command-line-args*)]
   (let [pred (eval (read-string predstr))]
-    (filter pred *input*))
+    (filter pred user/*input*))
   (println "usage: bbf [predicate]"))

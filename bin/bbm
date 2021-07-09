@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#_(
+  "exec" "bb" "-I" "-O" "$0" "$@"
+  )
+
+(if-some [predstr (first *command-line-args*)]
+  (binding [*print-meta* true]
+    (let [pred (eval (read-string predstr))]
+      (map pred user/*input*)))
+  (println "usage: bbm [predicate]"))
