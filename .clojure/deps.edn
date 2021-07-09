@@ -1,24 +1,30 @@
 {
  :aliases {
            :try {:extra-deps {deps-try/deps-try {:git/url "https://gitlab.com/eval/deps-try"
-                                                 :sha "9c5eb7d54fadbfc8f5c8b312678c7fee3cc69050"}}
+                                                 :sha "9ccf64be248d5d9aa641df9e94feaea913bc0687"}}
                  :main-opts ["-m" "deps-try.main"]}
            :repl {:extra-deps {cljdev/cljdev {:git/url "https://github.com/justone/cljdev.git"
-                                              :sha "18a1fd036d0d68cfdef678df263c96567a6c5c83"}}
-                  :main-opts  ["-m" "cljdev.repl"]}
-           :outdated {:extra-deps {olical/depot {:mvn/version "2.2.0"}}
-                      :main-opts  ["-m" "depot.outdated.main"]}
-           :new {:extra-deps {seancorfield/clj-new {:mvn/version "0.5.5"}}
-                 :main-opts ["-m" "clj-new.create"]}
+                                              :sha "dc9171f9f091e476a734714d128704876c7fa679"}}
+                  :main-opts  ["-m" "cljdev.repl"]
+                  :exec-fn cljdev.repl/start}
+           :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "0.15.3"}}
+                      :main-opts ["-m" "antq.core"]}
+           :new {:extra-deps {com.github.seancorfield/clj-new {:mvn/version "1.1.309"}}
+                 :main-opts ["-m" "clj-new.create"]
+                 :exec-fn clj-new/create
+                 :exec-args {:template "app"}}
            :dev-resources {:extra-paths ["nate-scratch/dev-resources"]}
-           :dev-portal {:extra-deps {djblue/portal (:local/root "/home/nate/projects/portal/")}}
+           :dev-portal {:extra-deps {djblue/portal {:local/root "/home/nate/projects/portal/"}}}
            :portal {:extra-deps {djblue/portal {:mvn/version "0.12.0"}}}
            :re-find {:extra-deps {MageMasher/re-find.fx
                                   {:git/url "https://github.com/MageMasher/re-find.fx"
                                    :sha "b29bde3519f7632b63eb71415943bf8a7cfa1462"}}
                      :main-opts ["-m" "re-find.fx"]}
            :carve {:extra-deps {borkdude/carve {:git/url "https://github.com/borkdude/carve"
-                                                :sha "e71e820de9bf4cc68441445ae0c6f858b71be42a"}}
+                                                :sha "c9a4dec89032f2003cc439c473fcd3c41e809669"}}
                    :main-opts ["-m" "carve.main"]}
+           :test {:extra-paths ["test"]
+                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.861"}}
+                  :main-opts  ["-m" "kaocha.runner"]}
            }
  }
