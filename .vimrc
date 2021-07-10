@@ -80,9 +80,17 @@ let g:conjure#log#botright = v:true
 " let g:conjure#client#clojure#nrepl#eval#print_options#length = 100
 " let g:conjure#highlight#enabled = v:true
 " let g:conjure#log#fold#enabled = v:true
-let g:conjure#filetypes = ["clojure", "fennel", "janet", "racket", "pandoc"]
+let g:conjure#filetypes = ["clojure", "fennel", "janet", "racket", "pandoc", "markdown"]
 let g:conjure#filetype#pandoc = 'conjure.client.clojure.nrepl'
-let g:sexp_filetypes = 'clojure,scheme,lisp,timl,pandoc'
+let g:conjure#filetype#markdown = 'conjure.client.clojure.nrepl'
+let g:sexp_filetypes = 'clojure,scheme,lisp,timl,pandoc,markdown'
+
+" Uncomment to use vim-markdown for formatting
+" let g:pandoc#filetypes#handled = ["pandoc", "markdown"]
+" let g:pandoc#filetypes#pandoc_markdown = 0
+
+" This doesn't seem to work
+let g:markdown_fenced_languages = ['clojure', 'python', 'ruby']
 
 " coc.vim
 let g:coc_global_extensions = ['coc-conjure']
