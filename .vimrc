@@ -530,3 +530,8 @@ endfunction
 
 " open web browser, mostly for vim-fugitive
 command! -nargs=1 Browse call OpenURL(<f-args>)
+
+
+if filereadable(expand("~/.vimrc.local.after"))
+    source ~/.vimrc.local.after
+endif
