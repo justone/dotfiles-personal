@@ -1,0 +1,3 @@
+#!/bin/bash
+
+puget --opts '{:print-color false}'

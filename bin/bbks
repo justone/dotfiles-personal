@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#_(
+  "exec" "bb-dev" "-I" "-O" "$0" "$@"
+  )
+
+(set! *data-readers* {:default tagged-literal})
+
+(if (seq *command-line-args*)
+  (binding [*print-meta* true]
+    (let [ks (map read-string *command-line-args*)]
+      (map #(select-keys % ks) user/*input*)))
+  (println "usage: bbks :key1 :key2"))

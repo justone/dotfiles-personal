@@ -1,0 +1,39 @@
+#!/usr/bin/env bb
+
+;; From: https://gist.github.com/borkdude/841d85d5ad04c517337166b3928697bd
+
+;; usage:
+;; $ find-var.clj babashka.main/main src:test
+
+;; example output:
+;; src/babashka/main.clj:672:32
+;; src/babashka/main.clj:673:22
+;; src/babashka/main.clj:676:28
+;; test/babashka/test_utils.clj:31:59
+;; test/babashka/test_utils.clj:32:32
+;; test/babashka/profile.clj:11:24
+;; test/babashka/main_test.clj:115:33
+
+(require '[babashka.pods :as pods])
+
+(pods/load-pod 'borkdude/clj-kondo "2021.06.18")
+
+(ns find-var
+  (:require [clojure.edn :as edn]
+            [pod.borkdude.clj-kondo :as clj-kondo]))
+
+(defn find-references [{:keys [:var :lint]}]
+  (let [analysis (-> (clj-kondo/run! {:config {:output {:analysis true}}
+                                      :lint lint})
+                     :analysis)
+        ns-to-find (symbol (namespace var))
+        name-to-find (symbol (name var))
+        usages (:var-usages analysis)]
+    (doseq [{:keys [:to :name] :as u} usages]
+      (when (and (= to ns-to-find)
+                 (= name name-to-find))
+        (let [{:keys [:filename :row :col]} u]
+          (println (str filename ":" row ":" col)))))))
+
+(find-references {:var (edn/read-string (first *command-line-args*))
+                  :lint [(second *command-line-args*)]})

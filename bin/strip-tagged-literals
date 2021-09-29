@@ -1,0 +1,19 @@
+#!/usr/bin/env bb
+
+(ns strip-tagged-literals
+  (:require [clojure.edn :as edn]))
+
+(defn parse-log [log]
+    (edn/read-string {:readers {'mulog/flake str
+                                'error str
+                                'object #(str "#object" %)
+                                :default tagged-literal}}
+                     log))
+
+(when (= *file* (System/getProperty "babashka.file"))
+    (loop [log (read-line)]
+        (when log
+            (-> log
+                    (parse-log)
+                    (prn))
+            (recur (read-line)))))
