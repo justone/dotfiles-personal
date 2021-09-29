@@ -1,11 +1,10 @@
-{:user  {:plugins [; [refactor-nrepl "2.3.1"]
-                   [cider/cider-nrepl "0.19.0"]
+{:user  {:plugins [[cider/cider-nrepl "0.26.0"]
                    [lein-oneoff  "0.3.1"]
                    [lein-pprint  "1.1.1"]]
-         ; :dependencies [[vvvvalvalval/scope-capture "0.1.4"]]
+         :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
+                        [vlaaad/reveal "1.3.214"]]
          ; :injections [(require 'sc.api)]
-         :repl-options {:timeout 120000}
-         :dependencies [[olical/propel "1.3.0"]]}
+         :repl-options {:timeout 120000}}
 
  ;; kaocha test runner
  :kaocha {:aliases
