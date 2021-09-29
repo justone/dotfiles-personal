@@ -1,0 +1,25 @@
+{
+ "coc.preferences.useQuickfixForLocations": true,
+ "suggest.removeDuplicateItems": true,
+ "coc.source.conjure.priority": 999999,
+ "codeLens.enable": true,
+ "suggest.enablePreview": true,
+ "suggest.maxCompleteItemCount": 15,
+ "suggest.removeDuplicateItems": true,
+ "suggest.snippetIndicator": "->",
+ "outline.splitCommand": "bel 10sp",
+ "callHierarchy.splitCommand": "bel 10sp",
+ "callHierarchy.openCommand": "split",
+ "languageserver": {
+    "clojure-lsp": {
+      "command": "/Users/njones/bin/excluded/clojure-lsp",
+      "filetypes": ["clojure"],
+      "rootPatterns": ["project.clj", "deps.edn"],
+      "additionalSchemes": ["jar", "zipfile"],
+      "trace.server": "verbose",
+      "initializationOptions": {
+        "ignore-classpath-directories": true
+      }
+    }
+  }
+}
