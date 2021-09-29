@@ -34,10 +34,10 @@ export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/config
 
 OS=`uname -s`
 
-# if we're running on a mac, use macvim for commit messages
+# if we're running on a mac, use neovim for commit messages
 if [ "$OS" == "Darwin" ]
 then
-    export EDITOR='mvim -v'
+    export EDITOR='nvim'
 fi
 if [ "$OS" == "Linux" ]
 then
