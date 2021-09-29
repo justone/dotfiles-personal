@@ -17,7 +17,10 @@
 	ss = status --short
 	ci = commit
 	di = diff
+	dti = "!GIT_EXTERNAL_DIFF=difftastic git diff"
 	cdi = diff --cached
+	cdti = "!GIT_EXTERNAL_DIFF=difftastic git diff --cached"
+	dtshow = "!GIT_EXTERNAL_DIFF=difftastic git show --ext-diff"
 	co = checkout
 	w = whatchanged
 	vimdiff = difftool --tool=vimdiff -y
@@ -34,6 +37,10 @@
 	lr = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
 	lrs = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
 	lrss = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
+	; from https://stackoverflow.com/a/60875067
+	; stash-index = "!f() { ! git diff --cached --exit-code --quiet && git stash push --quiet --keep-index -m \"temp for stash-index\" && git stash push \"$@\" && git stash pop --quiet stash@{1} && git stash show -p | git apply -R; }; f"
+	; from https://stackoverflow.com/a/60875082
+	; stash-working = "!f() { git commit --quiet --no-verify -m \"temp for stash-working\" && git stash push \"$@\" && git reset --quiet --soft HEAD~1; }; f"
 	x = "!gitx"
 	pat = "!f() { git push && git push --tags; }; f"
 	wl = walklog
