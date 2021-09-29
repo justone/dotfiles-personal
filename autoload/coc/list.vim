@@ -1,168 +1,39 @@
-let s:activated = 0
+scriptencoding utf-8
 let s:is_vim = !has('nvim')
-let s:saved_ve = &t_ve
-let s:saved_cursor = &guicursor
-let s:gui = has('gui_running') || has('nvim')
-
-function! coc#list#get_chars()
-  return {
-        \ '<plug>': "\<Plug>",
-        \ '<esc>': "\<Esc>",
-        \ '<tab>': "\<Tab>",
-        \ '<s-tab>': "\<S-Tab>",
-        \ '<bs>': "\<bs>",
-        \ '<right>': "\<right>",
-        \ '<left>': "\<left>",
-        \ '<up>': "\<up>",
-        \ '<down>': "\<down>",
-        \ '<home>': "\<home>",
-        \ '<end>': "\<end>",
-        \ '<cr>': "\<cr>",
-        \ '<PageUp>' : "\<PageUp>",
-        \ '<PageDown>' : "\<PageDown>",
-        \ '<FocusGained>' : "\<FocusGained>",
-        \ '<ScrollWheelUp>': "\<ScrollWheelUp>",
-        \ '<ScrollWheelDown>': "\<ScrollWheelDown>",
-        \ '<LeftMouse>': "\<LeftMouse>",
-        \ '<LeftDrag>': "\<LeftDrag>",
-        \ '<LeftRelease>': "\<LeftRelease>",
-        \ '<2-LeftMouse>': "\<2-LeftMouse>",
-        \ '<C-a>': "\<C-a>",
-        \ '<C-b>': "\<C-b>",
-        \ '<C-c>': "\<C-c>",
-        \ '<C-d>': "\<C-d>",
-        \ '<C-e>': "\<C-e>",
-        \ '<C-f>': "\<C-f>",
-        \ '<C-g>': "\<C-g>",
-        \ '<C-h>': "\<C-h>",
-        \ '<C-i>': "\<C-i>",
-        \ '<C-j>': "\<C-j>",
-        \ '<C-k>': "\<C-k>",
-        \ '<C-l>': "\<C-l>",
-        \ '<C-m>': "\<C-m>",
-        \ '<C-n>': "\<C-n>",
-        \ '<C-o>': "\<C-o>",
-        \ '<C-p>': "\<C-p>",
-        \ '<C-q>': "\<C-q>",
-        \ '<C-r>': "\<C-r>",
-        \ '<C-s>': "\<C-s>",
-        \ '<C-t>': "\<C-t>",
-        \ '<C-u>': "\<C-u>",
-        \ '<C-v>': "\<C-v>",
-        \ '<C-w>': "\<C-w>",
-        \ '<C-x>': "\<C-x>",
-        \ '<C-y>': "\<C-y>",
-        \ '<C-z>': "\<C-z>",
-        \ '<A-a>': "\<A-a>",
-        \ '<A-b>': "\<A-b>",
-        \ '<A-c>': "\<A-c>",
-        \ '<A-d>': "\<A-d>",
-        \ '<A-e>': "\<A-e>",
-        \ '<A-f>': "\<A-f>",
-        \ '<A-g>': "\<A-g>",
-        \ '<A-h>': "\<A-h>",
-        \ '<A-i>': "\<A-i>",
-        \ '<A-j>': "\<A-j>",
-        \ '<A-k>': "\<A-k>",
-        \ '<A-l>': "\<A-l>",
-        \ '<A-m>': "\<A-m>",
-        \ '<A-n>': "\<A-n>",
-        \ '<A-o>': "\<A-o>",
-        \ '<A-p>': "\<A-p>",
-        \ '<A-q>': "\<A-q>",
-        \ '<A-r>': "\<A-r>",
-        \ '<A-s>': "\<A-s>",
-        \ '<A-t>': "\<A-t>",
-        \ '<A-u>': "\<A-u>",
-        \ '<A-v>': "\<A-v>",
-        \ '<A-w>': "\<A-w>",
-        \ '<A-x>': "\<A-x>",
-        \ '<A-y>': "\<A-y>",
-        \ '<A-z>': "\<A-z>",
-        \}
-endfunction
-
-function! coc#list#getc() abort
-  let c = getchar()
-  return type(c) == type(0) ? nr2char(c) : c
-endfunction
+let s:prefix = '[List Preview]'
+" filetype detect could be slow.
+let s:filetype_map = {
+  \ 'vim': 'vim',
+  \ 'ts': 'typescript',
+  \ 'js': 'javascript',
+  \ 'html': 'html',
+  \ 'css': 'css'
+  \ }
 
 function! coc#list#getchar() abort
-  let input = coc#list#getc()
-  if 1 != &iminsert
-    return input
-  endif
-  "a language keymap is activated, so input must be resolved to the mapped values.
-  let partial_keymap = mapcheck(input, "l")
-  while partial_keymap !=# ""
-    let full_keymap = maparg(input, "l")
-    if full_keymap ==# "" && len(input) >= 3 "HACK: assume there are no keymaps longer than 3.
-      return input
-    elseif full_keymap ==# partial_keymap
-      return full_keymap
-    endif
-    let c = coc#list#getc()
-    if c ==# "\<Esc>" || c ==# "\<CR>"
-      "if the short sequence has a valid mapping, return that.
-      if !empty(full_keymap)
-        return full_keymap
-      endif
-      return input
-    endif
-    let input .= c
-    let partial_keymap = mapcheck(input, "l")
-  endwhile
-  return input
+  return coc#prompt#getchar()
 endfunction
 
-function! coc#list#prompt_start() abort
-  call timer_start(100, {-> coc#list#start_prompt()})
-endfunction
-
-function! coc#list#start_prompt()
-  if s:activated | return | endif
-  if s:gui && !empty(s:saved_cursor)
-    set guicursor+=a:ver1-CocCursorTransparent/lCursor
-  elseif s:is_vim
-    set t_ve=
-  endif
-  let s:activated = 1
-  try
-    while s:activated
-      let ch = coc#list#getchar()
-      if ch ==# "\u26d4"
-        break
-      endif
-      if ch ==# "\<FocusLost>" || ch ==# "\<FocusGained>" || ch ==# "\<CursorHold>"
-        continue
-      else
-        call coc#rpc#notify('InputChar', [ch, getcharmod()])
-      endif
-    endwhile
-  catch /^Vim:Interrupt$/
-    let s:activated = 0
-    call coc#rpc#notify('InputChar', ["\<C-c>"])
-    return
-  endtry
-  let s:activated = 0
-endfunction
-
-function! coc#list#setlines(lines, append)
-  let total = line('$')
+function! coc#list#setlines(bufnr, lines, append)
   if a:append
-    silent call append(line('$'), a:lines)
+    silent call appendbufline(a:bufnr, '$', a:lines)
   else
-    silent call append(0, a:lines)
-    let n = len(a:lines) + 1
-    let saved_reg = @"
-    silent execute n.',$d'
-    let @" = saved_reg
+    if exists('*deletebufline')
+      silent call deletebufline(a:bufnr, len(a:lines) + 1, '$')
+    else
+      let n = len(a:lines) + 1
+      let saved_reg = @"
+      silent execute n.',$d'
+      let @" = saved_reg
+    endif
+    silent call setbufline(a:bufnr, 1, a:lines)
   endif
 endfunction
 
 function! coc#list#options(...)
   let list = ['--top', '--tab', '--normal', '--no-sort', '--input', '--strict',
-        \ '--regex', '--interactive', '--number-select', '--auto-preview']
+        \ '--regex', '--interactive', '--number-select', '--auto-preview',
+        \ '--ignore-case', '--no-quit', '--first']
   if get(g:, 'coc_enabled', 0)
     let names = coc#rpc#request('listNames', [])
     call extend(list, names)
@@ -170,19 +41,9 @@ function! coc#list#options(...)
   return join(list, "\n")
 endfunction
 
-function! coc#list#stop_prompt(...)
-  if get(a:, 1, 0) == 0
-    if s:gui
-      set guicursor+=a:ver1-Cursor/lCursor
-      let &guicursor = s:saved_cursor
-    elseif s:is_vim
-      let &t_ve = s:saved_ve
-    endif
-  endif
-  if s:activated
-    let s:activated = 0
-    call feedkeys("\u26d4", 'int')
-  endif
+function! coc#list#names(...) abort
+  let names = coc#rpc#request('listNames', [])
+  return join(names, "\n")
 endfunction
 
 function! coc#list#status(name)
@@ -191,7 +52,6 @@ function! coc#list#status(name)
 endfunction
 
 function! coc#list#create(position, height, name, numberSelect)
-  nohlsearch
   if a:position ==# 'tab'
     execute 'silent tabe list:///'.a:name
   else
@@ -199,29 +59,38 @@ function! coc#list#create(position, height, name, numberSelect)
     execute 'resize '.a:height
   endif
   if a:numberSelect
+    setl norelativenumber
     setl number
   else
     setl nonumber
-    setl foldcolumn=2
+    setl norelativenumber
+    setl signcolumn=yes
   endif
   return [bufnr('%'), win_getid()]
 endfunction
 
+" close list windows
+function! coc#list#clean_up() abort
+  for i in range(1, winnr('$'))
+    let bufname = bufname(winbufnr(i))
+    if bufname =~# 'list://'
+      execute i.'close!'
+    endif
+  endfor
+endfunction
+
 function! coc#list#setup(source)
   let b:list_status = {}
-  let statusParts = [
-    \ '%#CocListMode#-- %{get(b:list_status, "mode")} --%*',
-    \ '%{get(g:, "coc_list_loading_status", "")}',
-    \ '%{get(b:list_status, "args", "")}',
-    \ '(%L/%{get(b:list_status, "total", "")})',
-    \ '%=',
-    \ '%#CocListPath# %{get(b:list_status, "cwd", "")} %l/%L%*'
-    \ ]
-  call setwinvar(winnr(), '&statusline', join(statusParts, ' '))
   setl buftype=nofile nobuflisted nofen nowrap
   setl norelativenumber bufhidden=wipe cursorline winfixheight
-  setl tabstop=1 nolist nocursorcolumn
+  setl tabstop=1 nolist nocursorcolumn undolevels=-1
   setl signcolumn=auto
+  if has('nvim-0.5.0') || has('patch-8.1.0864')
+    setl scrolloff=0
+  endif
+  if exists('&cursorlineopt')
+    setl cursorlineopt=both
+  endif
   setl filetype=list
   syntax case ignore
   let source = a:source[8:]
@@ -230,24 +99,52 @@ function! coc#list#setup(source)
   nnoremap <silent><nowait><buffer> <esc> <C-w>c
 endfunction
 
+" Check if previewwindow exists on current tab.
 function! coc#list#has_preview()
   for i in range(1, winnr('$'))
-    let preview = getwinvar(i, '&previewwindow')
+    let preview = getwinvar(i, 'previewwindow', getwinvar(i, '&previewwindow', 0))
     if preview
-      return 1
+      return i
     endif
   endfor
   return 0
 endfunction
 
-function! coc#list#restore(winid, height)
-  let res = win_gotoid(a:winid)
-  if res == 0 | return | endif
-  if winnr('$') == 1
+" Get previewwindow from tabnr, use 0 for current tab
+function! coc#list#get_preview(...) abort
+  let tabnr = get(a:, 1, 0) == 0 ? tabpagenr() : a:1
+  let info = gettabinfo(tabnr)
+  if !empty(info)
+    for win in info[0]['windows']
+      if getwinvar(win, 'previewwindow', 0)
+        return win
+      endif
+    endfor
+  endif
+  return -1
+endfunction
+
+function! coc#list#scroll_preview(dir) abort
+  let winnr = coc#list#has_preview()
+  if !winnr
     return
   endif
-  execute 'resize '.a:height
-  if s:is_vim
+  let winid = win_getid(winnr)
+  if exists('*win_execute')
+    call win_execute(winid, "normal! ".(a:dir ==# 'up' ? "\<C-u>" : "\<C-d>"))
+  else
+    let id = win_getid()
+    noa call win_gotoid(winid)
+    execute "normal! ".(a:dir ==# 'up' ? "\<C-u>" : "\<C-d>")
+    noa call win_gotoid(id)
+  endif
+endfunction
+
+function! coc#list#restore(winid, height)
+  if has('nvim') && nvim_win_is_valid(a:winid)
+    call nvim_win_set_height(a:winid, a:height)
+  elseif s:is_vim && exists('*win_execute')
+    call win_execute(a:winid, 'noa resize '.a:height, 'silent!')
     redraw
   endif
 endfunction
@@ -255,4 +152,163 @@ endfunction
 function! coc#list#set_height(height) abort
   if winnr('$') == 1| return | endif
   execute 'resize '.a:height
+endfunction
+
+function! coc#list#hide(original, height, winid) abort
+  let arr = win_id2tabwin(a:winid)
+  " close preview window
+  if !empty(arr) && arr[0] != 0
+    silent! pclose!
+    let previewwin = coc#list#get_preview(arr[0])
+    call coc#window#close(previewwin)
+  endif
+  if !empty(getwininfo(a:original))
+    call win_gotoid(a:original)
+  endif
+  if a:winid
+    silent! call coc#window#close(a:winid)
+  endif
+  if !empty(a:height) && win_getid() == a:original
+    if exists('*nvim_win_set_height')
+      call nvim_win_set_height(a:original, a:height)
+    elseif win_getid() == a:original
+      execute 'resize '.a:height
+    endif
+  endif
+endfunction
+
+" Improve preview performance by reused window & buffer.
+" lines - list of lines
+" config.position - could be 'below' 'top' 'tab'.
+" config.winid - id of original window.
+" config.name - (optional )name of preview buffer.
+" config.splitRight - (optional) split to right when 1.
+" config.lnum - (optional) current line number
+" config.filetype - (optional) filetype of lines.
+" config.hlGroup - (optional) highlight group.
+" config.maxHeight - (optional) max height of window, valid for 'below' & 'top' position.
+function! coc#list#preview(lines, config) abort
+  if s:is_vim && !exists('*win_execute')
+    throw 'win_execute function required for preview, please upgrade your vim.'
+    return
+  endif
+  let name = fnamemodify(get(a:config, 'name', ''), ':.')
+  let lines = a:lines
+  if empty(lines)
+    if get(a:config, 'scheme', 'file') != 'file'
+      let bufnr = s:load_buffer(name)
+      if bufnr != 0
+        let lines = getbufline(bufnr, 1, '$')
+      else
+        let lines = ['']
+      endif
+    else
+      " Show empty lines so not close window.
+      let lines = ['']
+    endif
+  endif
+  let winid = coc#list#get_preview(0)
+  let bufnr = winid == -1 ? 0 : winbufnr(winid)
+  " Try reuse buffer & window
+  let bufnr = coc#float#create_buf(bufnr, lines)
+  if bufnr == 0
+    return
+  endif
+  call setbufvar(bufnr, '&synmaxcol', 500)
+  let filetype = get(a:config, 'filetype', '')
+  let extname = matchstr(name, '\.\zs[^.]\+$')
+  if empty(filetype) && !empty(extname)
+    let filetype = get(s:filetype_map, extname, '')
+  endif
+  let range = get(a:config, 'range', v:null)
+  let hlGroup = get(a:config, 'hlGroup', 'Search')
+  let lnum = get(a:config, 'lnum', 1)
+  let position = get(a:config, 'position', 'below')
+  let original = get(a:config, 'winid', -1)
+  if winid == -1
+    let change = position != 'tab' && get(a:config, 'splitRight', 0)
+    let curr = win_getid()
+    if change
+      if original && win_id2win(original)
+        noa call win_gotoid(original)
+      else
+        noa wincmd t
+      endif
+      execute 'noa belowright vert sb '.bufnr
+      let winid = win_getid()
+    elseif position == 'tab' || get(a:config, 'splitRight', 0)
+      execute 'noa belowright vert sb '.bufnr
+      let winid = win_getid()
+    else
+      let mod = position == 'top' ? 'below' : 'above'
+      let height = s:get_height(lines, a:config)
+      execute 'noa '.mod.' sb +resize\ '.height.' '.bufnr
+      let winid = win_getid()
+    endif
+    noa call winrestview({"lnum": lnum ,"topline":max([1, lnum - 3])})
+    call setwinvar(winid, '&signcolumn', 'no')
+    call setwinvar(winid, '&number', 1)
+    call setwinvar(winid, '&cursorline', 0)
+    call setwinvar(winid, '&relativenumber', 0)
+    call setwinvar(winid, 'previewwindow', 1)
+    noa call win_gotoid(curr)
+  else
+    let height = s:get_height(lines, a:config)
+    if height > 0
+      if s:is_vim
+        let curr = win_getid()
+        noa call win_gotoid(winid)
+        execute 'silent! noa resize '.height
+        noa call win_gotoid(curr)
+      else
+        call nvim_win_set_height(winid, height)
+      endif
+    endif
+    call coc#compat#execute(winid, ['syntax clear', 'noa call winrestview({"lnum":'.lnum.',"topline":'.max([1, lnum - 3]).'})'])
+  endif
+  call setwinvar(winid, '&foldenable', 0)
+  if s:prefix.' '.name != bufname(bufnr)
+    if s:is_vim
+      call win_execute(winid, 'noa file '.fnameescape(s:prefix.' '.name), 'silent!')
+    else
+      silent! noa call nvim_buf_set_name(bufnr, s:prefix.' '.name)
+    endif
+  endif
+  " highlights
+  if !empty(filetype)
+    let start = max([0, lnum - 300])
+    let end = min([len(lines), lnum + 300])
+    call coc#highlight#highlight_lines(winid, [{'filetype': filetype, 'startLine': start, 'endLine': end}])
+    call coc#compat#execute(winid, 'syn sync fromstart')
+  else
+    call coc#compat#execute(winid, 'filetype detect')
+    let ft = getbufvar(bufnr, '&filetype', '')
+    if !empty(extname) && !empty(ft)
+      let s:filetype_map[extname] = ft
+    endif
+  endif
+  call sign_unplace('coc', {'buffer': bufnr})
+  call coc#compat#execute(winid, 'call clearmatches()')
+  if !empty(range)
+    call sign_place(1, 'coc', 'CocCurrentLine', bufnr, {'lnum': lnum})
+    call coc#highlight#match_ranges(winid, bufnr, [range], hlGroup, 10)
+  endif
+  redraw
+endfunction
+
+function! s:get_height(lines, config) abort
+  if get(a:config, 'splitRight', 0) || get(a:config, 'position', 'below') == 'tab'
+    return 0
+  endif
+  let height = min([get(a:config, 'maxHeight', 10), len(a:lines), &lines - &cmdheight - 2])
+  return height
+endfunction
+
+function! s:load_buffer(name) abort
+  if exists('*bufadd') && exists('*bufload')
+    let bufnr = bufadd(a:name)
+    call bufload(bufnr)
+    return bufnr
+  endif
+  return 0
 endfunction
