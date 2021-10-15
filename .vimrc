@@ -226,6 +226,8 @@ au FileType rst let g:table_mode_corner_corner='+'
 au FileType markdown let g:table_mode_corner='|'
 au FileType pandoc let g:table_mode_corner='|'
 
+let g:sexp_enable_insert_mode_mappings = 0
+
 " enable pathogen
 filetype off
 " let g:pathogen_blacklist = ['tagbar']
