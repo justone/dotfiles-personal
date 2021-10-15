@@ -2,7 +2,7 @@
                    [lein-oneoff  "0.3.1"]
                    [lein-pprint  "1.1.1"]]
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [vlaaad/reveal "1.3.214"]]
+                        [vlaaad/reveal "1.3.224"]]
          ; :injections [(require 'sc.api)]
          :repl-options {:timeout 120000}}
 
