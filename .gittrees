@@ -314,3 +314,7 @@
 	url = https://github.com/tpope/vim-repeat.git
 	path = .vim/bundle/vim-repeat
 	branch = master
+[subtree ".vim/bundle/auto-pairs"]
+	url = https://github.com/jiangmiao/auto-pairs.git
+	path = .vim/bundle/auto-pairs
+	branch = master
