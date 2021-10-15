@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+batchcolor '\d+\.\d+\.\d+\.\d+'
