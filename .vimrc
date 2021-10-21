@@ -537,6 +537,7 @@ command! -nargs=1 Browse call OpenURL(<f-args>)
 nmap <silent> <C-J>                 <Plug>(coc-diagnostic-next)
 nmap <silent> <C-K>                 <Plug>(coc-diagnostic-prev)
 nmap <silent> <Leader>c             <Plug>(coc-codeaction-cursor)
+nmap <silent> <Leader>K             :call CocAction('doHover')<CR>
 nmap <silent> <Leader>ci            :call CocAction('showIncomingCalls')<CR>
 nmap <silent> <Leader>cl            <Plug>(coc-codeaction-line)
 nmap <silent> <Leader>co            :call CocAction('showOutgoingCalls')<CR>
