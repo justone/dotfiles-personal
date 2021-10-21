@@ -12,7 +12,7 @@
  "callHierarchy.openCommand": "split",
  "languageserver": {
     "clojure-lsp": {
-      "command": "/Users/njones/bin/excluded/clojure-lsp",
+      "command": "clojure-lsp",
       "filetypes": ["clojure"],
       "rootPatterns": ["project.clj", "deps.edn"],
       "additionalSchemes": ["jar", "zipfile"],
