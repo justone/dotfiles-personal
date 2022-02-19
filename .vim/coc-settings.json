@@ -3,6 +3,7 @@
  "suggest.removeDuplicateItems": true,
  "coc.source.conjure.priority": 999999,
  "codeLens.enable": true,
+ "codeLens.position": "eol",
  "suggest.enablePreview": true,
  "suggest.maxCompleteItemCount": 15,
  "suggest.removeDuplicateItems": true,
