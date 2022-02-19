@@ -21,7 +21,7 @@ if ($pathdata) {
 my ( $fh, $tempfile ) = tempfile();
 write_file( $tempfile, $pathdata );
 system(
-    "vim -c 'set completeopt+=longest' -c 'imap <Tab> <C-x><C-f>' $tempfile");
+    "nvim -c 'set completeopt+=longest' -c 'imap <Tab> <C-x><C-f>' $tempfile");
 
 # read edited data
 my $new_pathdata = read_file($tempfile);
