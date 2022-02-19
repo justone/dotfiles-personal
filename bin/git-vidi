@@ -1,0 +1,3 @@
+#!/bin/bash
+
+vi -p `git di "$@" --name-only`
