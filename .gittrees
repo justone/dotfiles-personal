@@ -314,3 +314,7 @@
 	url = https://github.com/jiangmiao/auto-pairs.git
 	path = .vim/bundle/auto-pairs
 	branch = master
+[subtree ".vim/bundle/vim-ingo-library"]
+	url = https://github.com/inkarkat/vim-ingo-library.git
+	path = .vim/bundle/vim-ingo-library
+	branch = master
