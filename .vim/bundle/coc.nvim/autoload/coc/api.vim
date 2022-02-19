@@ -1,7 +1,7 @@
 " ============================================================================
 " Description: Client api used by vim8
 " Author: Qiming Zhao <chemzqm@gmail.com>
-" Licence: MIT licence
+" Licence: Anti 996 licence
 " Last Modified:  Aug 10, 2021
 " ============================================================================
 if has('nvim') | finish | endif
@@ -21,7 +21,10 @@ function! s:buf_line_count(bufnr) abort
     if empty(info)
       return 0
     endif
-    return info[0]['linecount']
+    " vim 8.1 has getbufinfo but no linecount
+    if has_key(info[0], 'linecount')
+      return info[0]['linecount']
+    endif
   endif
   if exists('*getbufline')
     let lines = getbufline(a:bufnr, 1, '$')
@@ -149,7 +152,7 @@ function! s:funcs.feedkeys(keys, mode, escape_csi)
 endfunction
 
 function! s:funcs.list_runtime_paths()
-  return split(&runtimepath, ',')
+  return globpath(&runtimepath, '', 0, 1)
 endfunction
 
 function! s:funcs.command_output(cmd)
@@ -263,14 +266,22 @@ function! s:funcs.buf_get_mark(bufnr, name)
   return [line("'" . a:name), col("'" . a:name)]
 endfunction
 
-function! s:funcs.buf_add_highlight(bufnr, srcId, hlGroup, line, colStart, colEnd) abort
-  if !has('textprop') || !has('patch-8.1.1719')
+function! s:funcs.buf_add_highlight(bufnr, srcId, hlGroup, line, colStart, colEnd, ...) abort
+  if !has('patch-8.1.1719')
     return
   endif
   let bufnr = a:bufnr == 0 ? bufnr('%') : a:bufnr
   let type = 'CocHighlight'.a:hlGroup
   if empty(prop_type_get(type))
-    call prop_type_add(type, {'highlight': a:hlGroup, 'combine': 1})
+    let opts = get(a:, 1, 0)
+    let priority = get(opts, 'priority', 0)
+    call prop_type_add(type, {
+          \ 'highlight': a:hlGroup,
+          \ 'priority': type(priority) == 0 ? priority : 0,
+          \ 'combine': get(opts, 'combine', 1),
+          \ 'start_incl': get(opts, 'start_incl', 0),
+          \ 'end_incl': get(opts, 'end_incl', 0),
+          \ })
   endif
   let total = strlen(getbufline(bufnr, a:line + 1)[0])
   let end = a:colEnd
@@ -305,12 +316,12 @@ function! s:funcs.buf_add_highlight(bufnr, srcId, hlGroup, line, colStart, colEn
 endfunction
 
 function! s:funcs.buf_clear_namespace(bufnr, srcId, startLine, endLine) abort
-  if !has('textprop') || !has('patch-8.1.1719')
+  if !has('patch-8.1.1719')
     return
   endif
   let bufnr = a:bufnr == 0 ? bufnr('%') : a:bufnr
   let start = a:startLine + 1
-  let end = a:endLine == -1 ? len(getbufline(bufnr, 1, '$')) : a:endLine + 1
+  let end = a:endLine == -1 ? len(getbufline(bufnr, 1, '$')) : a:endLine
   if a:srcId == -1
     call prop_clear(start, end, {'bufnr' : bufnr})
   else
@@ -352,7 +363,7 @@ function! s:funcs.buf_set_lines(bufnr, start, end, strict, ...) abort
   endif
   let replacement = get(a:, 1, [])
   let lineCount = s:buf_line_count(a:bufnr)
-  let startLnum = a:start >= 0 ? a:start + 1 : lineCount + a:start + 1
+  let startLnum = a:start >= 0 ? a:start + 1 : lineCount + a:start + 2
   let end = a:end >= 0 ? a:end : lineCount + a:end + 1
   if end == lineCount + 1
     let end = lineCount
@@ -376,8 +387,14 @@ function! s:funcs.buf_set_lines(bufnr, start, end, strict, ...) abort
       if delCount
         let start = startLnum + len(replacement)
         let saved_reg = @"
-        silent execute start . ','.(start + delCount - 1).'d'
+        let system_reg = @*
+        if exists('*deletebufline')
+          silent call deletebufline(curr, start, start + delCount - 1)
+        else
+          silent execute start . ','.(start + delCount - 1).'d'
+        endif
         let @" = saved_reg
+        let @* = system_reg
       endif
     endif
     call winrestview(storeView)
@@ -396,8 +413,12 @@ function! s:funcs.buf_set_lines(bufnr, start, end, strict, ...) abort
       endif
       if delCount
         let start = startLnum + len(replacement)
+        let saved_reg = @"
+        let system_reg = @*
         "8.1.0039
         silent call deletebufline(a:bufnr, start, start + delCount - 1)
+        let @" = saved_reg
+        let @* = system_reg
       endif
     endif
   endif

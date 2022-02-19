@@ -97,12 +97,12 @@ endfunction
 
 function! CocLocations(id, method, ...) abort
   let args = [a:id, a:method] + copy(a:000)
-  call coc#rpc#request('findLocations', args)
+  return coc#rpc#request('findLocations', args)
 endfunction
 
 function! CocLocationsAsync(id, method, ...) abort
   let args = [a:id, a:method] + copy(a:000)
-  call coc#rpc#notify('findLocations', args)
+  return s:AsyncRequest('findLocations', args)
 endfunction
 
 function! CocRequestAsync(...)
@@ -249,6 +249,16 @@ function! s:Autocmd(...) abort
   call coc#rpc#notify('CocAutocmd', a:000)
 endfunction
 
+function! s:HandleCharInsert(char, bufnr) abort
+  if get(g:, 'coc_disable_space_report', 0)
+    let g:coc_disable_space_report = 0
+    if a:char ==# ' '
+      return
+    endif
+  endif
+  call s:Autocmd('InsertCharPre', a:char, a:bufnr)
+endfunction
+
 function! s:SyncAutocmd(...)
   if !g:coc_service_initialized
     return
@@ -304,9 +314,9 @@ function! s:Enable(initialize)
     autocmd BufWinEnter         * call s:Autocmd('BufWinEnter', +expand('<abuf>'), win_getid())
     autocmd FileType            * call s:Autocmd('FileType', expand('<amatch>'), +expand('<abuf>'))
     autocmd CompleteDone        * call s:Autocmd('CompleteDone', get(v:, 'completed_item', {}))
-    autocmd InsertCharPre       * call s:Autocmd('InsertCharPre', v:char, bufnr('%'))
+    autocmd InsertCharPre       * call s:HandleCharInsert(v:char, bufnr('%'))
     if exists('##TextChangedP')
-      autocmd TextChangedP        * call s:Autocmd('TextChangedP', +expand('<abuf>'), {'lnum': line('.'), 'col': col('.'), 'pre': strpart(getline('.'), 0, col('.') - 1), 'changedtick': b:changedtick})
+      autocmd TextChangedP        * call s:Autocmd('TextChangedP', +expand('<abuf>'), {'lnum': line('.'), 'col': col('.'), 'line': getline('.'), 'changedtick': b:changedtick})
     endif
     autocmd TextChangedI        * call s:Autocmd('TextChangedI', +expand('<abuf>'), {'lnum': line('.'), 'col': col('.'), 'pre': strpart(getline('.'), 0, col('.') - 1), 'changedtick': b:changedtick})
     autocmd InsertLeave         * call s:Autocmd('InsertLeave', +expand('<abuf>'))
@@ -345,69 +355,70 @@ function! s:Hi() abort
   hi default CocHintSign      ctermfg=Blue    guifg=#15aabf guibg=NONE
   hi default CocSelectedText  ctermfg=Red     guifg=#fb4934 guibg=NONE
   hi default CocCodeLens      ctermfg=Gray    guifg=#999999 guibg=NONE
-  hi default CocUnderline     cterm=underline gui=underline
+  hi default CocUnderline     term=underline cterm=underline gui=underline
   hi default CocBold          term=bold cterm=bold gui=bold
   hi default CocItalic        term=italic cterm=italic gui=italic
   if s:is_vim || has('nvim-0.4.0')
-    hi default CocStrikeThrough cterm=strikethrough gui=strikethrough
+    hi default CocStrikeThrough term=strikethrough cterm=strikethrough gui=strikethrough
   else
     hi default CocStrikeThrough guifg=#989898 ctermfg=gray
   endif
   hi default CocMarkdownLink  ctermfg=Blue    guifg=#15aabf guibg=NONE
-  hi default link CocFadeOut       Conceal
-  hi default link CocMarkdownCode     markdownCode
-  hi default link CocMarkdownHeader   markdownH1
-  hi default link CocMenuSel          PmenuSel
-  hi default link CocErrorFloat       CocErrorSign
-  hi default link CocWarningFloat     CocWarningSign
-  hi default link CocInfoFloat        CocInfoSign
-  hi default link CocHintFloat        CocHintSign
-  hi default link CocErrorHighlight   CocUnderline
-  hi default link CocWarningHighlight CocUnderline
-  hi default link CocInfoHighlight    CocUnderline
-  hi default link CocHintHighlight    CocUnderline
+  hi default CocDisabled guifg=#999999 ctermfg=gray
+  hi default link CocFadeOut             Conceal
+  hi default link CocMarkdownCode        markdownCode
+  hi default link CocMarkdownHeader      markdownH1
+  hi default link CocMenuSel             PmenuSel
+  hi default link CocErrorFloat          CocErrorSign
+  hi default link CocWarningFloat        CocWarningSign
+  hi default link CocInfoFloat           CocInfoSign
+  hi default link CocHintFloat           CocHintSign
+  hi default link CocErrorHighlight      CocUnderline
+  hi default link CocWarningHighlight    CocUnderline
+  hi default link CocInfoHighlight       CocUnderline
+  hi default link CocHintHighlight       CocUnderline
   hi default link CocDeprecatedHighlight CocStrikeThrough
   hi default link CocUnusedHighlight     CocFadeOut
-  hi default link CocListMode ModeMsg
-  hi default link CocListPath Comment
-  hi default link CocHighlightText  CursorColumn
-  hi default link CocHoverRange     Search
-  hi default link CocCursorRange    Search
-  hi default link CocHighlightRead  CocHighlightText
-  hi default link CocHighlightWrite CocHighlightText
+  hi default link CocListMode            ModeMsg
+  hi default link CocListPath            Comment
+  hi default link CocHighlightText       CursorColumn
+  hi default link CocHoverRange          Search
+  hi default link CocCursorRange         Search
+  hi default link CocHighlightRead       CocHighlightText
+  hi default link CocHighlightWrite      CocHighlightText
   " Tree view highlights
-  hi default link CocTreeTitle Title
+  hi default link CocTreeTitle       Title
   hi default link CocTreeDescription Comment
-  hi default link CocTreeOpenClose CocBold
-  hi default link CocTreeSelected CursorLine
-  hi default link CocSelectedRange  CocHighlightText
+  hi default link CocTreeOpenClose   CocBold
+  hi default link CocTreeSelected    CursorLine
+  hi default link CocSelectedRange   CocHighlightText
   " Symbol highlights
-  hi default link CocSymbolDefault MoreMsg
-  hi default link CocSymbolFile Statement
-  hi default link CocSymbolModule Statement
-  hi default link CocSymbolNamespace Statement
-  hi default link CocSymbolPackage Statement
-  hi default link CocSymbolClass Statement
-  hi default link CocSymbolMethod Function
-  hi default link CocSymbolProperty Keyword
-  hi default link CocSymbolField CocSymbolDefault
-  hi default link CocSymbolConstructor Function
-  hi default link CocSymbolEnum CocSymbolDefault
-  hi default link CocSymbolInterface CocSymbolDefault
-  hi default link CocSymbolFunction Function
-  hi default link CocSymbolVariable CocSymbolDefault
-  hi default link CocSymbolConstant Constant
-  hi default link CocSymbolString String
-  hi default link CocSymbolNumber Number
-  hi default link CocSymbolBoolean Boolean
-  hi default link CocSymbolArray CocSymbolDefault
-  hi default link CocSymbolObject CocSymbolDefault
-  hi default link CocSymbolKey Keyword
-  hi default link CocSymbolNull Type
-  hi default link CocSymbolEnumMember CocSymbolDefault
-  hi default link CocSymbolStruct Keyword
-  hi default link CocSymbolEvent Keyword
-  hi default link CocSymbolOperator Operator
+  hi default link CocSymbolDefault       MoreMsg
+  hi default link CocSymbolFile          Statement
+  hi default link CocSymbolModule        Statement
+  hi default link CocSymbolNamespace     Statement
+  hi default link CocSymbolPackage       Statement
+  hi default link CocSymbolClass         Statement
+  hi default link CocSymbolMethod        Function
+  hi default link CocSymbolProperty      Keyword
+  hi default link CocSymbolField         CocSymbolDefault
+  hi default link CocSymbolConstructor   Function
+  hi default link CocSymbolEnum          CocSymbolDefault
+  hi default link CocSymbolInterface     CocSymbolDefault
+  hi default link CocSymbolFunction      Function
+  hi default link CocSymbolVariable      CocSymbolDefault
+  hi default link CocSymbolConstant      Constant
+  hi default link CocSymbolString        String
+  hi default link CocSymbolNumber        Number
+  hi default link CocSymbolBoolean       Boolean
+  hi default link CocSymbolArray         CocSymbolDefault
+  hi default link CocSymbolObject        CocSymbolDefault
+  hi default link CocSymbolKey           Keyword
+  hi default link CocSymbolNull          Type
+  hi default link CocSymbolEnumMember    CocSymbolDefault
+  hi default link CocSymbolStruct        Keyword
+  hi default link CocSymbolEvent         Keyword
+  hi default link CocSymbolOperator      Operator
   hi default link CocSymbolTypeParameter Operator
 
   if has('nvim')
@@ -435,29 +446,39 @@ function! s:Hi() abort
   endif
   call s:AddAnsiGroups()
 
-  if get(g:, 'coc_default_semantic_highlight_groups', 0) == 1
-    hi default link CocSem_namespace Identifier
-    hi default link CocSem_type Type
-    hi default link CocSem_class Structure
-    hi default link CocSem_enum Type
-    hi default link CocSem_interface Type
-    hi default link CocSem_struct Structure
-    hi default link CocSem_typeParameter Type
-    hi default link CocSem_parameter Identifier
-    hi default link CocSem_variable Identifier
-    hi default link CocSem_property Identifier
-    hi default link CocSem_enumMember Constant
-    hi default link CocSem_event Identifier
-    hi default link CocSem_function Function
-    hi default link CocSem_method Function
-    hi default link CocSem_macro Macro
-    hi default link CocSem_keyword Keyword
-    hi default link CocSem_modifier StorageClass
-    hi default link CocSem_comment Comment
-    hi default link CocSem_string String
-    hi default link CocSem_number Number
-    hi default link CocSem_regexp Normal
-    hi default link CocSem_operator Operator
+  if get(g:, 'coc_default_semantic_highlight_groups', 1)
+    let hlMap = {
+        \ 'Namespace': ['TSNamespace', 'Include'],
+        \ 'Type': ['TSType', 'Type'],
+        \ 'Class': ['TSConstructor', 'Special'],
+        \ 'Enum': ['TSEnum', 'Type'],
+        \ 'Interface': ['TSInterface', 'Type'],
+        \ 'Struct': ['TSStruct', 'Identifier'],
+        \ 'TypeParameter': ['TSParameter', 'Identifier'],
+        \ 'Parameter': ['TSParameter', 'Identifier'],
+        \ 'Variable': ['TSSymbol', 'Identifier'],
+        \ 'Property': ['TSProperty', 'Identifier'],
+        \ 'EnumMember': ['TSEnumMember', 'Constant'],
+        \ 'Event': ['TSEvent', 'Keyword'],
+        \ 'Function': ['TSFunction', 'Function'],
+        \ 'Method': ['TSMethod', 'Function'],
+        \ 'Macro': ['TSConstMacro', 'Define'],
+        \ 'Keyword': ['TSKeyword', 'Keyword'],
+        \ 'Modifier': ['TSModifier', 'StorageClass'],
+        \ 'Comment': ['TSComment', 'Comment'],
+        \ 'String': ['TSString', 'String'],
+        \ 'Number': ['TSNumber', 'Number'],
+        \ 'Boolean': ['TSBoolean', 'Boolean'],
+        \ 'Regexp': ['TSStringRegex', 'String'],
+        \ 'Operator': ['TSOperator', 'Operator'],
+        \ 'Decorator': ['TSSymbol', 'Identifier'],
+        \ 'Deprecated': ['TSStrike', 'CocDeprecatedHighlight']
+        \ }
+    for [key, value] in items(hlMap)
+      let ts = get(value, 0, '')
+      let fallback = get(value, 1, '')
+      execute 'hi default link CocSem'.key.' '.(hlexists(ts) ? ts : fallback)
+    endfor
   endif
 endfunction
 
