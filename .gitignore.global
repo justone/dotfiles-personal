@@ -16,3 +16,4 @@ znate.vim
 *.vim
 !.vim/
 .lein-repl-history
+.tool-versions
