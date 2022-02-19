@@ -1,8 +1,9 @@
-{:user  {:plugins [[cider/cider-nrepl "0.26.0"]
+{:user  {:plugins [[cider/cider-nrepl "0.28.2"]
                    [lein-oneoff  "0.3.1"]
                    [lein-pprint  "1.1.1"]]
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [vlaaad/reveal "1.3.224"]]
+                        [vlaaad/reveal "1.3.265"]
+                        [djblue/portal "0.21.2"]]
          ; :injections [(require 'sc.api)]
          :repl-options {:timeout 120000}}
 
