@@ -256,6 +256,10 @@ filetype indent on
 au FileType javascript.jsx setlocal foldmethod=syntax
 au FileType javascript.jsx setlocal foldnestmax=1
 
+" settings for ruby
+au FileType ruby setlocal foldmethod=syntax
+let ruby_foldable_groups = 'def'
+
 " settings for go
 " fold go files with syntax
 au FileType go setlocal foldmethod=syntax
