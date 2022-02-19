@@ -218,10 +218,6 @@
 	url = https://github.com/janko-m/vim-test.git
 	path = .vim/bundle/vim-test
 	branch = master
-[subtree ".vim/bundle/neoterm"]
-	url = https://github.com/kassio/neoterm.git
-	path = .vim/bundle/neoterm
-	branch = master
 [subtree ".vim/bundle/vim-monochrome"]
 	url = https://github.com/fxn/vim-monochrome.git
 	path = .vim/bundle/vim-monochrome
