@@ -318,3 +318,7 @@
 	url = https://github.com/inkarkat/vim-ingo-library.git
 	path = .vim/bundle/vim-ingo-library
 	branch = master
+[subtree ".vim/bundle/vim-mark"]
+	url = https://github.com/inkarkat/vim-mark.git
+	path = .vim/bundle/vim-mark
+	branch = master
