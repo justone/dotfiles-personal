@@ -1,3 +1,143 @@
+# 2022-02-18
+
+- Clear all highlights created by coc.nvim before restart.
+- Support strike through for ansiparse.
+- Support `highlights` for `Documentation` in float window.
+
+# 2022-02-17
+
+- Change workspace configuration throw error when workspace folder can't be
+  resolved.
+- Remove configuration `diagnostic.highlightOffset`.
+
+# 2022-02-15
+
+- Add `events.race`.
+- Change default `suggest.triggerCompletionWait` to 50.
+- Support trigger completion after indent fix.
+
+# 2022-02-14
+
+- Add `pumvisible` property to events.
+
+# 2022-02-10
+
+- Add shortcut support for `window.showMenuPicker()`.
+- Add configuration `dialog.shortcutHighlight` for shortcut highlight.
+- Add configuration `list.menuAction` for choose action by menu picker.
+
+# 2022-02-09
+
+- Add error log to `nvim_error_event`.
+- Add `nvim.lua()` which replace `nvim.executeLua()` to typings.d.ts.
+
+# 2022-02-08
+
+- Support `MenuItem` with disabled property for `window.showMenuPicker`
+- Support show disabled code actions in menu picker.
+
+# 2022-02-07
+
+- Change `:CocLocalConfig` to open configuration file of current workspace
+  folder.
+
+# 2022-02-05
+
+- Support `version` from `textDocument/publishDiagnostics` notification's parameter.
+- Support `codeDescription` of diagnostics by add href to float window.
+- Support `showDocument` request from language server.
+- Support `label` from DocumentSymbolOptions in outline tree.
+- Support extra url use regexp under cursor with `openLink` action.
+- Support `activeParameter` from signature information.
+- Add `trimTrailingWhitespace`, `insertFinalNewline` and `trimFinalNewlines` to FormattingOptions.
+- Add configuration `links.tooltip`, default to `false`.
+
+# 2022-02-04
+
+- Add `--reverse` option to list.
+- Add `<esc>` key-mapping to cancel list in preview window (neovim only).
+
+# 2022-02-02
+
+- Remove `disableWorkspaceFolders` `disableDiagnostics` and `disableCompletion`
+  from language client option.
+- Add configuration `documentHighlight.timeout`.
+- Add `tabPersist` option to `ListAction`.
+- Add `refactor` to `LocationList`
+
+# 2022-01-30
+
+- Add configuration `diagnostics.virtualTextLevel`.
+- Remove configuration `suggest.numberSelect`
+
+# 2022-01-26
+
+- Use `nvim_buf_set_text` when possible to keep extmarks.
+
+# 2022-01-25
+
+- Not trigger completion when filtered is succeed.
+- Move methods `workspace.getSelectedRange` `workspace.selectRange` to `window`
+  module, show deprecated warning when using old methods.
+
+# 2022-01-23
+
+- Support semantic tokens highlights from range provider.
+
+# 2022-01-22
+
+- Not set `gravity` with api `nvim_buf_set_extmark` because highlight bug, wait neovim fix.
+- Support watch later created workspace folders for file events.
+
+# 2022-01-21
+
+- Changed semantic token highlight prefix from `CocSem_` to `CocSem`.
+- Changed semantic token highlight disabled by default, use configuration
+  `semanticTokens.filetypes`
+- Add configuration `semanticTokens.filetypes`.
+- Add configuration `semanticTokens.highlightPriority`.
+- Add configuration `semanticTokens.incrementTypes`.
+- Add configuration `semanticTokens.combinedModifiers`.
+- Add command `semanticTokens.refreshCurrent`.
+- Add command `semanticTokens.inspect`.
+- Add action `inspectSemanticToken`.
+- Rework command `semanticTokens.checkCurrent` to show highlight information.
+- Support semantic tokens highlight group composed with type and modifier.
+
+# 2022-01-21
+
+- Add configuration `workspace.ignoredFolders`.
+- Add configuration `workspace.workspaceFolderFallbackCwd`.
+
+# 2022-01-20
+
+- Remove deprecated method `workspace.resolveRootFolder`.
+
+# 2022-01-17
+
+- Extend `buffer.updateHighlights` to support `priority`, `combine`, `start_incl` and `end_incl`.
+- Add configuration `diagnostic.highlightPriority`.
+- Add configuration `colors.filetypes` and `colors.highlightPriority`.
+
+# 2022-01-16
+
+- Add configuration `codeLens.position`.
+
+# 2022-01-14
+
+- Add configuration `suggest.selection`.
+
+# 2022-01-13
+
+- `codeLens.separator` now defaults to `""` and will be placed above lines on neovim >= 0.6.0 .
+- Add configurations 'diagnostic.locationlistLevel', 'diagnostic.signLevel', 'diagnostic.messageLevel'.
+
+# 2022-01-12
+
+- Add document.lineAt(), export TextLine class.
+- Upgrade node-client, support nvim.exec().
+- Add documentHighlight.priority configuration.
+
 # 2019-08-18 0.0.74
 
 - feat(cursors): support multiple cursors.

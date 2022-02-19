@@ -3,7 +3,7 @@ let s:root = expand('<sfile>:h:h:h')
 let s:is_win = has('win32') || has('win64')
 let s:is_vim = !has('nvim')
 let s:clear_match_by_id = has('nvim-0.5.0') || has('patch-8.1.1084')
-let s:vim_api_version = 10
+let s:vim_api_version = 21
 let s:activate = ""
 let s:quit = ""
 
@@ -21,6 +21,12 @@ endif
 
 function! coc#util#api_version() abort
   return s:vim_api_version
+endfunction
+
+function! coc#util#semantic_hlgroups() abort
+  let res = split(execute('hi'), "\n")
+  let filtered = filter(res, "v:val =~# '^CocSem'")
+  return map(filtered, "matchstr(v:val,'\\v^CocSem\\w+')")
 endfunction
 
 " get cursor position
@@ -159,6 +165,21 @@ function! coc#util#jump(cmd, filepath, ...) abort
     let extra = empty(get(a:, 1, [])) ? '' : '+'.(a:1[0] + 1)
     exe 'pedit '.extra.' '.fnameescape(file)
     return
+  elseif a:cmd == 'drop' && exists('*bufadd')
+    let dstbuf = bufadd(path)
+    let binfo = getbufinfo(dstbuf)
+    if len(binfo) == 1 && empty(binfo[0].windows)
+      exec 'buffer '.dstbuf
+      let &buflisted = 1
+    else
+      exec 'drop '.fnameescape(file)
+    endif
+  elseif a:cmd == 'edit'
+    if bufloaded(file)
+      exe 'b '.bufnr(file)
+    else
+      exe a:cmd.' '.fnameescape(file)
+    endif
   else
     exe a:cmd.' '.fnameescape(file)
   endif
@@ -333,6 +354,9 @@ function! coc#util#get_input()
 endfunction
 
 function! coc#util#get_complete_option()
+  if get(b:,"coc_suggest_disable",0)
+    return v:null
+  endif
   let pos = getcurpos()
   let line = getline(pos[1])
   let input = matchstr(strpart(line, 0, pos[2] - 1), '\k*$')
@@ -351,6 +375,8 @@ function! coc#util#get_complete_option()
         \ 'synname': synname,
         \ 'changedtick': b:changedtick,
         \ 'blacklist': get(b:, 'coc_suggest_blacklist', []),
+        \ 'disabled': get(b:, 'coc_disabled_sources', []),
+        \ 'indentkeys': coc#util#get_indentkeys()
         \}
 endfunction
 
@@ -442,6 +468,9 @@ function! coc#util#open_terminal(opts) abort
   setl norelativenumber
   setl nonumber
   setl bufhidden=wipe
+  if exists('#User#CocTerminalOpen')
+    exe 'doautocmd <nomodeline> User CocTerminalOpen'
+  endif
   let cmd = get(a:opts, 'cmd', '')
   let autoclose = get(a:opts, 'autoclose', 1)
   if empty(cmd)
@@ -529,16 +558,16 @@ function! coc#util#vim_info()
         \ 'colorscheme': get(g:, 'colors_name', ''),
         \ 'workspaceFolders': get(g:, 'WorkspaceFolders', v:null),
         \ 'background': &background,
-        \ 'runtimepath': &runtimepath,
+        \ 'runtimepath': join(globpath(&runtimepath, '', 0, 1), ','),
         \ 'locationlist': get(g:,'coc_enable_locationlist', 1),
         \ 'progpath': v:progpath,
         \ 'guicursor': &guicursor,
-        \ 'updateHighlight': has('nvim-0.5.0') || exists('*prop_list') ? v:true : v:false,
+        \ 'updateHighlight': has('nvim-0.5.0') || has('patch-8.1.1719') ? v:true : v:false,
         \ 'vimCommands': get(g:, 'coc_vim_commands', []),
         \ 'sign': exists('*sign_place') && exists('*sign_unplace'),
         \ 'textprop': has('textprop') && has('patch-8.1.1719') && !has('nvim') ? v:true : v:false,
         \ 'dialog': has('nvim-0.4.0') || has('patch-8.2.0750') ? v:true : v:false,
-        \ 'disabledSources': get(g:, 'coc_sources_disable_map', {}),
+        \ 'semanticHighlights': coc#util#semantic_hlgroups()
         \}
 endfunction
 
@@ -546,11 +575,11 @@ function! coc#util#highlight_options()
   return {
         \ 'colorscheme': get(g:, 'colors_name', ''),
         \ 'background': &background,
-        \ 'runtimepath': &runtimepath,
+        \ 'runtimepath': join(globpath(&runtimepath, '', 0, 1), ','),
         \}
 endfunction
 
-function! coc#util#set_lines(bufnr, changedtick, original, replacement, start, end) abort
+function! coc#util#set_lines(bufnr, changedtick, original, replacement, start, end, changes) abort
   if !bufloaded(a:bufnr)
     return
   endif
@@ -574,7 +603,14 @@ function! coc#util#set_lines(bufnr, changedtick, original, replacement, start, e
       endif
     endif
   endif
-  call coc#compat#buf_set_lines(a:bufnr, a:start, a:end, a:replacement)
+  if exists('*nvim_buf_set_text') && !empty(a:changes)
+    for item in a:changes
+      let lines = nvim_buf_get_lines(a:bufnr, 0, -1, v:false)
+      call nvim_buf_set_text(a:bufnr, item[1], item[2], item[3], item[4], item[0])
+    endfor
+  else
+    call coc#compat#buf_set_lines(a:bufnr, a:start, a:end, a:replacement)
+  endif
 endfunction
 
 function! coc#util#change_lines(bufnr, list) abort
@@ -601,7 +637,7 @@ endfunction
 
 " used by vim
 function! coc#util#get_buf_lines(bufnr, changedtick)
-  if !bufloaded(a:bufnr) 
+  if !bufloaded(a:bufnr)
     return v:null
   endif
   let changedtick = getbufvar(a:bufnr, 'changedtick')
@@ -617,6 +653,7 @@ endfunction
 " used for TextChangedI with InsertCharPre
 function! coc#util#get_changeinfo()
   return {
+        \ 'bufnr': bufnr('%'),
         \ 'lnum': line('.'),
         \ 'line': getline('.'),
         \ 'changedtick': b:changedtick,
@@ -864,13 +901,27 @@ endfunction
 
 " get tabsize & expandtab option
 function! coc#util#get_format_opts(bufnr) abort
-  if a:bufnr && bufloaded(a:bufnr)
-    let tabsize = getbufvar(a:bufnr, '&shiftwidth')
-    if tabsize == 0
-      let tabsize = getbufvar(a:bufnr, '&tabstop')
-    endif
-    return [tabsize, getbufvar(a:bufnr, '&expandtab')]
+  let bufnr = a:bufnr && bufloaded(a:bufnr) ? a:bufnr : bufnr('%')
+  let tabsize = getbufvar(bufnr, '&shiftwidth')
+  if tabsize == 0
+    let tabsize = getbufvar(bufnr, '&tabstop')
   endif
-  let tabsize = &shiftwidth == 0 ? &tabstop : &shiftwidth
-  return [tabsize, &expandtab]
+  return {
+      \ 'tabsize': tabsize,
+      \ 'expandtab': getbufvar(bufnr, '&expandtab'),
+      \ 'insertFinalNewline': getbufvar(bufnr, '&eol'),
+      \ 'trimTrailingWhitespace': getbufvar(bufnr, 'coc_trim_trailing_whitespace', 0),
+      \ 'trimFinalNewlines': getbufvar(bufnr, 'coc_trim_final_newlines', 0)
+      \ }
+endfunction
+
+" Get indentkeys for indent on TextChangedP, consider = for word indent only.
+function! coc#util#get_indentkeys() abort
+  if empty(&indentexpr)
+    return ''
+  endif
+  if &indentkeys !~# '='
+    return ''
+  endif
+  return &indentkeys
 endfunction

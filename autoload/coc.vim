@@ -9,6 +9,7 @@ let s:is_vim = !has('nvim')
 let s:error_sign = get(g:, 'coc_status_error_sign', has('mac') ? '❌ ' : 'E')
 let s:warning_sign = get(g:, 'coc_status_warning_sign', has('mac') ? '⚠️ ' : 'W')
 let s:select_api = exists('*nvim_select_popupmenu_item')
+let s:complete_info_api = exists('*complete_info')
 let s:callbacks = {}
 
 function! coc#expandable() abort
@@ -41,10 +42,14 @@ function! coc#on_enter()
 endfunction
 
 function! coc#_insert_key(method, key, ...) abort
+  let prefix = ''
   if get(a:, 1, 1)
-    call coc#_cancel()
+    if pumvisible()
+      let g:coc_disable_space_report = 1
+      let prefix = "\<space>\<bs>"
+    endif
   endif
-  return "\<c-r>=coc#rpc#".a:method."('doKeymap', ['".a:key."'])\<CR>"
+  return prefix."\<c-r>=coc#rpc#".a:method."('doKeymap', ['".a:key."'])\<CR>"
 endfunction
 
 function! coc#_complete() abort
@@ -79,7 +84,7 @@ function! coc#_select_confirm() abort
   endif
   let selected = complete_info()['selected']
   if selected != -1
-     return "\<C-y>"
+    return "\<C-y>"
   elseif pumvisible()
     return "\<down>\<C-y>"
   endif
@@ -92,15 +97,18 @@ function! coc#_selected()
 endfunction
 
 function! coc#_hide() abort
-  if !pumvisible() | return | endif
-  call feedkeys("\<C-e>", 'in')
+  if pumvisible()
+    " Make input as it is, it's not possible by `<C-e>` and `<C-p>`
+    let g:coc_disable_space_report = 1
+    call feedkeys("\<space>\<bs>", 'in')
+  endif
 endfunction
 
 function! coc#_cancel()
   " hack for close pum
   if pumvisible()
-    let g:coc#_context = {'start': 0, 'preselect': -1,'candidates': []}
-    call feedkeys("\<Plug>CocRefresh", 'i')
+    let g:coc_disable_space_report = 1
+    call feedkeys("\<space>\<bs>", 'in')
     call coc#rpc#notify('stopCompletion', [])
   endif
 endfunction
@@ -193,4 +201,26 @@ function! coc#do_notify(id, method, result)
   if !empty(Fn)
     call Fn(a:result)
   endif
+endfunction
+
+function! coc#complete_indent() abort
+  let l:curpos = getcurpos()
+  let l:indent_pre = indent('.')
+
+  let l:startofline = &startofline
+  let l:virtualedit = &virtualedit
+  set nostartofline
+  set virtualedit=all
+  normal! ==
+  let &startofline = l:startofline
+  let &virtualedit = l:virtualedit
+
+  let l:shift = indent('.') - l:indent_pre
+  let l:curpos[2] += l:shift
+  let l:curpos[4] += l:shift
+  call cursor(l:curpos[1:])
+  if l:shift != 0
+    return 1
+  endif
+  return 0
 endfunction
