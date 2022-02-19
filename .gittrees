@@ -322,3 +322,7 @@
 	url = https://github.com/inkarkat/vim-mark.git
 	path = .vim/bundle/vim-mark
 	branch = master
+[subtree ".vim/bundle/vim-ruby"]
+	url = https://github.com/vim-ruby/vim-ruby.git
+	path = .vim/bundle/vim-ruby
+	branch = master
