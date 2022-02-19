@@ -124,8 +124,10 @@ if filereadable("/etc/redhat-release")
     endif
 endif
 
-" settings for mark.vim
+" settings for vim-mark.vim
 let g:mwDefaultHighlightingPalette = 'maximum'
+nmap <Leader>M <Plug>MarkToggle
+nmap <Leader>N <Plug>MarkAllClear
 
 " settings for gist-vim
 let g:gist_browser_command = 'pmb openurl %URL%'
