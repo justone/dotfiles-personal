@@ -3,8 +3,7 @@
            :try {:extra-deps {deps-try/deps-try {:git/url "https://gitlab.com/eval/deps-try"
                                                  :sha "9ccf64be248d5d9aa641df9e94feaea913bc0687"}}
                  :main-opts ["-m" "deps-try.main"]}
-           :repl {:extra-deps {cljdev/cljdev {:git/url "https://github.com/justone/cljdev.git"
-                                              :sha "dc9171f9f091e476a734714d128704876c7fa679"}}
+           :repl {:extra-deps {io.github.justone/cljdev {:git/sha "e3acb0fefcb3d97b70f4ef26c9064b18c73daa28"}}
                   :main-opts  ["-m" "cljdev.repl"]
                   :exec-fn cljdev.repl/start}
            :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "0.15.3"}}
