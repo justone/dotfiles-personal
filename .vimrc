@@ -549,7 +549,8 @@ nmap <silent> <Leader>cl            <Plug>(coc-codeaction-line)
 nmap <silent> <Leader>co            :call CocAction('showOutgoingCalls')<CR>
 nmap <silent> <Leader>cr            <Plug>(coc-rename)
 nmap <silent> <Leader>cs            <Plug>(coc-references)
-nmap <silent> gd                    :call CocAction('jumpDefinition', 'split')<CR>
+nmap <silent> gd                    :call CocAction('jumpDefinition')<CR>
+nmap <silent> gD                    :call CocAction('jumpDefinition', 'split')<CR>
 
 function! Expand(exp) abort
     let l:result = expand(a:exp)
