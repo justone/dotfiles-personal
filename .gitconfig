@@ -46,8 +46,8 @@
 	wl = walklog
 	isunclean = "![ -n \"`git ls-files --modified --deleted --others --exclude-standard`\" ]"
 	serve = daemon --verbose --export-all --base-path=.git --reuseaddr --strict-paths .git/
-	pr = "!f() { git fetch origin pull/$1/head:pr-$1 && git checkout pr-$1; }; f"
 	db = delete-branch
+	cb = create-branch
 	hide = update-index --assume-unchanged
 	unhide = update-index --no-assume-unchanged
 	hidden = !git ls-files -v | grep \"^[a-z]\"

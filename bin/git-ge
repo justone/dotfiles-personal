@@ -7,3 +7,8 @@ if [[ -d git-extras ]]; then
 else
     git clone https://github.com/tj/git-extras
 fi
+
+rm -rf install
+PREFIX=install make install
+
+cp install/etc/bash_completion.d/git-extras ~/.bash_completion.d/
