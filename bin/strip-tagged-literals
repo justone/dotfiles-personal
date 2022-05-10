@@ -5,7 +5,7 @@
 
 (defn parse-log [log]
     (edn/read-string {:readers {'mulog/flake str
-                                'error str
+                                'error identity
                                 'object #(str "#object" %)
                                 :default tagged-literal}}
                      log))
