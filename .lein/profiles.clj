@@ -1,10 +1,13 @@
-{:user  {:plugins [[cider/cider-nrepl "0.28.2"]
+{:user  {:plugins [[cider/cider-nrepl "0.28.3"]
                    [lein-oneoff  "0.3.1"]
                    [lein-pprint  "1.1.1"]]
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [vlaaad/reveal "1.3.265"]
-                        [djblue/portal "0.21.2"]]
+                        [vlaaad/reveal "1.3.273"]
+                        [djblue/portal "0.25.0"]
+                        [pjstadig/humane-test-output "0.11.0"]]
          ; :injections [(require 'sc.api)]
+         :injections [(require 'pjstadig.humane-test-output)
+                      (pjstadig.humane-test-output/activate!)]
          :repl-options {:timeout 120000}}
 
  ;; kaocha test runner
@@ -14,7 +17,9 @@
           [[lambdaisland/kaocha  "0.0-409"]]}
 
  ;; allow specifying resources without leaving them modified
- :dev-resources {:resource-paths ["scratch/dev-resources"]}
+ :dev-resources {:resource-paths ["nate-scratch/dev-resources"]}
+
+ :dev-resources-test {:test-paths ["nate-scratch/dev-resources" "test"]}
 
  ;; add in REBL
  :rebl {:resource-paths ["/home/nate/REBL-0.9.168/REBL-0.9.168.jar"]}
