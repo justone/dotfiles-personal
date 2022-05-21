@@ -17,10 +17,7 @@
       "filetypes": ["clojure"],
       "rootPatterns": ["project.clj", "deps.edn"],
       "additionalSchemes": ["jar", "zipfile"],
-      "trace.server": "verbose",
-      "initializationOptions": {
-        "ignore-classpath-directories": true
-      }
+      "trace.server": "verbose"
     }
   }
 }
