@@ -1,0 +1,10 @@
+\pset null ∅
+\echo Setting timezone to America/Los_Angeles.
+\set QUIET 1
+set TimeZone = 'America/Los_Angeles';
+\unset QUIET
+\timing
+\echo
+
+\set x '\\setenv PAGER less'
+\set xx '\\setenv PAGER \'pspg -s 5 -X\''
