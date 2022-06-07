@@ -67,7 +67,6 @@ let g:airline_section_z = '%{airline#util#wrap(airline#extensions#obsession#get_
 let g:airline_symbols = {}
 let g:airline_symbols.branch = ''
 
-let g:loaded_fireplace = v:true
 set completeopt-=preview
 
 if filereadable(expand(".vimrc.project"))
@@ -276,14 +275,6 @@ map <F8> :set paste!<CR>
 map <F10> :diffu<CR>
 map <F11> :echo 'Current change: ' . changenr()<CR>
 map <F12> :noh<CR>
-
-" a few extra mappings for fireplace
-" evaluate top level form
-au BufEnter *.clj nnoremap <buffer> cpt :Eval<CR>
-au BufEnter *.cljs nnoremap <buffer> cpt :Eval<CR>
-" show last evaluation in temp file
-au BufEnter *.clj nnoremap <buffer> cpl :Last<CR>
-au BufEnter *.cljs nnoremap <buffer> cpl :Last<CR>
 
 " remove trailing whitespace when writing
 autocmd BufWritePre * :%s/\s\+$//e
