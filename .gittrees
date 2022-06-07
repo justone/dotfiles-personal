@@ -102,10 +102,6 @@
 	url = https://github.com/guns/vim-clojure-static.git
 	path = .vim/bundle/vim-clojure-static
 	branch = master
-[subtree ".vim/bundle/vim-fireplace"]
-	url = https://github.com/tpope/vim-fireplace.git
-	path = .vim/bundle/vim-fireplace
-	branch = master
 [subtree ".vim/bundle/vim-unstack"]
 	url = https://github.com/mattboehm/vim-unstack.git
 	path = .vim/bundle/vim-unstack
@@ -149,10 +145,6 @@
 [subtree ".vim/bundle/vim-projectionist"]
 	url = https://github.com/tpope/vim-projectionist.git
 	path = .vim/bundle/vim-projectionist
-	branch = master
-[subtree ".vim/bundle/vim-leiningen"]
-	url = https://github.com/tpope/vim-leiningen.git
-	path = .vim/bundle/vim-leiningen
 	branch = master
 [subtree ".vim/bundle/vim-abolish"]
 	url = https://github.com/tpope/vim-abolish.git
