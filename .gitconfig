@@ -22,6 +22,7 @@
 	cdti = "!DFT_DISPLAY=side-by-side-show-both DFT_SYNTAX_HIGHLIGHT=off GIT_EXTERNAL_DIFF=difft git diff --cached"
 	dtshow = "!DFT_DISPLAY=side-by-side-show-both DFT_SYNTAX_HIGHLIGHT=off GIT_EXTERNAL_DIFF=difft git show --ext-diff"
 	co = checkout
+	sw = switch
 	w = whatchanged
 	vimdiff = difftool --tool=vimdiff -y
 	vd = difftool --tool=neovim -y
