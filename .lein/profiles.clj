@@ -4,10 +4,12 @@
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
                         [vlaaad/reveal "1.3.273"]
                         [djblue/portal "0.25.0"]
+                        [hashp "0.2.1"]
                         [pjstadig/humane-test-output "0.11.0"]]
          ; :injections [(require 'sc.api)]
          :injections [(require 'pjstadig.humane-test-output)
-                      (pjstadig.humane-test-output/activate!)]
+                      (pjstadig.humane-test-output/activate!)
+                      (require 'hashp.core)]
          :repl-options {:timeout 120000}}
 
  ;; kaocha test runner
