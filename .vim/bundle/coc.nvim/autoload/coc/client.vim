@@ -5,7 +5,7 @@ let s:is_win = has("win32") || has("win64")
 let s:clients = {}
 
 if get(g:, 'node_client_debug', 0)
-  echohl WarningMsg | echon '[coc.nvim] Enable g:node_client_debug could impact your vim experience' | echohl None
+  echohl WarningMsg | echo '[coc.nvim] Enable g:node_client_debug could impact your vim experience' | echohl None
   let $NODE_CLIENT_LOG_LEVEL = 'debug'
   if exists('$NODE_CLIENT_LOG_FILE')
     let s:logfile = resolve($NODE_CLIENT_LOG_FILE)
@@ -43,9 +43,13 @@ function! s:start() dict
     return
   endif
   let timeout = string(get(g:, 'coc_channel_timeout', 30))
-  let disable_warning = string(get(g:, 'coc_disable_startup_warning', 0))
   let tmpdir = fnamemodify(tempname(), ':p:h')
   if s:is_vim
+    if get(g:, 'node_client_debug', 0)
+      let file = tmpdir . '/coc.log'
+      call ch_logfile(file, 'w')
+      echohl MoreMsg | echo '[coc.nvim] channel log to '.file | echohl None
+    endif
     let options = {
           \ 'in_mode': 'json',
           \ 'out_mode': 'json',
@@ -88,10 +92,12 @@ function! s:start() dict
           \ 'TMPDIR': tmpdir
           \ }
     else
-      let original = {
-            \ 'NODE_NO_WARNINGS': getenv('NODE_NO_WARNINGS'),
-            \ 'TMPDIR': getenv('TMPDIR'),
-            \ }
+      if exists('*getenv')
+        let original = {
+              \ 'NODE_NO_WARNINGS': getenv('NODE_NO_WARNINGS'),
+              \ 'TMPDIR': getenv('TMPDIR'),
+              \ }
+      endif
       if exists('*setenv')
         call setenv('COC_NVIM', '1')
         call setenv('NODE_NO_WARNINGS', '1')
@@ -128,7 +134,7 @@ function! s:on_stderr(name, msgs)
   if empty(data) | return | endif
   let client = a:name ==# 'coc' ? '[coc.nvim]' : '['.a:name.']'
   let data[0] = client.': '.data[0]
-  call coc#util#echo_messages('Error', data)
+  call coc#ui#echo_messages('Error', data)
 endfunction
 
 function! s:on_exit(name, code) abort

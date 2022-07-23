@@ -2,7 +2,7 @@
 " Description: Client api used by vim8
 " Author: Qiming Zhao <chemzqm@gmail.com>
 " Licence: Anti 996 licence
-" Last Modified:  Aug 10, 2021
+" Last Modified: Jun 03, 2022
 " ============================================================================
 if has('nvim') | finish | endif
 scriptencoding utf-8
@@ -10,6 +10,11 @@ let s:funcs = {}
 let s:prop_offset = get(g:, 'coc_text_prop_offset', 1000)
 let s:namespace_id = 1
 let s:namespace_cache = {}
+let s:max_src_id = 1000
+" bufnr => max textprop id
+let s:buffer_id = {}
+" srcId => list of types
+let s:id_types = {}
 
 " helper {{
 function! s:buf_line_count(bufnr) abort
@@ -31,9 +36,9 @@ function! s:buf_line_count(bufnr) abort
     return len(lines)
   endif
   let curr = bufnr('%')
-  execute 'buffer '.a:bufnr
+  execute 'noa buffer '.a:bufnr
   let n = line('$')
-  execute 'buffer '.curr
+  execute 'noa buffer '.curr
   return n
 endfunction
 
@@ -96,7 +101,7 @@ function! s:funcs.call_atomic(calls)
     try
       call add(res, call(s:funcs[name], arglist))
     catch /.*/
-      return [res, [i, "VimException(".s:inspect_type(v:exception).")", v:exception]]
+      return [res, [i, "VimException(".s:inspect_type(v:exception).")", v:exception . ' on '.v:throwpoint]]
     endtry
   endfor
   return [res, v:null]
@@ -270,42 +275,27 @@ function! s:funcs.buf_add_highlight(bufnr, srcId, hlGroup, line, colStart, colEn
   if !has('patch-8.1.1719')
     return
   endif
-  let bufnr = a:bufnr == 0 ? bufnr('%') : a:bufnr
-  let type = 'CocHighlight'.a:hlGroup
-  if empty(prop_type_get(type))
-    let opts = get(a:, 1, 0)
-    let priority = get(opts, 'priority', 0)
-    call prop_type_add(type, {
-          \ 'highlight': a:hlGroup,
-          \ 'priority': type(priority) == 0 ? priority : 0,
-          \ 'combine': get(opts, 'combine', 1),
-          \ 'start_incl': get(opts, 'start_incl', 0),
-          \ 'end_incl': get(opts, 'end_incl', 0),
-          \ })
-  endif
-  let total = strlen(getbufline(bufnr, a:line + 1)[0])
-  let end = a:colEnd
-  if end == -1
-    let end = total
+  if a:srcId == 0
+    let srcId = s:max_src_id + 1
+    let s:max_src_id = srcId
   else
-    let end = min([end, total])
+    let srcId = a:srcId
   endif
-  if end <= a:colStart
+  let bufnr = a:bufnr == 0 ? bufnr('%') : a:bufnr
+  let type = a:hlGroup.'_'.srcId
+  let types = get(s:id_types, srcId, [])
+  if index(types, type) == -1
+    call add(types, type)
+    let s:id_types[srcId] = types
+    call prop_type_add(type, extend({'highlight': a:hlGroup}, get(a:, 1, {})))
+  endif
+  let end = a:colEnd == -1 ? strlen(getbufline(bufnr, a:line + 1)[0]) + 1 : a:colEnd + 1
+  if end < a:colStart + 1
     return
   endif
-  let srcId = a:srcId
-  if srcId == 0
-    while v:true
-      let srcId = srcId + 1
-      if empty(prop_find({'id': s:prop_offset + srcId, 'lnum' : 1}))
-        break
-      endif
-    endwhile
-    " generate srcId
-  endif
-  let id = srcId == -1 ? 0 : s:prop_offset + srcId
+  let id = s:generate_id(a:bufnr)
   try
-    call prop_add(a:line + 1, a:colStart + 1, {'length': end - a:colStart, 'bufnr': bufnr, 'type': type, 'id': id})
+    call prop_add(a:line + 1, a:colStart + 1, {'bufnr': bufnr, 'type': type, 'id': id, 'end_col': end})
   catch /^Vim\%((\a\+)\)\=:E967/
     " ignore 967
   endtry
@@ -323,13 +313,18 @@ function! s:funcs.buf_clear_namespace(bufnr, srcId, startLine, endLine) abort
   let start = a:startLine + 1
   let end = a:endLine == -1 ? len(getbufline(bufnr, 1, '$')) : a:endLine
   if a:srcId == -1
+    if has_key(s:buffer_id, a:bufnr)
+      unlet s:buffer_id[a:bufnr]
+    endif
     call prop_clear(start, end, {'bufnr' : bufnr})
   else
-    try
-      call prop_remove({'bufnr': bufnr, 'all': 1, 'id': s:prop_offset + a:srcId}, start, end)
-    catch /^Vim\%((\a\+)\)\=:E968/
-      " ignore 968
-    endtry
+    for type in get(s:id_types, a:srcId, [])
+      try
+        call prop_remove({'bufnr': bufnr, 'all': 1, 'type': type}, start, end)
+      catch /^Vim\%((\a\+)\)\=:E968/
+        " ignore 968
+      endtry
+    endfor
   endif
 endfunction
 
@@ -358,11 +353,12 @@ function! s:funcs.buf_get_lines(bufnr, start, end, strict) abort
 endfunction
 
 function! s:funcs.buf_set_lines(bufnr, start, end, strict, ...) abort
-  if !bufloaded(a:bufnr)
+  let bufnr = a:bufnr == 0 ? bufnr('%') : a:bufnr
+  if !bufloaded(bufnr)
     return
   endif
   let replacement = get(a:, 1, [])
-  let lineCount = s:buf_line_count(a:bufnr)
+  let lineCount = s:buf_line_count(bufnr)
   let startLnum = a:start >= 0 ? a:start + 1 : lineCount + a:start + 2
   let end = a:end >= 0 ? a:end : lineCount + a:end + 1
   if end == lineCount + 1
@@ -371,11 +367,11 @@ function! s:funcs.buf_set_lines(bufnr, start, end, strict, ...) abort
   let delCount = end - (startLnum - 1)
   let changeBuffer = 0
   let curr = bufnr('%')
-  if a:bufnr != curr && !exists('*setbufline')
+  if bufnr != curr && !exists('*setbufline')
     let changeBuffer = 1
-    exe 'buffer '.a:bufnr
+    exe 'buffer '.bufnr
   endif
-  if a:bufnr == curr || changeBuffer
+  if bufnr == curr || changeBuffer
     " replace
     let storeView = winsaveview()
     if delCount == len(replacement)
@@ -405,18 +401,18 @@ function! s:funcs.buf_set_lines(bufnr, start, end, strict, ...) abort
     " replace
     if delCount == len(replacement)
       " 8.0.1039
-      call setbufline(a:bufnr, startLnum, replacement)
+      call setbufline(bufnr, startLnum, replacement)
     else
       if len(replacement)
         " 8.10037
-        call appendbufline(a:bufnr, startLnum - 1, replacement)
+        call appendbufline(bufnr, startLnum - 1, replacement)
       endif
       if delCount
         let start = startLnum + len(replacement)
         let saved_reg = @"
         let system_reg = @*
         "8.1.0039
-        silent call deletebufline(a:bufnr, start, start + delCount - 1)
+        silent call deletebufline(bufnr, start, start + delCount - 1)
         let @" = saved_reg
         let @* = system_reg
       endif
@@ -444,7 +440,14 @@ function! s:funcs.buf_set_var(bufnr, name, val)
 endfunction
 
 function! s:funcs.buf_del_var(bufnr, name)
-  call coc#compat#buf_del_var(a:bufnr, a:name)
+  if bufnr == bufnr('%')
+    execute 'unlet! b:'.a:name
+  elseif exists('*win_execute')
+    let winid = coc#compat#buf_win_id(a:bufnr)
+    if winid != -1
+      call win_execute(winid, 'unlet! b:'.a:name)
+    endif
+  endif
 endfunction
 
 function! s:funcs.buf_get_option(bufnr, name)
@@ -513,12 +516,12 @@ function! s:funcs.win_get_cursor(win_id) abort
   return get(ref, 'out', 0)
 endfunction
 
-function! s:funcs.win_get_var(win_id, name) abort
+function! s:funcs.win_get_var(win_id, name, ...) abort
   let tabnr = s:get_tabnr(a:win_id)
   if tabnr
-    return gettabwinvar(tabnr, a:win_id, a:name)
+    return gettabwinvar(tabnr, a:win_id, a:name, get(a:, 1, v:null))
   endif
-  throw 'window '.a:win_id. ' not a valid window'
+  throw 'window '.a:win_id. ' not a visible window'
 endfunction
 
 function! s:funcs.win_set_width(win_id, width) abort
@@ -561,7 +564,7 @@ function! s:funcs.win_set_var(win_id, name, value) abort
   if tabnr
     call settabwinvar(tabnr, a:win_id, a:name, a:value)
   else
-    throw 'window '.a:win_id. ' not a valid window'
+    throw "Invalid window id ".a:win_id
   endif
 endfunction
 
@@ -632,7 +635,18 @@ function! s:funcs.tabpage_get_win(tabnr)
   let wnr = tabpagewinnr(a:tabnr)
   return win_getid(wnr, a:tabnr)
 endfunction
+
+function! s:generate_id(bufnr) abort
+  let max = get(s:buffer_id, a:bufnr, s:prop_offset)
+  let id = max + 1
+  let s:buffer_id[a:bufnr] = id
+  return id
+endfunction
 " }}
+
+function! coc#api#get_types(srcId) abort
+  return get(s:id_types, a:srcId, [])
+endfunction
 
 function! coc#api#func_names() abort
   return keys(s:funcs)
@@ -644,12 +658,21 @@ function! coc#api#call(method, args) abort
   try
     let res = call(s:funcs[a:method], a:args)
   catch /.*/
-    let err = v:exception
+    let err = v:exception .' on api "'.a:method.'" '.json_encode(a:args)
   endtry
   return [err, res]
 endfunction
 
+function! coc#api#exec(method, args) abort
+  return call(s:funcs[a:method], a:args)
+endfunction
+
 function! coc#api#notify(method, args) abort
-  call call(s:funcs[a:method], a:args)
+  try
+    call call(s:funcs[a:method], a:args)
+  catch /.*/
+    let g:b = v:exception
+    call coc#rpc#notify('nvim_error_event', [0, v:exception.' on api "'.a:method.'" '.json_encode(a:args)])
+  endtry
 endfunction
 " vim: set sw=2 ts=2 sts=2 et tw=78 foldmarker={{,}} foldmethod=marker foldlevel=0:
