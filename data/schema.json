@@ -11,6 +11,11 @@
           "default": false,
           "description": "Set to true to use borders."
         },
+        "rounded": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use rounded borders when border is true."
+        },
         "highlight": {
           "type": "string",
           "default": "CocFloating",
@@ -187,7 +192,7 @@
         },
         "progressOnInitialization": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Enable progress report on languageserver initialize."
         },
         "initializationOptions": {
@@ -488,13 +493,6 @@
       "description": "Trigger completion after InsertEnter, auto trigger should be 'always' to enable this option",
       "default": false
     },
-    "suggest.timeout": {
-      "type": "integer",
-      "default": 5000,
-      "minimum": 500,
-      "maximum": 15000,
-      "description": "Timeout for completion, in milliseconds."
-    },
     "suggest.minTriggerInputLength": {
       "type": "integer",
       "default": 1,
@@ -502,15 +500,17 @@
     },
     "suggest.triggerCompletionWait": {
       "type": "integer",
-      "default": 50,
-      "minimum": 30,
-      "maximum": 500,
+      "default": 0,
+      "minimum": 0,
+      "maximum": 50,
       "description": "Wait time between text change and completion start, cancel completion when text changed during wait."
     },
-    "suggest.echodocSupport": {
-      "type": "boolean",
-      "default": false,
-      "description": "When enabled, add function signature to user_data.signature to support echodoc.vim"
+    "suggest.timeout": {
+      "type": "integer",
+      "default": 5000,
+      "minimum": 500,
+      "maximum": 15000,
+      "description": "Timeout for completion, in milliseconds."
     },
     "suggest.acceptSuggestionOnCommitCharacter": {
       "type": "boolean",
@@ -602,6 +602,14 @@
       "description": "Trigger suggest with ASCII characters only",
       "default": false
     },
+    "suggest.ignoreRegexps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Regexps to ignore when trigger suggest",
+      "default": []
+    },
     "documentHighlight.priority": {
       "type": "number",
       "default": -1,
@@ -647,7 +655,8 @@
       "type": "number",
       "description": "Priority for diagnostic highlights, works on vim8 and neovim >= 0.6.0",
       "default": 4096,
-      "maximum": 4096
+      "maximum": 4096,
+      "minimum": 110
     },
     "diagnostic.autoRefresh": {
       "type": "boolean",
@@ -719,11 +728,6 @@
       "description": "Filter diagnostic message in virtual text by level",
       "default": null,
       "enum": ["hint", "information", "warning", "error"]
-    },
-    "diagnostic.virtualTextAlignRight": {
-      "type": "boolean",
-      "description": "Make virtual text align to the right of window.",
-      "default": false
     },
     "diagnostic.virtualTextWinCol": {
       "type": ["number", "null"],
@@ -798,6 +802,7 @@
       "additionalProperties": false,
       "properties": {
         "border": {},
+        "rounded": {},
         "highlight": {},
         "borderhighlight": {},
         "title": {},
@@ -811,7 +816,7 @@
     },
     "diagnostic.filetypeMap": {
       "type": "object",
-      "description": "A map between buffer filetype and the filetype assigned to diagnostics. To syntax highlight diagnostics withs their parent buffer type use `\"default\": \"bufferType\"`",
+      "description": "A map between buffer filetype and the filetype assigned to diagnostics. To syntax highlight diagnostics with their parent buffer type use `\"default\": \"bufferType\"`",
       "default": {}
     },
     "diagnostic.format": {
@@ -859,6 +864,7 @@
       "additionalProperties": false,
       "properties": {
         "border": {},
+        "rounded": {},
         "highlight": {},
         "borderhighlight": {},
         "title": {},
@@ -921,6 +927,11 @@
       "default": 3,
       "description": "Print num lines of trailing context after each match."
     },
+    "refactor.showMenu": {
+      "type": "string",
+      "default": "<Tab>",
+      "description": "Refactor buffer local mapping to bring up menu for this chunk."
+    },
     "hover.target": {
       "type": "string",
       "description": "Target to show hover information, default is floating window when possible.",
@@ -938,6 +949,7 @@
       "additionalProperties": false,
       "properties": {
         "border": {},
+        "rounded": {},
         "highlight": {},
         "borderhighlight": {},
         "title": {},
@@ -956,13 +968,18 @@
     },
     "dialog.maxHeight": {
       "type": "number",
-      "default": 20,
+      "default": 30,
       "description": "Maximum height of dialog window."
     },
     "dialog.maxWidth": {
       "type": "number",
       "default": 80,
       "description": "Maximum width of dialog window."
+    },
+    "dialog.rounded": {
+      "type": "boolean",
+      "default": true,
+      "description": "use rounded border for dialog window."
     },
     "dialog.confirmKey": {
       "type": "string",
@@ -994,39 +1011,79 @@
       "default": "MoreMsg",
       "description": "Highlight group for shortcut character in menu dialog, default to 'MoreMsg'"
     },
-    "notification.marginTop": {
-      "type": "number",
-      "default": 1,
-      "description": "Margin top for notification dialog."
+    "notification.border": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable rounded border for notification windows."
+    },
+    "notification.timeout": {
+      "type": "integer",
+      "default": 10000,
+      "description": "Timeout for auto close notifications, in miniseconds."
     },
     "notification.marginRight": {
-      "type": "number",
-      "default": 1,
-      "description": "Margin right for notification dialog."
+      "type": "integer",
+      "default": 10,
+      "description": "Margin right to the right of editor window."
+    },
+    "notification.focusable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable focus by user actions (wincmds, mouse events), neovim only."
     },
     "notification.maxWidth": {
-      "type": "number",
+      "type": "integer",
       "default": 60,
       "description": "Maximum content width of notification dialog."
     },
     "notification.maxHeight": {
-      "type": "number",
+      "type": "integer",
       "default": 10,
       "description": "Maximum content height of notification dialog."
+    },
+    "notification.preferMenuPicker": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use menu picker for message notification with actions."
+    },
+    "notification.disabledProgressSources": {
+      "type": "array",
+      "default": [],
+      "description": "Soureces that should be disabled for message progress, use * to disable all message only progresses",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notification.minProgressWidth": {
+      "type": "integer",
+      "default": 30,
+      "description": "Minimal with of progress notification."
     },
     "notification.highlightGroup": {
       "type": "string",
       "default": "CocFloating",
       "description": "Highlight group of notification dialog."
     },
-    "notification.minProgressWidth": {
-      "type": "number",
+    "notification.winblend": {
+      "type": "integer",
       "default": 30,
-      "description": "Minimum width of progress notification."
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Winblend option of notification window, neovim only."
+    },
+    "workspace.openOutputCommand": {
+      "type": "string",
+      "default": "vs",
+      "description": "Command used to open output channel."
+    },
+    "workspace.openResourceCommand": {
+      "type": "string",
+      "default": "tab drop",
+      "description": "Command to open files that not loaded, load files as hidden buffers when empty."
     },
     "workspace.ignoredFiletypes": {
       "type": "array",
-      "default": ["markdown", "log", "txt", "help"],
+      "default": [],
       "description": "Filetypes that should be ignored for workspace folder resolve.",
       "items": {
         "type": "string"
@@ -1035,7 +1092,7 @@
     "workspace.bottomUpFiletypes": {
       "type": "array",
       "default": [],
-      "description": "Filetypes that should have workspace folder should resolved from base directory of file.",
+      "description": "Filetypes that should have workspace folder should resolved from base directory of file, or [\"*\"] for any filetype.",
       "items": {
         "type": "string"
       }
@@ -1076,7 +1133,7 @@
     "list.interactiveDebounceTime": {
       "type": "number",
       "default": 100,
-      "description": "Debouce time for input change on interactive mode."
+      "description": "Debounce time for input change on interactive mode."
     },
     "list.height": {
       "type": "number",
@@ -1114,8 +1171,8 @@
       "description": "Enable extended search mode which allows multiple search patterns delimited by spaces."
     },
     "list.limitLines": {
-      "type": "number",
-      "default": 30000,
+      "type": ["number", "null"],
+      "default": null,
       "description": "Limit lines for list buffer."
     },
     "list.maxPreviewHeight": {
@@ -1127,11 +1184,6 @@
       "type": "boolean",
       "default": false,
       "description": "Use vsplit for preview window."
-    },
-    "list.matchHighlightGroup": {
-      "type": "string",
-      "default": "Search",
-      "description": "Highlight group used for matched texts in list window."
     },
     "list.previewHighlightGroup": {
       "type": "string",
@@ -1204,12 +1256,17 @@
     "cursors.nextKey": {
       "type": "string",
       "default": "<C-n>",
-      "description": "Key used for jump to next cursors position. "
+      "description": "Key used for jump to next cursors position."
     },
     "cursors.previousKey": {
       "type": "string",
       "default": "<C-p>",
       "description": "Key used for jump to previous cursors position."
+    },
+    "cursors.wrapscan": {
+      "type": "boolean",
+      "default": true,
+      "description": "Searches wrap around the first or last cursors range."
     },
     "semanticTokens.filetypes": {
       "type": "array",
@@ -1228,7 +1285,7 @@
     "semanticTokens.incrementTypes": {
       "type": "array",
       "description": "Semantic token types that should increase highlight when insert at the start and end position of token.",
-      "default": ["variable", "string"],
+      "default": ["variable", "string", "parameter"],
       "items": {
         "type": "string"
       }
@@ -1301,6 +1358,11 @@
       "default": true,
       "description": "Show line number of symbols."
     },
+    "outline.detailAsDescription": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show detail as description aside with label, when false detail will be shown in tooltip on cursor hold."
+    },
     "outline.splitCommand": {
       "type": "string",
       "default": "botright 30vs",
@@ -1310,6 +1372,11 @@
       "type": "boolean",
       "default": true,
       "description": "Reveal item in outline tree on cursor hold."
+    },
+    "outline.autoWidth": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically increase window width to avoid wrapped lines."
     },
     "outline.keepWindow": {
       "type": "boolean",
@@ -1321,6 +1388,11 @@
       "default": "category",
       "description": "Sort method for symbols.",
       "enum": ["position", "name", "category"]
+    },
+    "outline.switchSortKey": {
+      "type": "string",
+      "default": "<C-s>",
+      "description": "The key used to switch sort method for symbols provider of current tree view."
     },
     "outline.expandLevel": {
       "type": "number",
@@ -1356,6 +1428,11 @@
       "default": true,
       "description": "Enable tooltip to show relative filepath of call hierarchy."
     },
+    "coc.preferences.enableLinkedEditing": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable linked editing support."
+    },
     "coc.preferences.enableMessageDialog": {
       "type": "boolean",
       "default": false,
@@ -1365,17 +1442,6 @@
       "type": "string",
       "default": "10MB",
       "description": "Maximum file size in bytes that coc.nvim should handle, default '10MB'"
-    },
-    "coc.preferences.promptWorkspaceEdit": {
-      "type": "boolean",
-      "description": "Prompt confirm from user when apply workspace edit for unloaded files.",
-      "default": true
-    },
-    "coc.preferences.listOfWorkspaceEdit": {
-      "type": "string",
-      "default": "quickfix",
-      "description": "List should contains changed locations after workspace edit, default to vim's quickfix",
-      "enum": ["quickfix", "location", "none"]
     },
     "coc.preferences.useQuickfixForLocations": {
       "type": "boolean",
@@ -1393,6 +1459,11 @@
       "default": "SNIP",
       "description": "Text shown in statusline to indicate snippet session is activated."
     },
+    "coc.preferences.snippetHighlight": {
+      "type": "boolean",
+      "description": "Use highlight group 'CocSnippetVisual' to highlight placeholders with same index of current one.",
+      "default": false
+    },
     "coc.preferences.currentFunctionSymbolAutoUpdate": {
       "type": "boolean",
       "description": "Automatically update the value of b:coc_current_function on CursorHold event",
@@ -1405,11 +1476,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "coc.preferences.enableFloatHighlight": {
-      "type": "boolean",
-      "description": "Enable highlight for floating window.",
-      "default": true
     },
     "coc.preferences.rootPatterns": {
       "type": "array",
@@ -1508,11 +1574,6 @@
       "type": "boolean",
       "default": true
     },
-    "coc.source.around.firstMatch": {
-      "type": "boolean",
-      "description": "Filter complete items by first letter strict match.",
-      "default": true
-    },
     "coc.source.around.shortcut": {
       "type": "string",
       "default": "A"
@@ -1539,11 +1600,6 @@
     "coc.source.buffer.priority": {
       "type": "integer",
       "default": 1
-    },
-    "coc.source.buffer.firstMatch": {
-      "type": "boolean",
-      "description": "Filter complete items by first letter strict match.",
-      "default": true
     },
     "coc.source.buffer.ignoreGitignore": {
       "type": "boolean",

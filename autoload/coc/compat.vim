@@ -13,10 +13,38 @@ endfunction
 
 function! coc#compat#buf_set_lines(bufnr, start, end, replacement) abort
   if s:is_vim
-    call coc#api#notify('buf_set_lines', [a:bufnr, a:start, a:end, 0, a:replacement])
+    call coc#api#exec('buf_set_lines', [a:bufnr, a:start, a:end, 0, a:replacement])
   else
     call nvim_buf_set_lines(a:bufnr, a:start, a:end, 0, a:replacement)
   endif
+endfunction
+
+function! coc#compat#buf_line_count(bufnr) abort
+  if exists('*nvim_buf_line_count')
+    return nvim_buf_line_count(a:bufnr)
+  endif
+  if bufnr('%') == a:bufnr
+    return line('$')
+  endif
+  if exists('*getbufinfo')
+    let info = getbufinfo(a:bufnr)
+    if empty(info)
+      return 0
+    endif
+    " vim 8.1 has getbufinfo but no linecount
+    if has_key(info[0], 'linecount')
+      return info[0]['linecount']
+    endif
+  endif
+  if exists('*getbufline')
+    let lines = getbufline(a:bufnr, 1, '$')
+    return len(lines)
+  endif
+  let curr = bufnr('%')
+  execute 'noa buffer '.a:bufnr
+  let n = line('$')
+  execute 'noa buffer '.curr
+  return n
 endfunction
 
 function! coc#compat#prepend_lines(bufnr, replacement) abort
@@ -88,7 +116,7 @@ function! coc#compat#buf_del_var(bufnr, name) abort
   if exists('*nvim_buf_del_var')
     silent! call nvim_buf_del_var(a:bufnr, a:name)
   else
-    if bufnr == bufnr('%')
+    if a:bufnr == bufnr('%')
       execute 'unlet! b:'.a:name
     elseif exists('*win_execute')
       let winid = coc#compat#buf_win_id(a:bufnr)
@@ -122,6 +150,14 @@ function! coc#compat#matchaddgroups(winid, groups) abort
   endif
 endfunction
 
+function! coc#compat#del_var(name) abort
+  if exists('*nvim_del_var')
+    silent! call nvim_del_var(a:name)
+  else
+    execute 'unlet! '.a:name
+  endif
+endfunction
+
 " remove keymap for specific buffer
 function! coc#compat#buf_del_keymap(bufnr, mode, lhs) abort
   if !bufloaded(a:bufnr)
@@ -131,7 +167,7 @@ function! coc#compat#buf_del_keymap(bufnr, mode, lhs) abort
     try
       call nvim_buf_del_keymap(a:bufnr, a:mode, a:lhs)
     catch /^Vim\%((\a\+)\)\=:E5555/
-      " ignore keymap not exists.
+      " ignore keymap doesn't exist
     endtry
     return
   endif
@@ -142,7 +178,7 @@ function! coc#compat#buf_del_keymap(bufnr, mode, lhs) abort
   if exists('*win_execute')
     let winid = coc#compat#buf_win_id(a:bufnr)
     if winid != -1
-      call win_execute(winid, 'silent! '.a:mode.'unmap <buffer> '.a:lhs)
+      call win_execute(winid, a:mode.'unmap <buffer> '.a:lhs, 'silent!')
     endif
   endif
 endfunction
@@ -195,6 +231,14 @@ function! coc#compat#execute(winid, command, ...) abort
     endif
     noa keepalt call nvim_set_current_win(curr)
   else
-    throw 'win_execute not exists, please upgrade vim.'
+    throw 'win_execute does not exist, please upgrade vim.'
   endif
 endfunc
+
+function! coc#compat#trim(str)
+  if exists('*trim')
+    return trim(a:str)
+  endif
+  " TODO trim from beginning
+  return substitute(a:str, '\s\+$', '', '')
+endfunction
