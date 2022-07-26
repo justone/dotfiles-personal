@@ -15,6 +15,7 @@
     "clojure-lsp": {
       "command": "clojure-lsp",
       "filetypes": ["clojure"],
+      "progressOnInitialization": true,
       "rootPatterns": ["project.clj", "deps.edn"],
       "additionalSchemes": ["jar", "zipfile"],
       "trace.server": "verbose"
