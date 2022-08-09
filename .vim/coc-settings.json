@@ -5,7 +5,8 @@
  "codeLens.enable": true,
  "codeLens.position": "eol",
  "notification.border": false,
- "suggest.enablePreview": true,
+ "suggest.noselect": true,
+ "suggest.enablePreselect": false,
  "suggest.maxCompleteItemCount": 15,
  "suggest.removeDuplicateItems": true,
  "suggest.snippetIndicator": "->",
@@ -19,7 +20,8 @@
       "progressOnInitialization": true,
       "rootPatterns": ["project.clj", "deps.edn"],
       "additionalSchemes": ["jar", "zipfile"],
-      "trace.server": "verbose"
+      "trace.server": "verbose",
+      "hover": {"hide-file-location?": true}
     }
   }
 }
