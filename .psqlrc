@@ -6,5 +6,6 @@ set TimeZone = 'America/Los_Angeles';
 \timing
 \echo
 
+-- use :x and :xx to enact these
 \set x '\\setenv PAGER less'
 \set xx '\\setenv PAGER \'pspg -s 5 -X\''
