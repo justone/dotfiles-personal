@@ -166,7 +166,7 @@ function! coc#notify#create(lines, config) abort
     let height = height + 1
   endif
   if !empty(actions)
-    let before = width - strwidth(actionText)
+    let before = max([width - strwidth(actionText), 0])
     let lines = lines + [repeat(' ', before).actionText]
     let height = height + 1
     call s:add_action_highlights(before, height - 1, highlights, actions)
@@ -292,8 +292,9 @@ function! coc#notify#close(winid) abort
   endif
   call coc#window#set_var(a:winid, 'closing', 1)
   call s:cancel(a:winid)
-  let curr = s:is_vim ? {'row': row} : {'winblend': coc#window#get_var(a:winid, 'winblend', 30)}
-  let dest = s:is_vim ? {'row': row + 1} : {'winblend': 60}
+  let winblend = coc#window#get_var(a:winid, 'winblend', 0)
+  let curr = s:is_vim ? {'row': row} : {'winblend': winblend}
+  let dest = s:is_vim ? {'row': row + 1} : {'winblend': winblend == 0 ? 0 : 60}
   call s:animate(a:winid, curr, dest, 0, 1)
 endfunction
 
