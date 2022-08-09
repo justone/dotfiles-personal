@@ -1,15 +1,20 @@
-{:user  {:plugins [[cider/cider-nrepl "0.28.3"]
-                   [lein-oneoff  "0.3.1"]
-                   [lein-pprint  "1.1.1"]]
+{:user  {:plugins [[cider/cider-nrepl "0.28.5"]
+                   [lein-oneoff  "0.3.2"]
+                   [lein-pprint  "1.3.2"]]
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [vlaaad/reveal "1.3.273"]
-                        [djblue/portal "0.25.0"]
+                        [djblue/portal "0.29.1"]
                         [hashp "0.2.1"]
                         [pjstadig/humane-test-output "0.11.0"]]
          ; :injections [(require 'sc.api)]
          :injections [(require 'pjstadig.humane-test-output)
                       (pjstadig.humane-test-output/activate!)
-                      (require 'hashp.core)]
+                      (require 'hashp.core)
+
+                      ; (println " - add-tap pprint to *err*")
+                      ; (require 'clojure.pprint)
+                      ; (add-tap (fn [x] (binding [*out* *err*]
+                      ;                          (clojure.pprint/pprint x))))
+                      ]
          :repl-options {:timeout 120000}}
 
  ;; kaocha test runner
