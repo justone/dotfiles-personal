@@ -4,6 +4,7 @@
  "coc.source.conjure.priority": 999999,
  "codeLens.enable": true,
  "codeLens.position": "eol",
+ "dialog.rounded": false,
  "notification.border": false,
  "suggest.noselect": true,
  "suggest.enablePreselect": false,
