@@ -14,6 +14,7 @@ set incsearch
 "set ignorecase
 set smartcase
 set expandtab smarttab
+set switchbuf=usetab,split
 
 " the famous leader character
 let mapleader = ','
@@ -313,6 +314,30 @@ au BufNewFile,BufRead *.tt set filetype=tt2html
 au BufNewFile,BufRead *.mt set filetype=tt2html
 
 map ,cp :%w ! pbcopy<CR>
+
+" ack.vim --- {{{
+"
+" From: https://www.freecodecamp.org/news/how-to-search-project-wide-vim-ripgrep-ack/
+
+" Use ripgrep for searching ⚡️
+" Options include:
+" --vimgrep -> Needed to parse the rg response properly for ack.vim
+" --smart-case -> Search case insensitive if all lowercase pattern, Search case sensitively otherwise
+let g:ackprg = 'rg --vimgrep --smart-case'
+
+" Auto close the Quickfix list after pressing '<enter>' on a list item
+" let g:ack_autoclose = 1
+
+" Any empty ack search will search for the work the cursor is on
+let g:ack_use_cword_for_empty_search = 1
+
+" Don't jump to first match
+cnoreabbrev Ack Ack!
+
+" Maps <leader>/ so we're ready to type the search keyword
+nnoremap <leader>A :Ack!<CR>
+nnoremap <leader>S :Ack!<space>
+" }}}
 
 " older versions of this file contain helpers for HTML, JSP and Java
 
