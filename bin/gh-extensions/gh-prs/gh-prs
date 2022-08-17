@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+
+echo
+gh pr list \
+  --json number,title,headRefName,reviewDecision \
+  --template '{{tablerow "Num" "Title" "Branch" "Status"}}{{range .}}{{tablerow (printf "#%v" .number | autocolor "yellow") .title (.headRefName | autocolor "blue") .reviewDecision}}{{end}}'
