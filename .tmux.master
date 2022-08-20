@@ -2,11 +2,11 @@
 
 source-file ~/.tmux.shared
 
-# change bind key to M-C-b
-set-option -g prefix M-C-b
+# change bind key to C-a
+set-option -g prefix C-a
 
 # prefix again goes to last window
-bind-key M-C-b last-window
+bind-key C-a last-window
 
 # reload
 bind r source-file ~/.tmux.master \; display-message "Config reloaded."
