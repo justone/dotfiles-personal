@@ -105,11 +105,11 @@ function! ale#events#Init() abort
 
         if g:ale_enabled
             if l:text_changed is? 'always' || l:text_changed is# '1'
-                autocmd TextChanged,TextChangedI * call ale#Queue(g:ale_lint_delay)
+                autocmd TextChanged,TextChangedI * call ale#Queue(ale#Var(str2nr(expand('<abuf>')), 'lint_delay'))
             elseif l:text_changed is? 'normal'
-                autocmd TextChanged * call ale#Queue(g:ale_lint_delay)
+                autocmd TextChanged * call ale#Queue(ale#Var(str2nr(expand('<abuf>')), 'lint_delay'))
             elseif l:text_changed is? 'insert'
-                autocmd TextChangedI * call ale#Queue(g:ale_lint_delay)
+                autocmd TextChangedI * call ale#Queue(ale#Var(str2nr(expand('<abuf>')), 'lint_delay'))
             endif
 
             if g:ale_lint_on_enter
@@ -139,7 +139,7 @@ function! ale#events#Init() abort
                 autocmd InsertLeave * if exists('*ale#engine#Cleanup') | call ale#cursor#EchoCursorWarning() | endif
             endif
 
-            if g:ale_virtualtext_cursor
+            if g:ale_virtualtext_cursor == 1
                 autocmd CursorMoved,CursorHold * if exists('*ale#engine#Cleanup') | call ale#virtualtext#ShowCursorWarningWithDelay() | endif
                 " Look for a warning to echo as soon as we leave Insert mode.
                 " The script's position variable used when moving the cursor will
@@ -147,9 +147,19 @@ function! ale#events#Init() abort
                 autocmd InsertLeave * if exists('*ale#engine#Cleanup') | call ale#virtualtext#ShowCursorWarning() | endif
             endif
 
+            if g:ale_hover_cursor
+                autocmd CursorHold * if exists('*ale#lsp#Send') | call ale#hover#ShowTruncatedMessageAtCursor() | endif
+            endif
+
             if g:ale_close_preview_on_insert
                 autocmd InsertEnter * if exists('*ale#preview#CloseIfTypeMatches') | call ale#preview#CloseIfTypeMatches('ale-preview') | endif
             endif
         endif
+    augroup END
+
+    augroup AleURISchemes
+        autocmd!
+
+        autocmd BufNewFile,BufReadPre jdt://** call ale#uri#jdt#ReadJDTLink(expand('<amatch>'))
     augroup END
 endfunction

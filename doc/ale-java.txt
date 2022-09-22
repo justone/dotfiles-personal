@@ -42,11 +42,17 @@ g:ale_java_checkstyle_options                   *g:ale_java_checkstyle_options*
 
 
 ===============================================================================
+cspell                                                        *ale-java-cspell*
+
+See |ale-cspell-options|
+
+
+===============================================================================
 javac                                                          *ale-java-javac*
 
 g:ale_java_javac_classpath                         *g:ale_java_javac_classpath*
                                                    *b:ale_java_javac_classpath*
-  Type: |String|
+  Type: |String| or |List|
   Default: `''`
 
   This variable can be set to change the global classpath for Java.
@@ -67,6 +73,29 @@ g:ale_java_javac_options                             *g:ale_java_javac_options*
 
   This variable can be set to pass additional options to javac.
 
+g:ale_java_javac_sourcepath                       *g:ale_java_javac_sourcepath*
+                                                  *b:ale_java_javac_sourcepath*
+  Type: |String| or |List|
+  Default: `''`
+
+This variable can set multiple source code paths, the source code path is a
+relative path (relative to the project root directory).
+
+Example:
+
+String type:
+Note that the unix system separator is a colon(`:`) window system
+is a semicolon(`;`).
+>
+  let g:ale_java_javac_sourcepath = 'build/gen/source/xx/main:build/gen/source'
+<
+List type:
+>
+  let g:ale_java_javac_sourcepath = [
+    \ 'build/generated/source/querydsl/main',
+    \ 'target/generated-sources/source/querydsl/main'
+  \ ]
+<
 
 ===============================================================================
 google-java-format                                *ale-java-google-java-format*
@@ -107,18 +136,26 @@ javalsp                                                      *ale-java-javalsp*
 
 To enable Java LSP linter you need to download and build the vscode-javac
 language server from https://github.com/georgewfraser/java-language-server.
-Simply download the source code and then build a distribution:
 
-   scripts/link_mac.sh
+Before building the language server you need to install pre-requisites: npm,
+maven, and protobuf. You also need to have Java 13 and JAVA_HOME properly
+set.
 
-or
+After downloading the source code and installing all pre-requisites you can
+build the language server with the included build.sh script:
 
-   scripts/link_windows.sh
+   scripts/build.sh
 
-This generates a dist/mac or dist/windows directory that contains the
-language server. To let ALE use this language server you need to set the
+This will create launch scripts for Linux, Mac, and Windows in the dist folder
+within the repo:
+
+  - lang_server_linux.sh
+  - lang_server_mac.sh
+  - lang_server_windows.sh
+
+To let ALE use this language server you need to set the
 g:ale_java_javalsp_executable variable to the absolute path of the launcher
-executable in this directory.
+executable for your platform.
 
 g:ale_java_javalsp_executable                   *g:ale_java_javalsp_executable*
                                                 *b:ale_java_javalsp_executable*
@@ -128,7 +165,7 @@ g:ale_java_javalsp_executable                   *g:ale_java_javalsp_executable*
 This variable must be set to the absolute path of the language server launcher
 executable. For example:
 >
-  let g:ale_java_javalsp_executable=/java-language-server/dist/mac/bin/launcher
+  let g:ale_java_javalsp_executable=/java-language-server/dist/lang_server_linux.sh
 <
 
 g:ale_java_javalsp_config                           *g:ale_java_javalsp_config*
@@ -140,7 +177,7 @@ The javalsp linter automatically detects external depenencies for Maven and
 Gradle projects. In case the javalsp fails to detect some of them, you can
 specify them setting a dictionary to |g:ale_java_javalsp_config| variable.
 >
-  let g:ale_java_javalsp_executable =
+  let g:ale_java_javalsp_config =
   \ {
   \   'java': {
   \     'externalDependencies': [
@@ -158,16 +195,17 @@ The Java language server will look for the dependencies you specify in
 `externalDependencies` array in your Maven and Gradle caches ~/.m2 and
 ~/.gradle.
 
+
 ===============================================================================
 eclipselsp                                                *ale-java-eclipselsp*
 
-To enable Eclipse LSP linter you need to clone and build the eclipse.jdt.ls
+To enable Eclipse JDT LSP linter you need to clone and build the eclipse.jdt.ls
 language server from https://github.com/eclipse/eclipse.jdt.ls. Simply
 clone the source code repo and then build the plugin:
 
    ./mvnw clean verify
 
-Note: currently, the build can only run when launched with JDK 8. JDK 9 or more
+Note: currently, the build can only run when launched with JDK 11. More
 recent versions can be used to run the server though.
 
 After build completes the files required to run the language server will be
@@ -186,8 +224,9 @@ g:ale_java_eclipselsp_path                         *g:ale_java_eclipselsp_path*
   Default: `'$HOME/eclipse.jdt.ls'`
 
   Absolute path to the location of the eclipse.jdt.ls repository folder. Or if
-  you have VSCode extension installed the absolute path to the VSCode extensions
-  folder (e.g. $HOME/.vscode/extensions/redhat.java-0.4x.0 in Linux).
+  you have VSCode extension installed the absolute path to the VSCode
+  extensions folder (e.g. $HOME/.vscode/extensions/redhat.java-0.4x.0 in
+  Linux).
 
 
 g:ale_java_eclipselsp_executable                *g:ale_java_eclipse_executable*
@@ -222,6 +261,18 @@ g:ale_java_eclipselsp_workspace_path     *g:ale_java_eclipselsp_workspace_path*
   absolute path of the Eclipse workspace. If not set this value will be set to
   the parent folder of the project root.
 
+g:ale_java_eclipselsp_javaagent               *g:ale_java_eclipselsp_javaagent*
+                                              *b:ale_java_eclipselsp_javaagent*
+
+  Type: |String|
+  Default: `''`
+
+  A variable to add java agent for annotation processing such as Lombok.
+  If you have multiple java agent files, use space to separate them.
+  For example:
+>
+  let g:ale_java_eclipselsp_javaagent='/eclipse/lombok.jar /eclipse/jacoco.jar'
+<
 
 ===============================================================================
 uncrustify                                                *ale-java-uncrustify*

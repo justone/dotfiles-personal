@@ -21,6 +21,13 @@ g:ale_ruby_brakeman_options                       *g:ale_ruby_brakeman_options*
 
   The contents of this variable will be passed through to brakeman.
 
+
+===============================================================================
+cspell                                                        *ale-ruby-cspell*
+
+See |ale-cspell-options|
+
+
 ===============================================================================
 debride                                                      *ale-ruby-debride*
 
@@ -40,6 +47,11 @@ g:ale_ruby_debride_options                         *g:ale_ruby_debride_options*
 
   This variable can be changed to modify flags given to debride.
 
+
+===============================================================================
+prettier                                                    *ale-ruby-prettier*
+
+See |ale-javascript-prettier| for information about the available options.
 
 
 ===============================================================================
@@ -114,6 +126,14 @@ g:ale_ruby_rubocop_options                         *g:ale_ruby_rubocop_options*
   This variable can be changed to modify flags given to rubocop.
 
 
+g:ale_ruby_rubocop_auto_correct_all       *g:ale_ruby_rubocop_auto_correct_all*
+                                          *b:ale_ruby_rubocop_auto_correct_all*
+  Type: Number
+  Default: `0`
+
+  This variable can be changed to make rubocop to correct all offenses (unsafe).
+
+
 ===============================================================================
 ruby                                                            *ale-ruby-ruby*
 
@@ -169,11 +189,21 @@ g:ale_ruby_sorbet_options                           *g:ale_ruby_sorbet_options*
   This variable can be changed to modify flags given to sorbet.
 
 
+g:ale_ruby_sorbet_enable_watchman           *g:ale_ruby_sorbet_enable_watchman*
+                                            *b:ale_ruby_sorbet_enable_watchman*
+  Type: |Number|
+  Default: `0`
+
+  Whether or not to use watchman to let the LSP server to know about changes
+  to files from outside of vim. Defaults to disable watchman because it
+  requires watchman to be installed separately from sorbet.
+
+
 ===============================================================================
 standardrb                                                *ale-ruby-standardrb*
 
-g:ale_ruby_standardrb_executable              *g:ale_ruby_standardrb_executable*
-                                              *b:ale_ruby_standardrb_executable*
+g:ale_ruby_standardrb_executable             *g:ale_ruby_standardrb_executable*
+                                             *b:ale_ruby_standardrb_executable*
   Type: String
   Default: `'standardrb'`
 
@@ -190,6 +220,24 @@ g:ale_ruby_standardrb_options                   *g:ale_ruby_standardrb_options*
 
 
 ===============================================================================
+syntax_tree                                              *ale-ruby-syntax_tree*
+
+g:ale_ruby_syntax_tree_executable           *g:ale_ruby_syntax_tree_executable*
+                                            *b:ale_ruby_syntax_tree_executable*
+  Type: String
+  Default: `'stree'`
+
+  Override the invoked SyntaxTree binary. Set this to `'bundle'` to invoke
+  `'bundle` `exec` stree'.
+
+
+g:ale_ruby_syntax_tree_options                 *g:ale_ruby_syntax_tree_options*
+                                               *b:ale_ruby_syntax_tree_options*
+  Type: |String|
+  Default: `''`
+
+  This variable can be changed to modify flags given to SyntaxTree.
+
 
 ===============================================================================
   vim:tw=78:ts=2:sts=2:sw=2:ft=help:norl:
