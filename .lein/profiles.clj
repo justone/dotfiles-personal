@@ -1,19 +1,24 @@
-{:user  {:plugins [[cider/cider-nrepl "0.28.5"]
+{:user  {:plugins [[cider/cider-nrepl "0.28.6"]
                    [lein-oneoff  "0.3.2"]
                    [lein-pprint  "1.3.2"]]
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [djblue/portal "0.29.1"]
-                        [hashp "0.2.1"]
+                        [djblue/portal "0.30.0"]
+                        ; [hashp "0.2.1"]
                         [pjstadig/humane-test-output "0.11.0"]]
          ; :injections [(require 'sc.api)]
          :injections [(require 'pjstadig.humane-test-output)
                       (pjstadig.humane-test-output/activate!)
-                      (require 'hashp.core)
 
-                      ; (println " - add-tap pprint to *err*")
-                      ; (require 'clojure.pprint)
-                      ; (add-tap (fn [x] (binding [*out* *err*]
-                      ;                          (clojure.pprint/pprint x))))
+                      ; (require 'hashp.core)
+
+                      (binding [*out* *err*] (println " - add-tap pprint to *err*"))
+                      (require 'clojure.pprint)
+                      ; Create named tap function, so we can remove if desired
+                      (defn pprint-tap "Tap that pretty prints"
+                         [x]
+                         (binding [*out* *err*]
+                           (clojure.pprint/pprint x)))
+                      (add-tap #'pprint-tap)
                       ]
          :repl-options {:timeout 120000}}
 
