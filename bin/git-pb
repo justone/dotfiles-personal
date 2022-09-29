@@ -1,0 +1,10 @@
+#!/bin/bash
+
+br=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ "$br" == "master" || "$br" == "main" ]]; then
+  echo "not on master/main"
+  exit 1
+fi
+
+git push -u origin $br
