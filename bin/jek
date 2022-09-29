@@ -1,3 +1,3 @@
 #!/bin/bash
 
-jet --from json --to edn --keywordize
+jet --from json --to edn --keywordize "$@"
