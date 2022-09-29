@@ -28,6 +28,7 @@ for path in /usr/local/bin /usr/local/sbin $HOME/bin $HOME/bin/holens $HOME/bin/
 done
 
 add_path $HOME/bin/after
+add_path $HOME/.babashka/bbin/bin
 add_path_no_check $HOME/bin/excluded/git-extras/install/bin
 
 export PATH
