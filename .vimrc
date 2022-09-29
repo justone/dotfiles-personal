@@ -533,7 +533,7 @@ let g:vimpipe_invoke_map="<leader>w"
 let g:vimpipe_close_map="<leader>W"
 
 " configure clojure folding
-let g:clojure_foldwords = "def,defn,defmacro,defmethod,defschema,defprotocol,defrecord"
+let g:clojure_foldwords = "def,defn,defmacro,defmethod,defschema,defprotocol,defrecord,use-fixtures"
 
 " allow formatting longer clojure forms
 let g:clojure_maxlines = 0
@@ -597,6 +597,10 @@ nnoremap <silent> crcn :call CocRequest('clojure-lsp', 'workspace/executeCommand
 nnoremap <silent> crcp :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'cycle-privacy', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1]})<CR>
 nnoremap <silent> cris :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'inline-symbol', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1]})<CR>
 nnoremap <silent> cref :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'extract-function', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1, input('Function name: ')]})<CR>
+nnoremap <silent> cred :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'extract-to-def', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1, input('Def name: ')]})<CR>
+nnoremap <silent> crdk :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'destructure-keys', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1]})<CR>
+nnoremap <silent> crrk :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'restructure-keys', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1]})<CR>
+nnoremap <silent> crcf :call CocRequest('clojure-lsp', 'workspace/executeCommand', {'command': 'create-function', 'arguments': [Expand('%:p'), line('.') - 1, col('.') - 1]})<CR>
 
 
 
