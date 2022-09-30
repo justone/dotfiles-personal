@@ -44,6 +44,20 @@ __cmd_failed ()
     fi
 }
 
+function prompt_text () {
+  dir=$1
+
+  if [[ $dir == $HOME ]]; then
+    echo "🏠"
+  elif [[ $dir == "$HOME/projects/"* ]]; then
+    echo "📁 "${dir#"$HOME/projects/"}
+  elif [[ $dir == "$HOME"* ]]; then
+    echo "🏠 "${dir#"$HOME/"}
+  else
+    echo $dir
+  fi
+}
+
 # set a fancy prompt (non-color, unless we can handle color)
 COLORS=$(tput colors 2> /dev/null)
 if [ $? = 0 ] && [ $COLORS -gt 2 ]; then
@@ -60,9 +74,9 @@ case $TERM in
         PROMPT_COMMAND='LAST_EXIT=$?; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
     xterm*)
-        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;[${WIN_TITLE}] ${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; else echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\007"; fi; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
+        PROMPT_COMMAND='LAST_EXIT=$?; if [ -n "$WIN_TITLE" ]; then echo -ne "\033]0;[${WIN_TITLE}] $(prompt_text $PWD)\007"; else echo -ne "\033]0;$(prompt_text $PWD)\007"; fi; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
     screen*)
-        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k[${WIN_TITLE}] ${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; else echo -ne "\033k${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}\033\\"; fi; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
+        PROMPT_COMMAND='LAST_EXIT=$?;if [ -n "$WIN_TITLE" ]; then echo -ne "\033k[${WIN_TITLE}] $(prompt_text $PWD)\033\\"; else echo -ne "\033k$(prompt_text $PWD)\033\\"; fi; sync_pmb_key; reconnect_ssh_agent;'$PROMPT_COMMAND
         ;;
 esac
