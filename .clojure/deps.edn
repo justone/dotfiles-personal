@@ -6,7 +6,7 @@
            :repl {:extra-deps {io.github.justone/cljdev {:git/sha "e3acb0fefcb3d97b70f4ef26c9064b18c73daa28"}}
                   :main-opts  ["-m" "cljdev.repl"]
                   :exec-fn cljdev.repl/start}
-           :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "0.15.3"}}
+           :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.1.932"}}
                       :main-opts ["-m" "antq.core"]}
            :new {:extra-deps {com.github.seancorfield/clj-new {:mvn/version "1.1.309"}}
                  :main-opts ["-m" "clj-new.create"]
