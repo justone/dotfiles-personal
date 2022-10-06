@@ -26,5 +26,8 @@
            :test {:extra-paths ["test"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.861"}}
                   :main-opts  ["-m" "kaocha.runner"]}
+           :cli/events {:deps {clojurians-zulip/feeds {:git/url "https://gitlab.com/clojurians-zulip/feeds.git"
+                                                       :sha "6ddf0786e65d592dee6c258ec764d32ef4cb6060"}}
+                        :main-opts ["-m" "inclined.main" "--ns" "clojurians-zulip.events" "--"]}
            }
  }
