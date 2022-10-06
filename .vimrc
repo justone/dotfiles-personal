@@ -84,6 +84,7 @@ let g:conjure#filetypes = ["clojure", "fennel", "janet", "racket"]
 let g:conjure#filetype#pandoc = 'conjure.client.clojure.nrepl'
 let g:conjure#filetype#markdown = 'conjure.client.clojure.nrepl'
 let g:sexp_filetypes = 'clojure,scheme,lisp,timl'
+let g:conjure#client#clojure#nrepl#connection#auto_repl#enabled = v:false
 
 " Uncomment to use vim-markdown for formatting
 " let g:pandoc#filetypes#handled = ["pandoc", "markdown"]
