@@ -44,4 +44,4 @@ function vipath() {
     rm -f $TMP
 }
 
-export MANPATH=$HOME/bin/excluded/git-extras/install/share/man/
+export MANPATH=$(echo $MANPATH | empath edit xappend $HOME/bin/excluded/git-extras/install/share/man/)
