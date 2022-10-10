@@ -57,10 +57,10 @@ bind E setw synchronize-panes off
 
 # switch " over to selecting windows
 unbind '"'
-bind-key '"' choose-window
+bind-key '"' choose-tree -w -O time
 
 # use ' to switch between sessions
-bind-key "'" choose-session
+bind-key "'" choose-tree -s -O time
 
 # number windows from 1
 set -g base-index 1
@@ -95,7 +95,7 @@ setw -g monitor-activity on
 set -g visual-activity off
 
 # moar history
-set -g history-limit 30000
+set -g history-limit 75000
 
 set -g status-left '#[fg=green][ #[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
 #set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
