@@ -1,10 +1,11 @@
 #!/bin/sh
 
 #_(
-  "exec" "bb" "-I" "-O" "$0" "$@"
+  "exec" "bb" "-I" "$0" "$@"
   )
 
 (if-some [predstr (first *command-line-args*)]
-  (let [pred (eval (read-string predstr))]
-    (filter pred user/*input*))
+  (binding [*print-meta* true]
+    (let [pred (eval (read-string predstr))]
+      (run! prn (filter pred user/*input*))))
   (println "usage: bbf [predicate]"))
