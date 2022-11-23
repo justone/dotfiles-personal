@@ -22,6 +22,11 @@ let maplocalleader = ","
 " map backslash to comma so reversing line search is fast
 nnoremap \ ,
 
+nnoremap <C-u> <C-u>zz
+nnoremap <C-d> <C-d>zz
+nnoremap n nzz
+nnoremap N Nzz
+
 if filereadable(expand("~/.vimrc.local"))
     source ~/.vimrc.local
 endif
@@ -75,6 +80,10 @@ if filereadable(expand(".vimrc.project"))
 endif
 
 " conjure
+au BufNewFile,BufRead,BufWinEnter conjure-log-* setlocal winfixwidth
+" au BufNewFile,BufRead,BufWinEnter conjure-log-* setlocal winfixheight
+au BufNewFile,BufRead,BufWinEnter conjure-log-* normal 80|
+" au BufNewFile,BufRead,BufWinEnter conjure-log-* normal 18_
 let g:conjure#client#clojure#nrepl#eval#auto_require = v:false
 let g:conjure#log#botright = v:true
 " let g:conjure#client#clojure#nrepl#eval#print_options#length = 100
