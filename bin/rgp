@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rg --passthru "$@"
+rg --line-buffered --passthru "$@"
