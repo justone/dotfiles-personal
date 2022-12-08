@@ -12,6 +12,7 @@
 	a = add
 	br = branch
 	rbr = branch --sort=-committerdate
+	rbrcsv = brcsv --sort=-committerdate
 	cbr = rev-parse --abbrev-ref HEAD
 	rd = !git commit --amend --date=now --no-edit && git show --format=fuller --stat
 	st = status

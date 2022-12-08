@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "sha,refname,upstream,tracking,HEAD,committerdate"
+git branch "$@" --format='%(objectname:short),%(refname:short),%(upstream:short),"%(upstream:track)",%(HEAD),%(committerdate)'
