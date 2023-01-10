@@ -8,7 +8,7 @@ blib
 tags
 Session*.vim
 /scratch
-nate-scratch/
+nate-scratch
 znate.vim
 .vimrc.project
 *.log
