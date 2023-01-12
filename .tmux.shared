@@ -23,8 +23,8 @@ unbind C-z
 setw -g aggressive-resize on
 
 # VI for splitting
-bind s split-window -v
-bind v split-window -h
+bind s split-window -v -c "#{pane_current_path}"
+bind v split-window -h -c "#{pane_current_path}"
 
 # VI for switching between
 bind h select-pane -L
