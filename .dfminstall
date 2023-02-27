@@ -10,3 +10,5 @@ README.md skip
 css skip
 .set_git_push_config.sh exec
 .set_git_push_config.sh skip
+.fix_origin.sh exec
+.fix_origin.sh skip
