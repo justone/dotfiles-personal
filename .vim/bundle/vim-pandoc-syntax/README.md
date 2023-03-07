@@ -1,5 +1,7 @@
 # vim-pandoc-syntax
 
+[![Vint](https://github.com/vim-pandoc/vim-pandoc-syntax/workflows/Vint/badge.svg)](https://github.com/vim-pandoc/vim-pandoc-syntax/actions?workflow=Vint)
+
 Standalone pandoc syntax module, to be used alongside
 [vim-pandoc](http://github.com/vim-pandoc/vim-pandoc).
 
@@ -33,10 +35,19 @@ If you want to use `vim-pandoc-syntax` without vim-pandoc, you'll need to tell
 Vim to load it for certain files. Just add something like this to your vimrc:
 
 ~~~ vim
-    augroup pandoc_syntax
-        au! BufNewFile,BufFilePRe,BufRead *.md set filetype=markdown.pandoc
-    augroup END
+augroup pandoc_syntax
+    au! BufNewFile,BufFilePre,BufRead *.md set filetype=markdown.pandoc
+augroup END
 ~~~
+
+For vimwiki users, use
+
+~~~ vim
+augroup pandoc_syntax
+  autocmd! FileType vimwiki set syntax=markdown.pandoc
+augroup END
+~~~
+
 
 ## Features
 
