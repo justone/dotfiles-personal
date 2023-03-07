@@ -6,6 +6,8 @@ for sha in `git log --format="%H" $*`; do
     if [[ "$ans" == 'n'  ||  "$ans" == 'no' ]]; then
         echo "skipping $sha"
     else
-        git difftool $sha^ $sha;
+        # for vimdiff:
+        # git difftool $sha^ $sha;
+        LESS="-RS -+F" git dtshow $sha;
     fi
 done

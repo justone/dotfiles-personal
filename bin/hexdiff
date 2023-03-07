@@ -1,0 +1,3 @@
+#!/bin/bash
+
+nvim -d <(hexdump -C $1) <(hexdump -C $2)
