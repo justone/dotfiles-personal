@@ -4,9 +4,20 @@
 " Description: vim-pandoc-handled buffer settings
 " Author: Felipe Morales
 
-if exists('b:pandoc_loaded') && b:pandoc_loaded == 1
-    finish
+" Source the plugin already here as Neovim has changed their loading order,
+" and without it, the variables being checked below is not present.
+"
+" GH: https://github.com/neovim/neovim/issues/19008
+" GH: https://github.com/vim-pandoc/vim-pandoc/issues/433
+runtime! plugin/pandoc.vim
+
+if (exists('b:did_ftplugin'))
+  finish
 endif
+let b:did_ftplugin = 1
+
+let s:cpo_save = &cpoptions
+set cpoptions&vim
 
 " Start a new auto command group for all this plugin's hooks
 augroup VimPandoc
@@ -57,4 +68,5 @@ if exists('g:pandoc#formatting#equalprg') && !empty(g:pandoc#formatting#equalprg
     let b:undo_ftplugin .= '| setlocal equalprg<'
 endif
 
-let b:pandoc_loaded = 1
+let &cpoptions = s:cpo_save
+unlet s:cpo_save
