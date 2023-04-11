@@ -19,6 +19,8 @@ if [ -n "$PS1" ]; then
     bind 'set match-hidden-files off'
 fi
 
+export LESS="-SRX"
+
 # so whalebrew puts its scripts local
 export WHALEBREW_INSTALL_PATH=~/bin/excluded
 

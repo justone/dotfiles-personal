@@ -67,6 +67,8 @@
 [core]
 	excludesfile = ~/.gitignore.global
 	attributesfile = ~/.gitattributes.global
+	; https://git-scm.com/docs/git-config#Documentation/git-config.txt-corepager
+	pager = less -F
 [github]
 	user = justone
 [credential "https://github.com"]

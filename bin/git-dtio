@@ -3,5 +3,5 @@
 TARGET="${1:-master...}"
 
 for f in `git di $TARGET --name-only`; do
-  LESS="-RS -+F" git dti $TARGET -- $f
+  GIT_PAGER="less -RS -+X" git dti $TARGET -- $f
 done
