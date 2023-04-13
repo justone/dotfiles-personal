@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export DFT_DISPLAY=side-by-side-show-both
+export DFT_SYNTAX_HIGHLIGHT=off
+export DFT_COLOR=always
+
+difft "$@"
