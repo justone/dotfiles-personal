@@ -1,0 +1,94 @@
+format = """
+$username\
+$hostname\
+$shlvl\
+$kubernetes\
+$vcsh\
+$git_branch\
+$git_commit\
+$git_state\
+$git_metrics\
+$git_status\
+$hg_branch\
+$docker_context\
+$package\
+$cmake\
+$dart\
+$deno\
+$dotnet\
+$elixir\
+$elm\
+$erlang\
+$golang\
+$helm\
+$java\
+$julia\
+$kotlin\
+$nim\
+$nodejs\
+$ocaml\
+$perl\
+$php\
+$purescript\
+$python\
+$red\
+$ruby\
+$rust\
+$scala\
+$swift\
+$terraform\
+$vlang\
+$zig\
+$nix_shell\
+$conda\
+$memory_usage\
+$gcloud\
+$openstack\
+$env_var\
+$crystal\
+$custom\
+$cmd_duration\
+$time\
+$directory\
+$line_break\
+$lua\
+$jobs\
+$battery\
+$status\
+$shell\
+$character"""
+
+java.disabled = true
+battery.disabled = true
+
+[aws]
+symbol = ""
+
+[username]
+format = "[$user]($style)"
+
+[hostname]
+format = "@[$hostname]($style) "
+style = 'blue'
+
+[time]
+use_12hr = true
+disabled = false
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch)]($style) '
+
+[jobs]
+# format = '[\($number\)]($style) '
+
+[kubernetes]
+symbol = "⛵"
+disabled = false
+format = '[$symbol $context]($style) '
+# format = '[$context]($style) '
+
+[status]
+format = "($style) "
+
+[package]
+format = '[$symbol$version]($style) '
