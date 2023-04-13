@@ -27,12 +27,6 @@ alias grep='grep --exclude="*.svn*" '
 alias sshn="ssh -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 alias scpn='scp -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
-# no vi please
-if [ "$OS" == "Darwin" ]
-then
-    alias vi='mvim -v'
-fi
-
 # fixup ssh-agent so tmux in tmux works
 alias fixagent='[[ ! -e "$HOME/.ssh_auth_sock" ]] && rm -f $HOME/.ssh_auth_sock && ln -s $SSH_AUTH_SOCK $HOME/.ssh_auth_sock && export SSH_AUTH_SOCK=$HOME/.ssh_auth_sock'
 
