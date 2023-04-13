@@ -1,0 +1,11 @@
+# Engage enhancements if they are present
+
+if [[ -d "$HOME/.asdf" ]]; then
+    . "$HOME/.asdf/asdf.sh"
+    . "$HOME/.asdf/completions/asdf.bash"
+    . "$HOME/.asdf/plugins/java/set-java-home.bash"
+fi
+
+if command -v starship &> /dev/null; then
+    eval "$(starship init bash)"
+fi
