@@ -1,0 +1,413 @@
+#!/usr/bin/env bb
+
+(ns k
+  (:require
+    [babashka.pods :as pods]
+    [cheshire.core :as json]
+    [clojure.java.shell :as sh]
+    [clojure.pprint :refer [pprint print-table]]
+    [clj-yaml.core :as yaml]
+    [clojure.string :as string]
+    [clojure.tools.cli :refer [parse-opts]]
+            )
+(:import (java.time Duration OffsetDateTime)
+         (java.time.temporal ChronoUnit)))
+
+(pods/load-pod "tabl")
+(require '[pod.tabl.doric :as doric])
+
+;; Utility functions
+
+(defn perr
+  [& parts]
+  (binding [*out* *err*]
+    (apply println parts)))
+
+(defn format-duration
+  [duration]
+  (cond
+    (> 1 (.toHours duration))
+    (str (.toMinutesPart duration) "m" (.toSecondsPart duration) "s")
+
+    (> 1 (.toDays duration))
+    (str (.toHoursPart duration) "h" (.toMinutesPart duration) "m")
+
+    (> 7 (.toDays duration))
+    (str (.toDaysPart duration) "d" (.toHoursPart duration) "h")
+
+    :else
+    (str (.toDaysPart duration) "d")))
+
+(defn str->dur
+  [from to]
+  (Duration/ofMillis (.until (OffsetDateTime/parse from) (OffsetDateTime/parse to) ChronoUnit/MILLIS)))
+
+#_(format-duration (.toSeconds (str->dur "2020-06-28T20:00:00Z" "2020-06-28T20:03:02Z")))
+#_(format-duration (str->dur "2020-06-28T20:00:00Z" "2020-06-28T21:03:00Z"))
+#_(format-duration (str->dur "2020-06-28T20:00:00Z" "2020-06-30T21:03:00Z"))
+#_(format-duration (str->dur "2020-06-28T20:00:00Z" "2020-07-05T21:03:00Z"))
+
+
+;; Running Kubectl
+
+(defn which
+  [cmd]
+  (let [{:keys [out exit]} (sh/sh "which" cmd)]
+    (when (zero? exit)
+      (string/trim out))))
+
+(def kubectl-cmd (or (which "kubectl")
+                     (which "microk8s.kubectl")))
+
+(defn kubectl-data
+  [& args]
+  (let [result (apply sh/sh kubectl-cmd args)]
+    (if (zero? (:exit result))
+      result
+      (throw (ex-info (:err result) result)))))
+
+#_(kubectl-data "-o" "json" "get" "pod")
+
+(defn run-kubectl
+  [& args]
+  (let [cmd (cons kubectl-cmd args)
+        _ (perr (string/join " " cmd))
+        pb (doto (ProcessBuilder. cmd)
+             (.inheritIO))
+        proc (.start pb)]
+    (-> (Runtime/getRuntime)
+        (.addShutdownHook (Thread. #(.destroy proc))))
+    proc))
+
+
+;; Data fetching functions
+
+(defn raw-pods
+  []
+  (-> (kubectl-data "-o" "json" "get" "pods")
+      :out
+      (json/decode true)
+      :items))
+
+(defn raw-container->container
+  [raw-container]
+  {:container/name (keyword (:name raw-container))
+   :container/image (:image raw-container)})
+
+(defn parse-date-time
+  [input]
+  (OffsetDateTime/parse input))
+
+(defn raw-pod->pod
+  [raw-pod]
+  (let [name (-> raw-pod :metadata :name)]
+    (with-meta
+      {:metadata/app (or (-> raw-pod :metadata :labels :app) name)
+       :metadata/name name
+       :containers (mapv raw-container->container (-> raw-pod :spec :containers))
+       :node/name (-> raw-pod :spec :nodeName)
+       :node/ip (-> raw-pod :status :hostIP)
+       :status/state (-> raw-pod :status :phase)
+       :status/start-time (some-> raw-pod :status :startTime parse-date-time)}
+      {:raw raw-pod})))
+
+#_(def p (raw-pods))
+#_(pprint (first p))
+#_(->> (map raw-pod->pod p)
+       (filter #(= "call-of-duty-stats-api" (:metadata/app %)))
+       (map meta)
+       (pprint))
+#_(count (map :metadata/app p))
+#_(print-table (map raw-pod->pod p))
+
+(defn raw-deployments
+  []
+  (-> (kubectl-data "-o" "json" "get" "deployments")
+      :out
+      (json/decode true)
+      :items))
+
+(defn raw-deployment->deployment
+  [raw-deployment]
+  {:metadata/name (-> raw-deployment :metadata :name)})
+
+#_(def d (raw-deployments))
+#_(pprint (first d))
+#_(print-table (map raw-deployment->deployment d))
+
+
+;; Fuzzy matching
+
+(defn fuzzy
+  [input]
+  (let [restr (apply str (conj (into [] (interleave (repeat ".*") input)) ".*"))]
+    (re-pattern restr))
+  )
+
+(defn fuzzy-filter
+  [match name-fn items]
+  (let [lookup (into {} (map (juxt name-fn identity)) items)
+        pat (fuzzy match)]
+    (if-some [item (get lookup match)]
+      [item]
+      (filter #(re-matches pat (name-fn %)) items))))
+
+#_(fuzzy-filter "exch" :metadata/app (map raw-pod->pod (raw-pods)))
+
+
+(defn pick-nth
+  [pick coll]
+  (if pick
+    [(nth coll pick)]
+    coll))
+
+;; Describe
+
+(def describe-opts
+  [["-c" "--container CONT" "Container to select"]
+   ["-p" "--pick N" "Follow nth pod"]])
+
+
+(defn describe
+  [args]
+  (let [parsed (parse-opts args describe-opts)
+        {:keys [options arguments]} parsed
+        pick (some-> options :pick parse-long dec)
+        pods (->> (raw-pods)
+                  (map raw-pod->pod)
+                  (filter :node/ip)
+                  (fuzzy-filter (first arguments) :metadata/app)
+                  (pick-nth pick))]
+    (if (= 1 (count pods))
+      (.waitFor (run-kubectl "describe" "pod" (-> pods first :metadata/name)))
+      (println "Too many matches:" (string/join ", " (map :metadata/app pods))))
+    nil))
+
+;; Exec
+
+(def exec-opts
+  [["-c" "--container CONT" "Container to select"]
+   ["-p" "--pick N" "Follow nth pod"]])
+
+(defn find-container
+  [k containers]
+  (first (filter #(= k (:container/name %)) containers)))
+
+(defn exec
+  [args]
+  (let [parsed (parse-opts args exec-opts)
+        {:keys [options arguments]} parsed
+        pick (some-> options :pick parse-long dec)
+        pods (->> (raw-pods)
+                  (map raw-pod->pod)
+                  (filter :node/ip)
+                  (fuzzy-filter (first arguments) :metadata/app)
+                  (pick-nth pick))
+        first-pod (first pods)
+        {:keys [containers]} first-pod
+        container (or (find-container (keyword (:container options)) containers)
+                      (find-container :api containers)
+                      (find-container :frontend containers)
+                      (first containers))]
+    (if (= 1 (count pods))
+      (.waitFor (apply run-kubectl "exec" "-it" (-> pods first :metadata/name) "-c" (name (:container/name container)) "--" (rest arguments)))
+      (println "Too many matches:" (string/join ", " (map :metadata/app pods))))
+    nil))
+
+
+;; Logs
+
+(def logs-opts
+  [["-c" "--container CONT" "Container to select"]
+   ["-n" "--number NUMLINES" "How many lines to go back" :default 500]
+   ["-f" "--follow" "Follow log" :default false]
+   ["-a" "--all" "Follow all pods" :default false]
+   ["-p" "--pick N" "Follow nth pod"]
+   ])
+
+(defn logs
+  [args]
+  (let [parsed (parse-opts args logs-opts)
+        {:keys [options arguments]} parsed
+        _ (clojure.pprint/pprint options)
+        pick (some-> options :pick parse-long dec)
+        pods (->> (raw-pods)
+                  (map raw-pod->pod)
+                  (filter :node/ip)
+                  (fuzzy-filter (first arguments) :metadata/app)
+                  (pick-nth pick))
+        first-pod (first pods)
+        {:keys [containers]} first-pod
+        container (or (find-container (keyword (:container options)) containers)
+                      (find-container :api containers)
+                      (find-container :frontend containers)
+                      (first containers))]
+    (cond
+      (= 1 (count pods))
+      (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (-> first-pod :metadata/name) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
+
+      (:all options)
+      (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
+
+      :else
+      (println "Too many matches:" (string/join ", " (map :metadata/app pods))))
+    nil))
+
+
+;; Restart
+
+(defn restart
+  [args]
+  (let [deployments (->> (raw-deployments)
+                         (map raw-deployment->deployment)
+                         (fuzzy-filter (first args) :metadata/name))
+        deployment-name (some->> deployments first :metadata/name (str "deployment.v1.apps/"))]
+    (if (= 1 (count deployments))
+      (do
+        (.waitFor (run-kubectl "scale" deployment-name "--replicas" "0"))
+        (Thread/sleep 1000)
+        (.waitFor (run-kubectl "scale" deployment-name "--replicas" "1")))
+      (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
+    nil))
+
+
+;; Stop
+
+(defn stop
+  [args]
+  (let [deployments (->> (raw-deployments)
+                         (map raw-deployment->deployment)
+                         (fuzzy-filter (first args) :metadata/name))
+        deployment-name (some->> deployments first :metadata/name (str "deployment.v1.apps/"))]
+    (if (= 1 (count deployments))
+      (.waitFor (run-kubectl "scale" deployment-name "--replicas" "0"))
+      (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
+    nil))
+
+
+;; Start
+
+(defn start
+  [args]
+  (let [deployments (->> (raw-deployments)
+                         (map raw-deployment->deployment)
+                         (fuzzy-filter (first args) :metadata/name))
+        deployment-name (some->> deployments first :metadata/name (str "deployment.v1.apps/"))]
+    (if (= 1 (count deployments))
+      (.waitFor (run-kubectl "scale" deployment-name "--replicas" "1"))
+      (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
+    nil))
+
+
+;; Print pods
+
+(defn calculate-age
+  [start now]
+  (-> (Duration/ofMillis (.until start now ChronoUnit/MILLIS))
+      (.truncatedTo ChronoUnit/MINUTES)
+      format-duration))
+
+(defn extract-version
+  [image-name]
+  (let [image-parts (string/split image-name #":")]
+    (if (= 1 (count image-parts))
+      "N/A (latest)"
+      (last image-parts))))
+
+
+(def non-app-containers #{:nginx})
+
+(defn prep-pod
+  [now pod]
+  (let [{:keys [containers]} pod
+        app-containers (remove (comp non-app-containers :container/name) containers)]
+    {:name (:metadata/app pod)
+     :raw-name (:metadata/name pod)
+     :version (-> (or (find-container :api app-containers) (find-container :frontend app-containers) (first app-containers))
+                  :container/image
+                  extract-version)
+     :node-ip (:node/ip pod)
+     :state (:status/state pod)
+     :age (some-> (:status/start-time pod) (calculate-age now))}))
+
+(def columns-pods
+  [{:name :name :align :left}
+   {:name :raw-name :align :left}
+   {:name :version :align :left}
+   {:name :state :align :left}
+   {:name :age :align :left}
+   {:name :node-ip :align :left}])
+
+(defn pods
+  [subargs]
+  (let [now (OffsetDateTime/now)]
+    (->> (raw-pods)
+         (map raw-pod->pod)
+         ; (filter :node/ip)
+         (map (partial prep-pod now))
+         (doric/print-table columns-pods)))
+  nil)
+
+;; Pick context
+
+(comment
+  (kubectl-data "-o" "json" "get" "pods")
+
+
+  ; (yaml/)
+  )
+
+;; Pick context
+
+(defn raw-contexts
+  []
+  (-> (str (System/getenv "HOME") "/.kube/config")
+      (slurp)
+      (yaml/parse-string)
+      :contexts))
+
+(defn pick-context
+  [args]
+  (let [contexts (->> (raw-contexts)
+                         (fuzzy-filter (first args) :name))
+        context-name (some->> contexts first :name)]
+    (if (= 1 (count contexts))
+      (.waitFor (run-kubectl "config" "use-context" context-name))
+      (println "Too many matches:" (string/join ", " (map :name contexts))))
+    nil))
+
+; Main entrypoint
+
+(def subcommands
+  [{:name "describe"      :doc "describe a pod"       :fn describe}
+   {:name "exec"          :doc "exec into a pod"      :fn exec}
+   {:name "logs"          :doc "logs for a pod"       :fn logs}
+   {:name "pods"          :doc "list pods"            :fn pods}
+   {:name "restart"       :doc "restart a deployment" :fn restart}
+   {:name "start"         :doc "start a deployment"   :fn start}
+   {:name "stop"          :doc "stop a deployment"    :fn stop}
+   {:name "pick-context"  :doc "pick k8s context"     :fn pick-context}])
+
+(def columns-subcommands
+  [{:name :name :align :left}
+   {:name :doc :align :left}])
+
+(defn -main [& args]
+  (let [[subcommand & subargs] args
+        fns (fuzzy-filter subcommand :name subcommands)
+        chosen-fn (some-> fns first :fn)]
+    (if (= 1 (count fns))
+      (chosen-fn subargs)
+      (if (and (< 0 (count args)) (< 1 (count fns)))
+        (println "Too many matches:" (string/join ", " (map :name fns)))
+        (do
+          (println "Quick Kubernetes tool, available subcommands:")
+          (->> subcommands
+               (map #(select-keys % [:name :doc]))
+               (doric/print-table columns-subcommands)))))))
+
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
+
+; vim: set ft=clojure:
