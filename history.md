@@ -1,3 +1,353 @@
+# 2023-01-30
+
+- Always show `cancellable` progress as notification without check
+  `notification.statusLineProgress`.
+
+# 2023-01-29
+
+- Exclude `source` actions when request code actions with range.
+- Any character can be used for channel name.
+
+# 2023-01-26
+
+- Add escape support to `coc#status()`.
+
+# 2023-01-24
+
+- Add `encoding` and `CancellationToken` support for `runCommand` function.
+
+# 2023-01-23
+
+- Make `vscode.open` command work with file uri.
+- Cancel option for `workspace.registerExprKeymap()`.
+- Support `suggest.filterOnBackspace` configuration.
+
+# 2023-01-22
+
+- `maxRestartCount` configuration for configured language server.
+
+# 2022-12-25
+
+- Create symbol tree from SymbolInformation list.
+
+# 2022-12-23
+
+- Support `URI` as param for API `workspace.jumpTo()`.
+
+# 2022-12-22
+
+- Support popup window for window related APIs.
+
+# 2022-12-21
+
+- When create `CocSem` highlight group, replace invalid character of token types
+  and token modifiers with underline.
+
+# 2022-12-20
+
+- Export `Buffer.setKeymap` and `Buffer.deleteKeymap` with vim and neovim support.
+- Make `workspace.registerLocalKeymap` accept bufnr argument.
+
+# 2022-12-12
+
+- Allow configuration of `window` scoped used by folder configuration file, like
+  VSCode.
+- Add location support for `getHover` action.
+- Use unique id for each tab on vim.
+- Chinese word segmentation for keywords.
+
+# 2022-12-05
+
+- Add `switchConsole` method to `LanguageClient`
+
+# 2022-12-03
+
+- Add configuration `suggest.insertMode`.
+
+# 2022-12-02
+
+- Expand variables for string configuration value.
+
+# 2022-11-30
+
+- File fragment support for `workspace.jumpTo()`.
+- Support `g:coc_open_url_command`.
+- Support `contributes.configuration` from extension as array.
+
+# 2022-11-29
+
+- Add documentations for develop of coc.nvim extensions.
+- Remove unused variable `g:coc_channel_timeout`.
+
+# 2022-11-28
+
+- Placeholder and update value support for `InputBox` and `QuickPick`.
+- `triggerOnly` option property for vim completion source.
+- Export `getExtensionById` from `extensions` module.
+
+# 2022-11-26
+
+- Use CTRL-R expression instead of timer for pum related functions:
+
+  - `coc#pum#insert()`
+  - `coc#pum#one_more()`
+  - `coc#pum#next()`
+  - `coc#pum#prev()`
+  - `coc#pum#stop()`
+  - `coc#pum#cancel()`
+  - `coc#pum#confirm()`
+
+# 2022-11-25
+
+- Avoid view change on list create.
+- Add configurations `links.enable` and `links.highlight`.
+- Use cursorline for list on neovim (to have correct highlight).
+- Fix highlight not work on neovim 0.5.0 by use `luaeval`.
+
+# 2022-11-22
+
+- Add command `document.toggleCodeLens`.
+
+# 2022-11-21
+
+- Add `CocAction('addWorkspaceFolder')`.
+
+# 2022-11-20
+
+- Support code lens feature on vim9.
+- `codeLens.subseparator` default changed to `|`, like VSCode.
+- Add configuration `coc.preferences.enableGFMBreaksInMarkdownDocument`, default to `true`
+- Add key-mappings `<Plug>(coc-codeaction-selected)` and `<Plug>(coc-codeaction-refactor-selected)`.
+
+# 2022-11-19
+
+- Create highlights after VimEnter.
+- Action 'organizeImport' return false instead of throw error when import code
+  action not found.
+
+# 2022-11-18
+
+- Throw error when rpc request error, instead of echo message.
+
+# 2022-11-13
+
+- Plugin emit ready after extensions activated.
+
+# 2022-11-12
+
+- Not cancel completion when request for in complete sources.
+
+# 2022-11-11
+
+- Support filter and display completion items with different start positions.
+- Remove configuration `suggest.fixInsertedWord`, insert word would always
+  be fixed.
+- Configuration `suggest.invalidInsertCharacters` default to line break
+  characters.
+
+# 2022-11-10
+
+- Not reset 'Search' highlight on float window as it could be used.
+- Note remap `<esc>` on float preview window.
+- Add new action `feedkeys!` to list.
+- Add new configuration `list.floatPreview`.
+
+# 2022-11-07
+
+- Add API `CocAction('snippetInsert')` for snippet insert from vim plugin.
+- Snippet support for vim source, snippet item should have `isSnippet` to be
+  `true` and `insertText` to be snippet text, when `on_complete` function exists,
+  the snippet expand should be handled completion source.
+
+# 2022-11-06
+
+- `window.createQuickPick()` API that show QuickPick by default, call `show()`
+- Fix change value property for QuickPick not works.
+
+# 2022-10-30
+
+- Add configuration `colors.enable`, mark `colors.filetypes` deprecated.
+- Add command `document.toggleColors` for toggle colors of current buffer.
+- Changed filter of completion to use code from VSCode.
+- Add configuration `suggest.filterGraceful`
+
+# 2022-10-39
+
+- Add configuration `suggest.enableFloat` back.
+
+# 2022-10-27
+
+- Use `workspace.rootPatterns` replace `coc.preferences.rootPatterns`, old
+  configuration still works when exists.
+- Store configurations with configuration registry.
+
+# 2022-10-25
+
+- Add `--height` support to `CocList`.
+
+# 2022-10-24
+
+- Use builtin static words source for snippet choices.
+- Remove configuration `"snippet.choicesMenuPicker"`
+- Remove unused internal functions `coc#complete_indent()` and
+  `coc#_do_complete()`
+
+# 2022-10-21
+
+- Consider utf-16 code unit instead of unicode code point.
+- Add `coc#string#character_index()` `coc#string#byte_index()` and
+  `coc#string#character_length()`.
+
+# 2022-10-20
+
+- Add `coc#pum#one_more()`
+
+# 2022-10-19
+
+- Trigger for trigger sources when no filter results available.
+
+# 2022-10-18
+
+- Change `suggest.maxCompleteItemCount` default to 256.
+
+# 2022-10-17
+
+- Set `g:coc_service_initialized` to `0` before service restart.
+- Show warning when diagnostic jump failed.
+- Use strwidth.wasm module for string display width.
+- Add API `workspace.getDisplayWidth`.
+
+# 2022-10-15
+
+- Add configuration `inlayHint.display`.
+
+# 2022-10-07
+
+- Use `CocFloatActive` for highlight active parameters.
+
+# 2022-09-28
+
+- Limit popupmenu width when exceed screen to &pumwidth, instead of change
+  completion column.
+- Make escape of `${name}` for ultisnip snippets the same behavior as
+  Ultisnip.vim.
+
+# 2022-09-27
+
+- Use fuzzy.wasm for native fuzzy match.
+- Add `binarySearch` and `isFalsyOrEmpty` functions for array.
+- `suggest.localityBonus` works like VSCode, using selection ranges.
+- Add and export `workspace.computeWordRanges`.
+- Rework keywords parse for better performance (parse changed lines only and use
+  yield to reduce iteration).
+
+# 2022-09-12
+
+- All configurations are now scoped #4185
+- No `onDidChangeConfiguration` event fired when workspace folder changed.
+- Deprecated configuration `suggest.detailMaxLength`, use `suggest.labelMaxLength` instead.
+- Deprecated configuration `inlayHint.filetypes`, use `inlayHint.enable` with scoped languages instead.
+- Deprecated configuration `semanticTokens.filetypes`, use `semanticTokens.enable` with scoped languages instead.
+- Use `workspaceFolderValue` instead of `workspaceValue` for `ConfigurationInspect` returned by `WorkspaceConfiguration.inspect()`.
+
+# 2022-09-04
+
+- Add configuration "snippet.choicesMenuPicker".
+
+# 2022-09-03
+
+- Send "WinClosed" event to node client.
+- Add `onDidFilterStateChange` and `onDidCursorMoved` to `TreeView`.
+- Support `autoPreview` for outline.
+
+# 2022-09-02
+
+- Support `diagnostic.virtualTextFormat`.
+- Add command `workspace.writeHeapSnapshot`.
+
+# 2022-09-01
+
+- Add configuration "suggest.asciiMatch"
+- Support `b:coc_force_attach`.
+
+# 2022-08-31
+
+- Add configuration "suggest.reversePumAboveCursor".
+- Use `DiagnosticSign*` highlight groups when possible.
+- Use `DiagnosticUnderline*` highlight groups when possible.
+
+# 2022-08-30
+
+- Export `LineBuilder` class.
+
+# 2022-08-29
+
+- Fix semanticTokens highlights unexpected cleared
+- Fix range of `doQuickfix` action.
+- Check reverse of `CocFloating`, use `border` and `Normal` highlight when reversed.
+- Make `CocInlayHint` use background of `SignColumn`.
+- Add command `document.toggleInlayHint`.
+
+# 2022-08-28
+
+- Make `CocMenuSel` use background of `PmenuSel`.
+- Snippet related configuration changed (old configuration still works until next release)
+  - "coc.preferences.snippetStatusText" -> "snippet.statusText"
+  - "coc.preferences.snippetHighlight" -> "snippet.highlight"
+  - "coc.preferences.nextPlaceholderOnDelete" -> "snippet.nextPlaceholderOnDelete"
+- Add configuration `"list.smartCase"`
+- Add configurations for inlay hint
+  - "inlayHint.refreshOnInsertMode"
+  - "inlayHint.enableParameter"
+  - "inlayHint.typeSeparator"
+  - "inlayHint.parameterSeparator"
+  - "inlayHint.subSeparator"
+
+# 2022-08-27
+
+- Avoid use `EasyMotion#is_active`, use autocmd to disable linting.
+- Show message when call hierarchy provider not found or bad position.
+
+# 2022-08-26
+
+- Remove `completeOpt` from `workspace.env`.
+- Add configuration `"diagnostic.virtualTextAlign"`.
+- Add warning when required features not compiled with vim.
+- Not echo error for semanticTokens request (log only).
+- Merge results form providers when possible.
+
+# 2022-08-24
+
+- Virtual text of suggest on vim9.
+- Virtual text of diagnostics on vim9.
+- Add configuration `inlayHint.filetypes`.
+- Inlay hint support on vim9.
+
+# 2022-08-23
+
+- Retry semanticTokens request on server cancel (LSP 3.17).
+- `RelativePattern` support for `workspace.createFileSystemWatcher()`.
+- `relativePatternSupport` for `DidChangeWatchedFiles` (LSP 3.17).
+- Not echo error on `doComplete()`.
+
+# 2022-08-21
+
+- Added `window.createFloatFactory()`, deprecated `FloatFactory` class.
+- Support `labelDetails` field of `CompleteItem`(LSP 3.17).
+- Added `triggerKind` to `CodeActionContext`, export `CodeActionTriggerKind`.
+
+# 2022-08-20
+
+- Support pull diagnostics `:h coc-pullDiagnostics`.
+- Break change: avoid extension overwrite builtin configuration defaults.
+- Change default value of configuration "diagnostic.format".
+- 'line' changes to 'currline' for `CocAction('codeAction')`.
+- Check NodeJS version on syntax error.
+
+# 2022-08-10
+
+- Change "notification.highlightGroup" default to "Normal".
+
 # 2022-08-07
 
 - Add configuration 'suggest.pumFloatConfig'.
@@ -481,7 +831,7 @@
 - **Break change** logic for resolve workspace folder changed.
 - Add `Task` module.
 - Add `getCurrentFunctionSymbol` action.
-- Add `list.source.outline.ctagsFilestypes` setting.
+- Add `list.source.outline.ctagsFiletypes` setting.
 - Add `suggest.disableMenu` and `suggest.disableMenu` settings.
 - Add `equal` support for complete items.
 - Add support for do action with visual select lines of list.

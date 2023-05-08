@@ -1,13 +1,13 @@
 scriptencoding utf-8
-let g:coc#_context = {'start': 0, 'preselect': -1,'candidates': []}
 let g:coc_user_config = get(g:, 'coc_user_config', {})
 let g:coc_global_extensions = get(g:, 'coc_global_extensions', [])
 let g:coc_selected_text = ''
 let g:coc_vim_commands = []
 let s:watched_keys = []
 let s:is_vim = !has('nvim')
-let s:error_sign = get(g:, 'coc_status_error_sign', has('mac') ? '❌ ' : 'E')
-let s:warning_sign = get(g:, 'coc_status_warning_sign', has('mac') ? '⚠️ ' : 'W')
+let s:utf = has('nvim') || &encoding =~# '^utf'
+let s:error_sign = get(g:, 'coc_status_error_sign', has('mac') && s:utf ? "\u274c " : 'E ')
+let s:warning_sign = get(g:, 'coc_status_warning_sign', has('mac') && s:utf ? "\u26a0\ufe0f " : 'W ')
 let s:select_api = exists('*nvim_select_popupmenu_item')
 let s:callbacks = {}
 let s:hide_pum = has('nvim-0.6.1') || has('patch-8.2.3389')
@@ -40,56 +40,17 @@ endfunction
 function! coc#_insert_key(method, key, ...) abort
   let prefix = ''
   if get(a:, 1, 1)
-    if pumvisible()
-      if s:hide_pum
-        let prefix = "\<C-x>\<C-z>"
-      else
-        let g:coc_disable_space_report = 1
-        let prefix = "\<space>\<bs>"
-      endif
+    if coc#pum#visible()
+      let prefix = "\<C-r>=coc#pum#close()\<CR>"
+    elseif pumvisible() && s:hide_pum
+      let prefix = "\<C-x>\<C-z>"
     endif
   endif
   return prefix."\<c-r>=coc#rpc#".a:method."('doKeymap', ['".a:key."'])\<CR>"
 endfunction
 
-function! coc#_complete() abort
-  let items = get(g:coc#_context, 'candidates', [])
-  let preselect = get(g:coc#_context, 'preselect', -1)
-  let startcol = g:coc#_context.start + 1
-  if s:select_api && len(items) && preselect != -1
-    noa call complete(startcol, items)
-    call nvim_select_popupmenu_item(preselect, v:false, v:false, {})
-    " use <cmd> specific key to preselect item at once
-    call feedkeys("\<Cmd>\<CR>" , 'i')
-  else
-    if pumvisible()
-      let g:coc_disable_complete_done = 1
-    endif
-    call complete(startcol, items)
-  endif
-  return ''
-endfunction
-
-function! coc#_do_complete(start, items, preselect, changedtick)
-  if b:changedtick != a:changedtick
-    return
-  endif
-  let g:coc#_context = {
-        \ 'start': a:start,
-        \ 'candidates': a:items,
-        \ 'preselect': a:preselect
-        \}
-  if mode() =~# 'i'
-    call coc#_complete()
-  endif
-endfunction
-
-function! coc#_cancel(...)
-  call coc#pum#close()
-endfunction
-
 " used for statusline
-function! coc#status()
+function! coc#status(...)
   let info = get(b:, 'coc_diagnostic_info', {})
   let msgs = []
   if !empty(info) && get(info, 'error', 0)
@@ -98,7 +59,11 @@ function! coc#status()
   if !empty(info) && get(info, 'warning', 0)
     call add(msgs, s:warning_sign . info['warning'])
   endif
-  return coc#compat#trim(join(msgs, ' ') . ' ' . get(g:, 'coc_status', ''))
+  let status = get(g:, 'coc_status', '')
+  if get(a:, 1, 0)
+    let status = substitute(status, '%', '%%', 'g')
+  endif
+  return coc#compat#trim(join(msgs, ' ') . ' ' . status)
 endfunction
 
 function! coc#config(section, value)
@@ -106,6 +71,7 @@ function! coc#config(section, value)
   call coc#rpc#notify('updateConfig', [a:section, a:value])
 endfunction
 
+" Deprecated, use variable instead.
 function! coc#add_extension(...)
   if a:0 == 0 | return | endif
   call extend(g:coc_global_extensions, a:000)
@@ -135,7 +101,7 @@ endfunction
 function! coc#on_notify(id, method, Cb)
   let key = a:id. '-'.a:method
   let s:callbacks[key] = a:Cb
-  call coc#rpc#notify('registNotification', [a:id, a:method])
+  call coc#rpc#notify('registerNotification', [a:id, a:method])
 endfunction
 
 function! coc#do_notify(id, method, result)
@@ -147,9 +113,13 @@ function! coc#do_notify(id, method, result)
 endfunction
 
 function! coc#start(...)
-  let opt = coc#util#get_complete_option()
-  call CocActionAsync('startCompletion', extend(opt, get(a:, 1, {})))
+  call CocActionAsync('startCompletion', get(a:, 1, {}))
   return ''
+endfunction
+
+" Could be used by coc extensions
+function! coc#_cancel(...)
+  call coc#pum#close()
 endfunction
 
 function! coc#refresh() abort
@@ -157,27 +127,31 @@ function! coc#refresh() abort
 endfunction
 
 function! coc#_select_confirm() abort
-  call timer_start(10, { -> coc#pum#select_confirm()})
-  return s:is_vim || has('nvim-0.5.0') ? "\<Ignore>" : "\<space>\<bs>" 
+  return "\<C-r>=coc#pum#select_confirm()\<CR>"
 endfunction
 
-function! coc#complete_indent() abort
-  let curpos = getcurpos()
-  let indent_len = len(matchstr(getline('.'), '^\s*'))
-  let startofline = &startofline
-  let virtualedit = &virtualedit
-  set nostartofline
-  set virtualedit=all
-  normal! ==
-  let &startofline = startofline
-  let &virtualedit = virtualedit
-  let shift = len(matchstr(getline('.'), '^\s*')) - indent_len
-  let curpos[2] += shift
-  let curpos[4] += shift
-  call cursor(curpos[1:])
-   if shift != 0
-    if s:is_vim
-      call timer_start(0, { -> execute('redraw')})
+function! coc#_suggest_variables() abort
+  return {
+      \ 'disable': get(b:, 'coc_suggest_disable', 0),
+      \ 'disabled_sources': get(b:, 'coc_disabled_sources', []),
+      \ 'blacklist': get(b:, 'coc_suggest_blacklist', []),
+      \ }
+endfunction
+
+function! coc#_remote_fns(name)
+  let fns = ['init', 'complete', 'should_complete', 'refresh', 'get_startcol', 'on_complete', 'on_enter']
+  let res = []
+  for fn in fns
+    if exists('*coc#source#'.a:name.'#'.fn)
+      call add(res, fn)
     endif
-  endif
+  endfor
+  return res
+endfunction
+
+function! coc#_do_complete(name, opt, cb) abort
+  let handler = 'coc#source#'.a:name.'#complete'
+  let l:Cb = {res -> a:cb(v:null, res)}
+  let args = [a:opt, l:Cb]
+  call call(handler, args)
 endfunction

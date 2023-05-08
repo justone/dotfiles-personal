@@ -3,24 +3,25 @@ let s:is_win = has('win32') || has('win64')
 let s:is_mac = has('mac')
 let s:sign_api = exists('*sign_getplaced') && exists('*sign_place')
 let s:sign_groups = []
+let s:outline_preview_bufnr = 0
 
 " Check <Tab> and <CR>
-function! coc#ui#check_pum_keymappings() abort
-  for key in ['<cr>', '<tab>', '<c-y>']
-    let lhs = maparg(key, 'i')
-    if lhs =~# '\<pumvisible()' && lhs !~# '\<coc#pum#visible()'
-      let lines = [
-            \ 'coc.nvim switched to custom popup menu from 0.0.82',
-            \ 'you have to change key-mapping of '.key.' to make it work.',
-            \ 'checkout current key-mapping by ":verbose imap '.key.'"',
-            \ 'checkout documentation by ":h coc-completion"']
-      call coc#notify#create(lines, {
-            \ 'borderhighlight': 'CocInfoSign',
-            \ 'timeout': 30000,
-            \ 'kind': 'warning',
-            \ })
-    endif
-  endfor
+function! coc#ui#check_pum_keymappings(trigger) abort
+  if a:trigger !=# 'none'
+    for key in ['<cr>', '<tab>', '<c-y>', '<s-tab>']
+      let arg = maparg(key, 'i', 0, 1)
+      if get(arg, 'expr', 0)
+        let rhs = get(arg, 'rhs', '')
+        if rhs =~# '\<pumvisible()' && rhs !~# '\<coc#pum#visible()'
+          let rhs = substitute(rhs, '\Cpumvisible()', 'coc#pum#visible()', 'g')
+          let rhs = substitute(rhs, '\c"\\<C-n>"', 'coc#pum#next(1)', '')
+          let rhs = substitute(rhs, '\c"\\<C-p>"', 'coc#pum#prev(1)', '')
+          let rhs = substitute(rhs, '\c"\\<C-y>"', 'coc#pum#confirm()', '')
+          execute 'inoremap <silent><nowait><expr> '.arg['lhs'].' '.rhs
+        endif
+      endif
+    endfor
+  endif
 endfunction
 
 function! coc#ui#quickpick(title, items, cb) abort
@@ -123,7 +124,7 @@ function! coc#ui#run_terminal(opts, cb)
   endif
   let opts = {
         \ 'cmd': cmd,
-        \ 'cwd': get(a:opts, 'cwd', getcwd()),
+        \ 'cwd': empty(get(a:opts, 'cwd', '')) ? getcwd() : a:opts['cwd'],
         \ 'keepfocus': get(a:opts, 'keepfocus', 0),
         \ 'Callback': {status, bufnr, content -> a:cb(v:null, {'success': status == 0 ? v:true : v:false, 'bufnr': bufnr, 'content': content})}
         \}
@@ -146,8 +147,6 @@ function! coc#ui#echo_messages(hl, msgs)
     return
   endif
   execute 'echohl '.a:hl
-  echom a:msgs[0]
-  redraw
   echo join(msgs, "\n")
   echohl None
 endfunction
@@ -325,6 +324,14 @@ function! coc#ui#change_lines(bufnr, list) abort
 endfunction
 
 function! coc#ui#open_url(url)
+  if isdirectory(a:url) && $TERM_PROGRAM ==# "iTerm.app"
+    call coc#ui#iterm_open(a:url)
+    return
+  endif
+  if !empty(get(g:, 'coc_open_url_command', ''))
+    call system(g:coc_open_url_command.' '.a:url)
+    return
+  endif
   if has('mac') && executable('open')
     call system('open '.a:url)
     return
@@ -407,38 +414,154 @@ function! coc#ui#update_signs(bufnr, group, signs) abort
   if !s:sign_api || !bufloaded(a:bufnr)
     return
   endif
-  if len(a:signs)
-    call add(s:sign_groups, a:group)
+  call sign_unplace(a:group, {'buffer': a:bufnr})
+  for def in a:signs
+    let opts = {'lnum': def['lnum']}
+    if has_key(def, 'priority')
+      let opts['priority'] = def['priority']
+    endif
+    call sign_place(0, a:group, def['name'], a:bufnr, opts)
+  endfor
+endfunction
+
+function! coc#ui#outline_preview(config) abort
+  let view_id = get(w:, 'cocViewId', '')
+  if view_id !=# 'OUTLINE'
+    return
   endif
-  let current = get(get(sign_getplaced(a:bufnr, {'group': a:group}), 0, {}), 'signs', [])
-  let exists = []
-  let unplaceList = []
-  for item in current
-    let index = 0
-    let placed = 0
-    for def in a:signs
-      if def['name'] ==# item['name'] && def['lnum'] == item['lnum']
-        let placed = 1
-        call add(exists, index)
-        break
-      endif
-      let index = index + 1
-    endfor
-    if !placed
-      call add(unplaceList, item['id'])
+  let wininfo = get(getwininfo(win_getid()), 0, v:null)
+  if empty(wininfo)
+    return
+  endif
+  let border = get(a:config, 'border', v:true)
+  let th = &lines - &cmdheight - 2
+  let range = a:config['range']
+  let height = min([range['end']['line'] - range['start']['line'] + 1, th - 4])
+  let to_left = &columns - wininfo['wincol'] - wininfo['width'] < wininfo['wincol']
+  let start_lnum = range['start']['line'] + 1
+  let end_lnum = range['end']['line'] + 1 - start_lnum > &lines ? start_lnum + &lines : range['end']['line'] + 1
+  let lines = getbufline(a:config['bufnr'], start_lnum, end_lnum)
+  let content_width = max(map(copy(lines), 'strdisplaywidth(v:val)'))
+  let width = min([content_width, a:config['maxWidth'], to_left ? wininfo['wincol'] - 3 : &columns - wininfo['wincol'] - wininfo['width']])
+  let filetype = getbufvar(a:config['bufnr'], '&filetype')
+  let cursor_row = coc#cursor#screen_pos()[0]
+  let config = {
+      \ 'relative': 'editor',
+      \ 'row': cursor_row - 1 + height < th ? cursor_row - (border ? 1 : 0) : th - height - (border ? 1 : -1),
+      \ 'col': to_left ? wininfo['wincol'] - 4 - width : wininfo['wincol'] + wininfo['width'],
+      \ 'width': width,
+      \ 'height': height,
+      \ 'lines': lines,
+      \ 'border': border ? [1,1,1,1] : v:null,
+      \ 'rounded': get(a:config, 'rounded', 1) ? 1 : 0,
+      \ 'winblend': a:config['winblend'],
+      \ 'highlight': a:config['highlight'],
+      \ 'borderhighlight': a:config['borderhighlight'],
+      \ }
+  let winid = coc#float#get_float_by_kind('outline-preview')
+  let result = coc#float#create_float_win(winid, s:outline_preview_bufnr, config)
+  if empty(result)
+    return v:null
+  endif
+  call setwinvar(result[0], 'kind', 'outline-preview')
+  let s:outline_preview_bufnr = result[1]
+  if !empty(filetype)
+    call coc#compat#execute(result[0], 'setfiletype '.filetype)
+  endif
+  return result[1]
+endfunction
+
+function! coc#ui#outline_close_preview() abort
+  let winid = coc#float#get_float_by_kind('outline-preview')
+  if winid
+    call coc#float#close(winid)
+  endif
+endfunction
+
+" Ignore error from autocmd when file opened
+function! coc#ui#safe_open(cmd, file) abort
+  let bufname = fnameescape(a:file)
+  try
+    execute a:cmd.' 'bufname
+  catch /.*/
+    if bufname('%') != bufname
+      throw v:exception
     endif
-  endfor
-  for idx in range(0, len(a:signs) - 1)
-    if index(exists, idx) == -1
-      let def = a:signs[idx]
-      let opts = {'lnum': def['lnum']}
-      if has_key(def, 'priority')
-        let opts['priority'] = def['priority']
-      endif
-      call sign_place(0, a:group, def['name'], a:bufnr, opts)
+  endtry
+endfunction
+
+" Use noa to setloclist, avoid BufWinEnter autocmd
+function! coc#ui#setloclist(nr, items, action, title) abort
+  if a:action ==# ' '
+    let title = get(getloclist(a:nr, {'title': 1}), 'title', '')
+    let action = title ==# a:title ? 'r' : ' '
+    noa call setloclist(a:nr, [], action, {'title': a:title, 'items': a:items})
+  else
+    noa call setloclist(a:nr, [], a:action, {'title': a:title, 'items': a:items})
+  endif
+endfunction
+
+function! coc#ui#get_mouse() abort
+  if get(g:, 'coc_node_env', '') ==# 'test'
+    return get(g:, 'mouse_position', [win_getid(), line('.'), col('.')])
+  endif
+  return [v:mouse_winid,v:mouse_lnum,v:mouse_col]
+endfunction
+
+" viewId - identifier of tree view
+" bufnr - bufnr tree view
+" winid - winid of tree view
+" bufname -  bufname of tree view
+" command - split command
+" optional options - bufhidden, canSelectMany, winfixwidth
+function! coc#ui#create_tree(opts) abort
+  let viewId = a:opts['viewId']
+  let bufname = a:opts['bufname']
+  let tabid = coc#util#tabnr_id(tabpagenr())
+  let winid = s:get_tree_winid(a:opts)
+  let bufnr = a:opts['bufnr']
+  if !bufloaded(bufnr)
+    let bufnr = -1
+  endif
+  if winid != -1
+    call win_gotoid(winid)
+    if bufnr('%') == bufnr
+      return [bufnr, winid, tabid]
+    elseif bufnr != -1
+      execute 'silent keepalt buffer '.bufnr
+    else
+      execute 'silent keepalt edit +setl\ buftype=nofile '.bufname
+      call s:set_tree_defaults(a:opts)
     endif
-  endfor
-  for id in unplaceList
-    call sign_unplace(a:group, {'buffer': a:bufnr, 'id': id})
-  endfor
+  else
+    " need to split
+    let cmd = get(a:opts, 'command', 'belowright 30vs')
+    execute 'silent keepalt '.cmd.' +setl\ buftype=nofile '.bufname
+    call s:set_tree_defaults(a:opts)
+    let winid = win_getid()
+  endif
+  let w:cocViewId = viewId
+  return [winbufnr(winid), winid, tabid]
+endfunction
+
+" valid window id or -1
+function! s:get_tree_winid(opts) abort
+  let viewId = a:opts['viewId']
+  let winid = a:opts['winid']
+  if winid != -1 && coc#window#visible(winid)
+    return winid
+  endif
+  if winid != -1
+    call coc#compat#execute(winid, 'noa close!', 'silent!')
+  endif
+  return coc#window#find('cocViewId', viewId)
+endfunction
+
+function! s:set_tree_defaults(opts) abort
+  let bufhidden = get(a:opts, 'bufhidden', 'wipe')
+  let signcolumn = get(a:opts, 'canSelectMany', v:false) ? 'yes' : 'no'
+  let winfixwidth = get(a:opts, 'winfixwidth', v:false) ? ' winfixwidth' : ''
+  execute 'setl bufhidden='.bufhidden.' signcolumn='.signcolumn.winfixwidth
+  setl nolist nonumber norelativenumber foldcolumn=0
+  setl nocursorline nobuflisted wrap undolevels=-1 filetype=coctree nomodifiable noswapfile
 endfunction

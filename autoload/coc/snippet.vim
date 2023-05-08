@@ -27,14 +27,9 @@ function! coc#snippet#_select_mappings()
   snoremap <c-r> <c-g>"_c<c-r>
 endfunction
 
-function! coc#snippet#show_choices(lnum, col, len, values) abort
-  let m = mode()
-  call cursor(a:lnum, a:col + a:len)
-  if m !=# 'i'
-    call feedkeys("\<Esc>i", 'in')
-  endif
-  let changedtick = b:changedtick
-  call timer_start(20, { -> coc#_do_complete(a:col - 1, a:values, 0, changedtick)})
+function! coc#snippet#show_choices(lnum, col, position, input) abort
+  call coc#snippet#move(a:position)
+  call CocActionAsync('startCompletion', { 'source': '$words' })
   redraw
 endfunction
 
@@ -78,10 +73,17 @@ function! coc#snippet#next() abort
 endfunction
 
 function! coc#snippet#jump(direction, complete) abort
-  if a:direction == 1 && a:complete && pumvisible()
-    let pre = exists('*complete_info') && complete_info()['selected'] == -1 ? "\<C-n>" : ''
-    call feedkeys(pre."\<C-y>", 'in')
-    return ''
+  if a:direction == 1 && a:complete
+    if pumvisible()
+      let pre = exists('*complete_info') && complete_info()['selected'] == -1 ? "\<C-n>" : ''
+      call feedkeys(pre."\<C-y>", 'in')
+      return ''
+    endif
+    if coc#pum#visible()
+      " Discard the return value, otherwise weird characters will be inserted
+      call coc#pum#confirm()
+      return ''
+    endif
   endif
   call coc#rpc#request(a:direction == 1 ? 'snippetNext' : 'snippetPrev', [])
   return ''
@@ -134,8 +136,6 @@ function! coc#snippet#move(position) abort
   let m = mode()
   if m == 's'
     call feedkeys("\<Esc>", 'in')
-  elseif coc#pum#visible()
-    call coc#pum#close()
   endif
   let pos = coc#snippet#to_cursor(a:position)
   call cursor(pos)
@@ -151,5 +151,5 @@ function! coc#snippet#to_cursor(position) abort
   if line is v:null
     return [a:position.line + 1, a:position.character + 1]
   endif
-  return [a:position.line + 1, byteidx(line, a:position.character) + 1]
+  return [a:position.line + 1, coc#string#byte_index(line, a:position.character) + 1]
 endfunction

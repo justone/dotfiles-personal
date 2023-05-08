@@ -1,9 +1,9 @@
 scriptencoding utf-8
 let s:is_vim = !has('nvim')
-let s:utf = &encoding =~# '^utf'
-let s:error_icon = get(g:, 'coc_notify_error_icon', s:utf ? '' : 'E')
-let s:warning_icon = get(g:, 'coc_notify_warning_icon', s:utf ? '⚠' : 'W')
-let s:info_icon = get(g:, 'coc_notify_info_icon', s:utf ? '' : 'I')
+let s:utf = has('nvim') || &encoding =~# '^utf'
+let s:error_icon = get(g:, 'coc_notify_error_icon', s:utf ? "\uf057" : 'E')
+let s:warning_icon = get(g:, 'coc_notify_warning_icon', s:utf ? "\u26a0" : 'W')
+let s:info_icon = get(g:, 'coc_notify_info_icon', s:utf ? "\uf06a" : 'I')
 let s:interval = get(g:, 'coc_notify_interval', s:is_vim ? 50 : 20)
 let s:phl = 'CocNotificationProgress'
 let s:progress_char = '─'
@@ -112,6 +112,7 @@ endfunction
 " source -  source name [string]
 " kind - kind for create icon [string]
 " actions - action names [string[]]
+" close - close button [boolean]
 function! coc#notify#create(lines, config) abort
   let actions = get(a:config, 'actions', [])
   let key = json_encode(extend({'lines': a:lines}, a:config))
@@ -121,10 +122,10 @@ function! coc#notify#create(lines, config) abort
   if winid != -1
     let row = getwinvar(winid, 'top', 0)
     call filter(s:winids, 'v:val != '.winid)
-    call coc#float#close(winid)
+    call coc#float#close(winid, 1)
     let winid = v:null
   endif
-  let opts = coc#dict#pick(a:config, ['highlight', 'borderhighlight', 'focusable', 'shadow'])
+  let opts = coc#dict#pick(a:config, ['highlight', 'borderhighlight', 'focusable', 'shadow', 'close'])
   let border = has_key(opts, 'borderhighlight') ? [1, 1, 1, 1] : []
   let icon = s:get_icon(kind, get(a:config, 'highlight', 'CocFloating'))
   let margin = get(a:config, 'marginRight', 10)
@@ -211,7 +212,7 @@ function! coc#notify#create(lines, config) abort
   call setwinvar(winid, 'key', key)
   call setwinvar(winid, 'actions', actions)
   call setwinvar(winid, 'source', get(a:config, 'source', ''))
-  call setwinvar(winid, 'border', !empty(border))
+  call setwinvar(winid, 'borders', !empty(border))
   call coc#float#nvim_scrollbar(winid)
   call add(s:winids, winid)
   let from = {'row': opts['row'], 'winblend': opts['winblend']}
@@ -273,7 +274,7 @@ function! coc#notify#get_win_top(winid) abort
   if row == 0
     return row
   endif
-  return row - (s:is_vim ? 0 : getwinvar(a:winid, 'border', 0))
+  return row - (s:is_vim ? 0 : getwinvar(a:winid, 'borders', 0))
 endfunction
 
 " Close with timer
@@ -282,7 +283,7 @@ function! coc#notify#close(winid) abort
     return
   endif
   if !coc#window#visible(a:winid)
-    call coc#float#close(a:winid)
+    call coc#float#close(a:winid, 1)
     return
   endif
   let row = coc#window#get_var(a:winid, 'top')
@@ -338,28 +339,34 @@ function! s:progress(winid, total, curr, index) abort
   if coc#window#visible(a:winid)
     let total = a:total
     let idx = float2nr(a:curr/5.0)%total
+    let option = coc#float#get_options(a:winid)
+    let width = option['width']
     if idx != a:index
-      " update percent
+      " update percent & message
       let bufnr = winbufnr(a:winid)
       let percent = coc#window#get_var(a:winid, 'percent')
+      let lines = []
       if !empty(percent)
-        let width = strchars(getbufline(bufnr, 1)[0])
         let line = repeat(s:progress_char, width - 4).printf('%4s', percent)
         let total = width - 4
-        call setbufline(bufnr, 1, line)
+        call add(lines, line)
+      else
+        call add(lines, repeat(s:progress_char, width))
       endif
       let message = coc#window#get_var(a:winid, 'message')
       if !empty(message)
-        let linecount = coc#compat#buf_line_count(bufnr)
-        let hasAction = !empty(coc#window#get_var(a:winid, 'actions', []))
-        if getbufvar(bufnr, 'message', 0) == 0
-          call appendbufline(bufnr, linecount - hasAction, message)
-          call setbufvar(bufnr, 'message', 1)
-          call coc#float#change_height(a:winid, 1)
-          let tabnr = coc#window#tabnr(a:winid)
-          call coc#notify#reflow(tabnr)
-        else
-          call setbufline(bufnr, linecount - hasAction, message)
+        let lines = lines + coc#string#reflow(split(message, '\v\r?\n'), width)
+      endif
+      noa call setbufline(bufnr, 1, lines)
+      noa call deletebufline(bufnr, len(lines) + 1, '$')
+      let height = option['height']
+      let delta = len(lines) - height
+      if delta > 0 && height < 3
+        call coc#float#change_height(a:winid, min([delta, 3 - height]))
+        let tabnr = coc#window#tabnr(a:winid)
+        call coc#notify#reflow(tabnr)
+        if len(lines) > 3
+          call coc#float#nvim_scrollbar(a:winid)
         endif
       endif
       let bytes = strlen(s:progress_char)
@@ -436,7 +443,7 @@ function! s:animate(winid, from, to, prev, ...) abort
     call filter(s:winids, 'v:val != '.a:winid)
     let tabnr = coc#window#tabnr(a:winid)
     if tabnr != -1
-      call coc#float#close(a:winid)
+      call coc#float#close(a:winid, 1)
       call coc#notify#reflow(tabnr)
     endif
   endif
@@ -452,7 +459,7 @@ function! coc#notify#reflow(...) abort
   let wins = map(copy(winids), {_, val -> {
         \ 'winid': val,
         \ 'row': coc#window#get_var(val,'top',0),
-        \ 'top': coc#window#get_var(val,'top',0) - (s:is_vim ? 0 : coc#window#get_var(val, 'border', 0)),
+        \ 'top': coc#window#get_var(val,'top',0) - (s:is_vim ? 0 : coc#window#get_var(val, 'borders', 0)),
         \ 'height': coc#float#get_height(val),
         \ }})
   call sort(wins, {a, b -> b['top'] - a['top']})

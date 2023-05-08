@@ -3,28 +3,24 @@ let s:is_vim = !has('nvim')
 
 " Get tabpagenr of winid, return -1 if window doesn't exist
 function! coc#window#tabnr(winid) abort
-  if exists('*nvim_win_get_tabpage')
-    try
-      return nvim_win_get_tabpage(a:winid)
-    catch /Invalid window id/
-      return -1
-    endtry
-  endif
+  " getwininfo not work with popup on vim
   if exists('*win_execute')
     let ref = {}
     call win_execute(a:winid, 'let ref["out"] = tabpagenr()')
     return get(ref, 'out', -1)
-  elseif !s:is_vim
-    let info = getwininfo(a:winid)
-    return empty(info) ? -1 : info[0]['tabnr']
-  else
-    throw 'win_execute() does not exist, please upgrade your vim.'
   endif
+  let info = getwininfo(a:winid)
+  return empty(info) ? -1 : info[0]['tabnr']
 endfunction
 
+" (1, 0) based line, column
 function! coc#window#get_cursor(winid) abort
   if exists('*nvim_win_get_cursor')
     return nvim_win_get_cursor(a:winid)
+  endif
+  if has('patch-8.2.1727')
+    let pos = getcurpos(a:winid)
+    return [pos[1], pos[2] - 1]
   endif
   return coc#api#exec('win_get_cursor', [a:winid])
 endfunction
@@ -48,6 +44,15 @@ function! coc#window#visible(winid) abort
   return coc#window#tabnr(a:winid) == tabpagenr()
 endfunction
 
+" winid is popup and shown
+function! s:visible_popup(winid) abort
+  let popups = popup_list()
+  if index(popups, a:winid) != -1
+    return get(popup_getpos(a:winid), 'visible', 0) == 1
+  endif
+  return 0
+endfunction
+
 " Return v:null when name or window doesn't exist,
 " 'getwinvar' only works on window of current tab
 function! coc#window#get_var(winid, name, ...) abort
@@ -64,7 +69,7 @@ function! coc#window#get_var(winid, name, ...) abort
   else
     try
       return coc#api#exec('win_get_var', [a:winid, a:name, get(a:, 1, v:null)])
-    catch /.*/
+    catch /Invalid window id/
       return get(a:, 1, v:null)
     endtry
   endif
@@ -89,20 +94,27 @@ endfunction
 
 function! coc#window#is_float(winid) abort
   if s:is_vim
-    if exists('*popup_list')
-      return index(popup_list(), a:winid) != -1
-    else
-      try
-        return !empty(popup_getpos(a:winid))
-      catch /^Vim\%((\a\+)\)\=:E993/
-        return 0
-      endtry
-    endif
-    return 0
-  elseif exists('*nvim_win_get_config')
+    try
+      return !empty(popup_getpos(a:winid))
+    catch /^Vim\%((\a\+)\)\=:E993/
+      return 0
+    endtry
+  else
     let config = nvim_win_get_config(a:winid)
     return !empty(config) && !empty(get(config, 'relative', ''))
   endif
+endfunction
+
+" Reset current lnum & topline of window
+function! coc#window#restview(winid, lnum, topline) abort
+  if empty(getwininfo(a:winid))
+    return
+  endif
+  if s:is_vim && s:visible_popup(a:winid)
+    call popup_setoptions(a:winid, {'firstline': a:topline})
+    return
+  endif
+  call coc#compat#execute(a:winid, ['noa call winrestview({"lnum":'.a:lnum.',"topline":'.a:topline.'})'])
 endfunction
 
 function! coc#window#set_height(winid, height) abort
@@ -163,23 +175,16 @@ function! coc#window#close(winid) abort
   if empty(a:winid) || a:winid == -1
     return
   endif
+  if coc#float#valid(a:winid)
+    call coc#float#close(a:winid)
+    return
+  endif
   if exists('*nvim_win_is_valid') && exists('*nvim_win_close')
     if nvim_win_is_valid(a:winid)
       call nvim_win_close(a:winid, 1)
     endif
-  elseif exists('*win_execute')
-    call coc#compat#execute(a:winid, 'noa close!', 'silent!')
   else
-    let curr = win_getid()
-    if curr == a:winid
-      silent! close!
-    else
-      let res = win_gotoid(a:winid)
-      if res
-        silent! close!
-        call win_gotoid(curr)
-      endif
-    endif
+    call coc#compat#execute(a:winid, 'noa close!', 'silent!')
   endif
 endfunction
 
