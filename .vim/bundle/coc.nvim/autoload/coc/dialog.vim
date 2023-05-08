@@ -111,83 +111,104 @@ function! coc#dialog#create_cursor_float(winid, bufnr, lines, config) abort
   return [currbuf, pos, winid, bufnr, alignTop]
 endfunction
 
-" Create float window for input
-function! coc#dialog#create_prompt_win(title, default, opts) abort
-  call s:close_auto_hide_wins()
-  let bufnr = has('nvim') ? s:prompt_win_bufnr : 0
-  if s:is_vim
-    execute 'hi link CocPopupTerminal '.get(a:opts, 'highlight', 'CocFloating')
-    let node =  expand(get(g:, 'coc_node_path', 'node'))
-    let bufnr = term_start([node, s:root . '/bin/prompt.js', a:default], {
-          \ 'term_rows': 1,
-          \ 'term_highlight': 'CocPopupTerminal',
-          \ 'hidden': 1,
-          \ 'term_finish': 'close'
-          \ })
-    call term_setapi(bufnr, 'Coc')
-    call setbufvar(bufnr, 'current', type(a:default) == v:t_string ? a:default : '')
+" Use terminal buffer
+function! coc#dialog#_create_prompt_vim(title, default, opts) abort
+  if !has('patch-8.2.0750')
+    throw 'Input box not supported on vim < 8.2.0750'
   endif
-  let config = s:get_prompt_dimension(a:title, a:default, a:opts)
-  let res = coc#float#create_float_win(0, bufnr, extend(config, {
-        \ 'style': 'minimal',
-        \ 'border': get(a:opts, 'border', [1,1,1,1]),
-        \ 'rounded': get(a:opts, 'rounded', 1),
-        \ 'prompt': 1,
-        \ 'title': a:title,
-        \ 'lines': s:is_vim ? v:null : [a:default],
-        \ 'highlight': get(a:opts, 'highlight', 'CocFloating'),
-        \ 'borderhighlight': [get(a:opts, 'borderhighlight', 'CocFloating')],
-        \ }))
+  execute 'hi link CocPopupTerminal '.get(a:opts, 'highlight', 'CocFloating')
+  let node =  expand(get(g:, 'coc_node_path', 'node'))
+  let placeHolder = get(a:opts, 'placeHolder', '')
+  let opt = {
+        \ 'term_rows': 1,
+        \ 'hidden': 1,
+        \ 'term_finish': 'close',
+        \ 'norestore': 1,
+        \ 'term_highlight': 'CocPopupTerminal'
+        \ }
+  let bufnr = term_start([node, s:root . '/bin/prompt.js', a:default, empty(placeHolder) ? '' : placeHolder], opt)
+  call term_setapi(bufnr, 'Coc')
+  call setbufvar(bufnr, 'current', type(a:default) == v:t_string ? a:default : '')
+  let res = s:create_prompt_win(bufnr, a:title, a:default, a:opts)
   if empty(res)
     return
   endif
   let winid = res[0]
-  let bufnr = res[1]
-  if has('nvim')
-    let s:prompt_win_bufnr = res[1]
-    execute 'sign unplace 6 buffer='.s:prompt_win_bufnr
-    call nvim_set_current_win(winid)
-    inoremap <buffer> <C-a> <Home>
-    inoremap <buffer><expr><C-e> pumvisible() ? "\<C-e>" : "\<End>"
-    exe 'imap <silent><nowait><buffer> <esc> <esc><esc>'
-    exe 'nnoremap <silent><buffer> <esc> :call coc#float#close('.winid.')<CR>'
-    exe 'inoremap <silent><expr><nowait><buffer> <cr> "\<C-r>=coc#dialog#prompt_insert(getline(''.''))\<cr>\<esc>"'
-    if get(a:opts, 'list', 0)
-      for key in ['<C-j>', '<C-k>', '<C-n>', '<C-p>', '<up>', '<down>', '<C-f>', '<C-b>', '<C-space>']
-        " Can't use < in remap
-        let escaped = key ==# '<C-space>' ? "C-@" : strcharpart(key, 1, strchars(key) - 2)
-        exe 'inoremap <nowait><buffer> '.key.' <Cmd>call coc#rpc#notify("PromptKeyPress", ['.bufnr.', "'.escaped.'"])<CR>'
-      endfor
-    endif
-    call feedkeys('A', 'in')
+  " call win_gotoid(winid)
+  call coc#util#do_autocmd('CocOpenFloatPrompt')
+  let pos = popup_getpos(winid)
+  " width height row col
+  let dimension = [pos['width'], pos['height'], pos['line'] - 1, pos['col'] - 1]
+  return [bufnr, winid, dimension]
+endfunction
+
+" Use normal buffer on neovim
+function! coc#dialog#_create_prompt_nvim(title, default, opts) abort
+  let result = s:create_prompt_win(s:prompt_win_bufnr, a:title, a:default, a:opts)
+  if empty(result)
+    return
+  endif
+  let winid = result[0]
+  let s:prompt_win_bufnr = result[1]
+  let bufnr = s:prompt_win_bufnr
+  call sign_unplace(s:sign_group, { 'buffer': s:prompt_win_bufnr })
+  call nvim_set_current_win(winid)
+  inoremap <buffer> <C-a> <Home>
+  inoremap <buffer><expr><C-e> pumvisible() ? "\<C-e>" : "\<End>"
+  exe 'imap <silent><nowait><buffer> <esc> <esc><esc>'
+  exe 'nnoremap <silent><buffer> <esc> :call coc#float#close('.winid.')<CR>'
+  exe 'inoremap <silent><expr><nowait><buffer> <cr> "\<C-r>=coc#dialog#prompt_insert()\<cr>\<esc>"'
+  if get(a:opts, 'list', 0)
+    for key in ['<C-j>', '<C-k>', '<C-n>', '<C-p>', '<up>', '<down>', '<C-f>', '<C-b>', '<C-space>']
+      let escaped = key ==# '<C-space>' ? '\<C-@\>' : substitute(key, '\(<\|>\)', '\\\1', 'g')
+      exe 'inoremap <nowait><buffer> '.key.' <Cmd>call coc#rpc#notify("PromptKeyPress", ['.bufnr.', "'.escaped.'"])<CR>'
+    endfor
+  endif
+  let mode = mode()
+  if mode ==# 'n'
+    call feedkeys('A', 'int')
+  elseif mode ==# 'i'
+    call feedkeys("\<end>", 'int')
+  endif
+  let placeHolder = get(a:opts, 'placeHolder', '')
+  if empty(a:default) && !empty(placeHolder) && has('nvim-0.5.0')
+    let src_id = coc#highlight#create_namespace('input-box')
+    call nvim_buf_set_extmark(bufnr, src_id, 0, 0, {
+          \ 'virt_text': [[placeHolder, 'CocInputBoxVirtualText']],
+          \ 'virt_text_pos': 'overlay',
+          \ })
   endif
   call coc#util#do_autocmd('CocOpenFloatPrompt')
-  if s:is_vim
-    let pos = popup_getpos(winid)
-    " width height row col
-    let dimension = [pos['width'], pos['height'], pos['line'] - 1, pos['col'] - 1]
-  else
-    let id = coc#float#get_related(winid, 'border')
-    if !has('nvim-0.6.0')
-      redraw
-    endif
-    let pos = nvim_win_get_position(id)
-    let dimension = [nvim_win_get_width(id), nvim_win_get_height(id), pos[0], pos[1]]
+  if !has('nvim-0.6.0')
+    redraw
   endif
+  let id = coc#float#get_related(winid, 'border')
+  let pos = nvim_win_get_position(id)
+  let dimension = [nvim_win_get_width(id), nvim_win_get_height(id), pos[0], pos[1]]
   return [bufnr, winid, dimension]
+endfunction
+
+" Create float window for input
+function! coc#dialog#create_prompt_win(title, default, opts) abort
+  call s:close_auto_hide_wins()
+  if s:is_vim
+    return coc#dialog#_create_prompt_vim(a:title, a:default, a:opts)
+  endif
+  return  coc#dialog#_create_prompt_nvim(a:title, a:default, a:opts)
 endfunction
 
 " Create list window under target window
 function! coc#dialog#create_list(target, dimension, opts) abort
-  let maxHeight = get(a:opts, 'maxHeight', 10)
-  let height = max([1, len(get(a:opts, 'lines', []))])
+  let maxHeight = get(a:opts, 'maxHeight', 30)
+  let height = get(a:opts, 'linecount', 1)
   let height = min([maxHeight, height, &lines - &cmdheight - 1 - a:dimension['row'] + a:dimension['height']])
   let chars = get(a:opts, 'rounded', 1) ? ['╯', '╰'] : ['┘', '└']
+  let width = a:dimension['width'] - 2
   let config = extend(copy(a:opts), {
       \ 'relative': 'editor',
       \ 'row': a:dimension['row'] + a:dimension['height'],
       \ 'col': a:dimension['col'],
-      \ 'width': a:dimension['width'] - 2,
+      \ 'width': width,
       \ 'height': height,
       \ 'border': [1, 1, 1, 1],
       \ 'scrollinside': 1,
@@ -201,6 +222,7 @@ function! coc#dialog#create_list(target, dimension, opts) abort
   let winid = result[0]
   call coc#float#add_related(winid, a:target)
   call setwinvar(winid, 'auto_height', get(a:opts, 'autoHeight', 1))
+  call setwinvar(winid, 'core_width', width)
   call setwinvar(winid, 'max_height', maxHeight)
   call setwinvar(winid, 'target_winid', a:target)
   call setwinvar(winid, 'kind', 'list')
@@ -214,7 +236,7 @@ function! coc#dialog#create_menu(lines, config) abort
   let highlight = get(a:config, 'highlight', 'CocFloating')
   let borderhighlight = get(a:config, 'borderhighlight', [highlight])
   let relative = get(a:config, 'relative', 'cursor')
-  let lines = copy(a:lines)
+  let lines = a:lines
   let content = get(a:config, 'content', '')
   let maxWidth = get(a:config, 'maxWidth', 80)
   let highlights = get(a:config, 'highlights', [])
@@ -312,66 +334,57 @@ function! coc#dialog#prompt_confirm(title, cb) abort
     endtry
     return
   endif
-  if has('nvim-0.4.0')
-    let text = ' '. a:title . ' (y/n)? '
-    let maxWidth = coc#math#min(78, &columns - 2)
-    let width = coc#math#min(maxWidth, strdisplaywidth(text))
-    let maxHeight = &lines - &cmdheight - 1
-    let height = coc#math#min(maxHeight, float2nr(ceil(str2float(string(strdisplaywidth(text)))/width)))
-    let arr =  coc#float#create_float_win(0, s:prompt_win_bufnr, {
-          \ 'col': &columns/2 - width/2 - 1,
-          \ 'row': maxHeight/2 - height/2 - 1,
-          \ 'width': width,
-          \ 'height': height,
-          \ 'border': [1,1,1,1],
-          \ 'focusable': v:false,
-          \ 'relative': 'editor',
-          \ 'highlight': 'Normal',
-          \ 'borderhighlight': 'MoreMsg',
-          \ 'style': 'minimal',
-          \ 'lines': [text],
-          \ })
-    if empty(arr)
-      call a:cb('Window create failed!')
-      return
-    endif
-    let winid = arr[0]
-    let s:prompt_win_bufnr = arr[1]
-    let res = 0
-    redraw
-    " same result as vim
-    while 1
-      let key = nr2char(getchar())
-      if key == "\<C-c>"
-        let res = -1
-        break
-      elseif key == "\<esc>" || key == 'n' || key == 'N'
-        let res = 0
-        break
-      elseif key == 'y' || key == 'Y'
-        let res = 1
-        break
-      endif
-    endw
-    call coc#float#close(winid)
-    call a:cb(v:null, res)
-    " use relative editor since neovim doesn't support center position
-  elseif exists('*confirm')
-    let choice = confirm(a:title, "&Yes\n&No")
-    call a:cb(v:null, choice == 1)
-  else
-    echohl MoreMsg
-    echom a:title.' (y/n)'
-    echohl None
-    let confirm = nr2char(getchar())
-    redraw!
-    if !(confirm ==? "y" || confirm ==? "\r")
-      echohl Moremsg | echo 'Cancelled.' | echohl None
-      return 0
-      call a:cb(v:null, 0)
-    end
-    call a:cb(v:null, 1)
+  let text = ' '. a:title . ' (y/n)? '
+  let maxWidth = coc#math#min(78, &columns - 2)
+  let width = coc#math#min(maxWidth, strdisplaywidth(text))
+  let maxHeight = &lines - &cmdheight - 1
+  let height = coc#math#min(maxHeight, float2nr(ceil(str2float(string(strdisplaywidth(text)))/width)))
+  let arr =  coc#float#create_float_win(0, s:prompt_win_bufnr, {
+        \ 'col': &columns/2 - width/2 - 1,
+        \ 'row': maxHeight/2 - height/2 - 1,
+        \ 'width': width,
+        \ 'height': height,
+        \ 'border': [1,1,1,1],
+        \ 'focusable': v:false,
+        \ 'relative': 'editor',
+        \ 'highlight': 'Normal',
+        \ 'borderhighlight': 'MoreMsg',
+        \ 'style': 'minimal',
+        \ 'lines': [text],
+        \ })
+  if empty(arr)
+    call a:cb('Window create failed!')
+    return
   endif
+  let winid = arr[0]
+  let s:prompt_win_bufnr = arr[1]
+  call sign_unplace(s:sign_group, { 'buffer': s:prompt_win_bufnr })
+  let res = 0
+  redraw
+  " same result as vim
+  while 1
+    let key = nr2char(getchar())
+    if key == "\<C-c>"
+      let res = -1
+      break
+    elseif key == "\<esc>" || key == 'n' || key == 'N'
+      let res = 0
+      break
+    elseif key == 'y' || key == 'Y'
+      let res = 1
+      break
+    endif
+  endw
+  call coc#float#close(winid)
+  call a:cb(v:null, res)
+endfunction
+
+" works on neovim only
+function! coc#dialog#get_prompt_win() abort
+  if s:prompt_win_bufnr == 0
+    return -1
+  endif
+  return get(win_findbuf(s:prompt_win_bufnr), 0, -1)
 endfunction
 
 function! coc#dialog#get_config_editor(lines, config) abort
@@ -404,8 +417,9 @@ function! coc#dialog#get_config_editor(lines, config) abort
       \ }
 endfunction
 
-function! coc#dialog#prompt_insert(text) abort
-  call coc#rpc#notify('PromptInsert', [a:text, bufnr('%')])
+function! coc#dialog#prompt_insert() abort
+  let value = getline('.')
+  call coc#rpc#notify('PromptInsert', [value, bufnr('%')])
   return ''
 endfunction
 
@@ -469,7 +483,7 @@ function! coc#dialog#change_border_hl(winid, hlgroup) abort
   else
     let winid = coc#float#get_related(a:winid, 'border')
     if winid > 0
-      call setwinvar(winid, '&winhl', 'Normal:'.a:hlgroup.',NormalNC:'.a:hlgroup)
+      call setwinvar(winid, '&winhl', 'Normal:'.a:hlgroup)
     endif
   endif
 endfunction
@@ -493,6 +507,39 @@ function! coc#dialog#change_title(winid, title) abort
       endif
       call nvim_buf_set_lines(bufnr, 0, 1, v:false, [top])
     endif
+  endif
+endfunction
+
+function! coc#dialog#change_input_value(winid, bufnr, value) abort
+  if !coc#float#valid(a:winid)
+    return
+  endif
+  if win_getid() != a:winid
+    call win_gotoid(a:winid)
+  endif
+  if s:is_vim
+    " call timer_start(3000, { -> term_sendkeys(bufnr, "\<C-u>\<C-k>abcd")})
+    call term_sendkeys(a:bufnr, "\<C-u>\<C-k>".a:value)
+  else
+    let mode = mode()
+    if mode ==# 'i'
+      call feedkeys("\<end>", 'int')
+    else
+      call feedkeys("\<esc>A", 'int')
+    endif
+    " Use complete to replace text before
+    let saved_completeopt = &completeopt
+    if saved_completeopt =~ 'menuone'
+      noa set completeopt=menu
+    endif
+    noa call complete(1, [{ 'empty': 1, 'word': a:value }])
+    if has('nvim-0.6.1')
+      call feedkeys("\<C-x>\<C-z>", 'in')
+    else
+      let g:coc_disable_space_report = 1
+      call feedkeys("\<space>\<bs>", 'in')
+    endif
+    execute 'noa set completeopt='.saved_completeopt
   endif
 endfunction
 
@@ -545,8 +592,8 @@ function! coc#dialog#update_list(winid, bufnr, lines, highlights) abort
   if coc#window#tabnr(a:winid) == tabpagenr()
     if getwinvar(a:winid, 'auto_height', 0)
       let row = coc#float#get_row(a:winid)
-      " core height
-      let height = max([1, len(copy(a:lines))])
+      let width = getwinvar(a:winid, 'core_width', 80)
+      let height = s:get_height(a:lines, width)
       let height = min([getwinvar(a:winid, 'max_height', 10), height, &lines - &cmdheight - 1 - row])
       let curr = s:is_vim ? popup_getpos(a:winid)['core_height'] : nvim_win_get_height(a:winid)
       let delta = height - curr
@@ -586,11 +633,11 @@ endfunction
 
 function! coc#dialog#set_cursor(winid, bufnr, line) abort
   if s:is_vim
-    call coc#compat#execute(a:winid, 'exe '.a:line, 'silent!')
+    call coc#compat#execute(a:winid, 'exe '.max([a:line, 1]), 'silent!')
     call popup_setoptions(a:winid, {'cursorline' : 1})
     call popup_setoptions(a:winid, {'cursorline' : 0})
   else
-    call nvim_win_set_cursor(a:winid, [a:line, 0])
+    call nvim_win_set_cursor(a:winid, [max([a:line, 1]), 0])
   endif
   call coc#dialog#place_sign(a:bufnr, a:line)
 endfunction
@@ -600,6 +647,20 @@ function! coc#dialog#place_sign(bufnr, line) abort
   if a:line > 0
     call sign_place(6, s:sign_group, 'CocCurrentLine', a:bufnr, {'lnum': a:line})
   endif
+endfunction
+
+function! s:create_prompt_win(bufnr, title, default, opts) abort
+  let config = s:get_prompt_dimension(a:title, a:default, a:opts)
+  return coc#float#create_float_win(0, a:bufnr, extend(config, {
+        \ 'style': 'minimal',
+        \ 'border': get(a:opts, 'border', [1,1,1,1]),
+        \ 'rounded': get(a:opts, 'rounded', 1),
+        \ 'prompt': 1,
+        \ 'title': a:title,
+        \ 'lines': s:is_vim ? v:null : [a:default],
+        \ 'highlight': get(a:opts, 'highlight', 'CocFloating'),
+        \ 'borderhighlight': [get(a:opts, 'borderhighlight', 'CocFloating')],
+        \ }))
 endfunction
 
 " Could be center(with optional marginTop) or cursor
@@ -656,7 +717,7 @@ function! s:close_auto_hide_wins(...) abort
     if except && id == except
       continue
     endif
-    if coc#window#get_var(id, 'autohide', 0)
+    if getwinvar(id, 'autohide', 0)
       call coc#float#close(id)
     endif
   endfor
@@ -666,6 +727,14 @@ function! s:create_loading_buf() abort
   let bufnr = coc#float#create_buf(0)
   call s:change_loading_buf(bufnr, 0)
   return bufnr
+endfunction
+
+function! s:get_height(lines, width) abort
+  let height = 0
+  for line in a:lines
+    let height += float2nr(strdisplaywidth(line) / a:width) + 1
+  endfor
+  return max([1, height])
 endfunction
 
 function! s:change_loading_buf(bufnr, idx) abort
