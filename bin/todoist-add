@@ -1,0 +1,80 @@
+#!/usr/bin/env bb
+
+#_{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns todoist
+  (:require [cheshire.core :as json]
+            [clojure.pprint :refer [pprint]]
+            [clojure.string :as string]
+            [clojure.tools.cli :as cli]
+            [org.httpkit.client :as http]))
+
+(def ^:private api-key-name
+  "TODOIST_API_TOKEN")
+
+(defn create-task-req
+  [api-key task]
+  {:url "https://api.todoist.com/rest/v2/tasks"
+   :method :post
+   :headers {"Authorization" (str "Bearer " api-key)
+             "Content-Type" "application/json"}
+   :body (json/encode task)})
+
+(comment
+  (def resp
+    (-> (create-task-req
+          (System/getenv api-key-name)
+          {:content "Task title"
+           :description "Description"
+           :project_id "2274483841"
+           :labels ["Work"]})
+        http/request
+        deref))
+  (-> resp
+      :body
+      (json/decode true)
+      pprint))
+
+(def cli-opts
+  [["-P" "--project-id id"
+    :missing "Must supply a project id"]
+   ["-c" "--content CONTENT"
+    :missing "Must supply content"]
+   ["-d" "--description DESC"]
+   ["-l" "--label LABEL"
+    :multi true
+    :default []
+    :update-fn conj]
+   ["-h" "--help"]])
+
+(defn -main
+  [& args]
+  (let [{:keys [options summary errors]} (cli/parse-opts args cli-opts)
+        {:keys [content description label project-id]} options
+        api-key (System/getenv api-key-name)]
+    (cond
+      (:help options)
+      (println summary)
+
+      errors
+      (throw (ex-info (str (string/join "\n" errors) "\n\n" summary) {:babashka/exit 1}))
+
+      (nil? api-key)
+      (throw (ex-info (str "API key not found, set the " api-key-name " environment variable.") {:babashka/exit 1}))
+
+      :else
+      (let [task (merge {:content content
+                         :project_id project-id
+                         :labels label}
+                        (when description
+                          {:description description}))
+            response @(http/request (create-task-req api-key task))
+            todo (-> response
+                     :body
+                     (json/decode true))]
+        (pprint (select-keys todo [:id :created_at :labels :content :description]))))))
+
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
+
+; vim: set ft=clojure:
