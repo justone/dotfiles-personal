@@ -6,6 +6,7 @@ README.md skip
 .lein recurse
 .local recurse
 .gittrees skip
+.gitignore skip
 .nd skip
 css skip
 .set_git_push_config.sh exec
