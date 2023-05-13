@@ -19,7 +19,7 @@
       "command": "clojure-lsp",
       "filetypes": ["clojure"],
       "progressOnInitialization": true,
-      "rootPatterns": ["project.clj", "deps.edn"],
+      "rootPatterns": ["project.clj", "deps.edn", "bb.edn"],
       "additionalSchemes": ["jar", "zipfile"],
       "trace.server": "verbose",
       "hover": {"hide-file-location?": true}
