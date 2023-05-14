@@ -9,3 +9,5 @@
     (let [pred (eval (read-string predstr))]
       (run! prn (filter pred user/*input*))))
   (println "usage: bbf [predicate]"))
+
+; vim: set ft=clojure:

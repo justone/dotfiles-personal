@@ -11,3 +11,5 @@
     (let [ks (mapv read-string *command-line-args*)]
       (run! prn (map #(select-keys % ks) user/*input*))))
   (println "usage: bbks :key1 :key2"))
+
+; vim: set ft=clojure:

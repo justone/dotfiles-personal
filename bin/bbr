@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#_(
+  "exec" "bb" "-I" "-O" "$0" "$@"
+  )
+
+(let [[reducer init] (map #(some-> % read-string eval) *command-line-args*)]
+  (cond
+    init (prn (reduce reducer init user/*input*))
+    reducer (prn (reduce reducer user/*input*))
+    :else (println "usage: bbr fn")))
+
+; vim: set ft=clojure:
