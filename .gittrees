@@ -330,3 +330,7 @@
 	url = git@github.com:walterl/conjure-macroexpand.git
 	path = .vim/bundle/conjure-macroexpand
 	branch = master
+[subtree ".vim/bundle/baleia.nvim"]
+	url = https://github.com/m00qek/baleia.nvim.git
+	path = .vim/bundle/baleia.nvim
+	branch = main
