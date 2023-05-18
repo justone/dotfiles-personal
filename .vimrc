@@ -240,6 +240,17 @@ au FileType pandoc let g:table_mode_corner='|'
 
 let g:sexp_enable_insert_mode_mappings = 0
 
+" Vim REST Console
+ let g:vrc_curl_opts={
+	\'--include': '',
+	\'--show-error': '',
+	\'--silent': ''
+	\}
+
+let g:vrc_auto_format_response_patterns = {
+	\'json': 'jq "."'
+	\}
+
 " enable pathogen
 filetype off
 " let g:pathogen_blacklist = ['tagbar']
