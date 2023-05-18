@@ -12,3 +12,7 @@ set TimeZone = 'America/Los_Angeles';
 -- use :x and :xx to enact these
 \set x '\\setenv PAGER less'
 \set xx '\\setenv PAGER \'pspg -s 5 -X\''
+
+-- use :l and :ll to enact these
+\set l '\\pset numericlocale off'
+\set ll '\\pset numericlocale on'
