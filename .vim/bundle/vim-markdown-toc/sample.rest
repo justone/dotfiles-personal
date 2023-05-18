@@ -1,0 +1,91 @@
+// Examples of some ElasticSearch requests.
+
+#
+# View nodes status
+#
+http://localhost:9200
+GET /_cat/nodes?v
+
+#
+# Add a new doc to the new 'testindex' and 'testtype'
+#
+http://localhost:9200
+
+POST /testindex/testtype
+{
+    "name": "some name",
+    "value": "some value",
+    "date": "2015-01-01"
+}
+
+#
+# Search 'testindex'
+#
+http://localhost:9200
+GET /testindex/_search?pretty
+
+#
+# View mapping.
+#
+http://localhost:9200
+GET /testindex/testtype/_mapping?pretty
+
+#
+# Bulk-add new docs to 'testindex' using an external data file.
+#
+http://localhost:9200
+
+POST /testindex/_bulk?pretty
+@data.sample.json
+
+#
+# Lite search
+#
+http://localhost:9200
+GET /testindex/testtype/_search?pretty
+q=+name:FOO +value:(FOO BAR)
+
+# or
+http://localhost:9200
+GET /testindex/testtype/_search
+pretty&
+q=+name:FOO +value:(FOO BAR)
+
+#
+# Full-body search
+#
+http://localhost:9200
+
+POST /testindex/_search?pretty
+{
+  "query": {
+    "filtered": {
+      "filter": {
+        "range": {
+          "date": {
+            "gte": "2015-01-06",
+            "lte": "2015-01-08"
+          }
+        }
+      },
+      "query": {
+        "match": {
+          "value": "FOO"
+        }
+      }
+    }
+  }
+}
+
+#
+# Delete 'testindex'
+#
+http://localhost:9200
+DELETE /testindex?pretty
+
+#
+# Check for 'testindex' existence
+#
+http://localhost:9200
+HEAD /testindex
+
