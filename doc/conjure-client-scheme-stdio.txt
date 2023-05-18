@@ -1,0 +1,85 @@
+                                                 *conjure-client-scheme-stdio*
+
+==============================================================================
+CONTENTS                                *conjure-client-scheme-stdio-contents*
+
+    1. Introduction ............ |conjure-client-scheme-stdio-introduction|
+    2. Mappings .................... |conjure-client-scheme-stdio-mappings|
+    3. Configuration .......... |conjure-client-scheme-stdio-configuration|
+
+==============================================================================
+INTRODUCTION                        *conjure-client-scheme-stdio-introduction*
+>
+  MIT/GNU Scheme is an implementation of the Scheme programming language.
+
+Conjure starts an MIT Scheme REPL within Neovim when you first open a Scheme
+(`.scm`) file. You can configure which Scheme REPL is launched with the
+`g:conjure#client#scheme#stdio#command` configuration option.
+
+You should be able to evaluate files and forms as you would with other Conjure
+supported languages right away.
+
+Check out `:ConjureSchool` if you're unsure about what evaluation operations
+you can perform.
+
+ * https://www.gnu.org/software/mit-scheme/
+
+==============================================================================
+MAPPINGS                                *conjure-client-scheme-stdio-mappings*
+
+These mappings are the defaults, you can change them as described in
+|conjure-mappings| and |conjure-configuration|.
+
+See |conjure-client-scheme-stdio-configuration| for specific configuration
+options relevant to these mappings.
+
+<localleader>cs          Start the Scheme REPL if it's not running already.
+
+<localleader>cS          Stop any existing Scheme REPL.
+
+==============================================================================
+CONFIGURATION                      *conjure-client-scheme-stdio-configuration*
+
+All configuration can be set as described in |conjure-configuration|.
+
+                                 *g:conjure#client#scheme#stdio#mapping#start*
+`g:conjure#client#scheme#stdio#mapping#start`
+            Start the Scheme REPL if it's not running already.
+            Default: `"cs"`
+
+                                  *g:conjure#client#scheme#stdio#mapping#stop*
+`g:conjure#client#scheme#stdio#mapping#stop`
+            Stop any existing Scheme REPL.
+            Default: `"cS"`
+
+                                       *g:conjure#client#scheme#stdio#command*
+`g:conjure#client#scheme#stdio#command`
+            Command used to start the Scheme REPL, you can modify this to add
+            arguments or change the command entirely.
+
+            When using a different REPL you'll probably have to change the
+            `prompt_pattern` too! Have a look at the default REPL output and
+            write a Lua pattern that will match that prompt string as best as
+            you can.
+
+            Default: `"mit-scheme"`
+
+                                *g:conjure#client#scheme#stdio#prompt_pattern*
+`g:conjure#client#scheme#stdio#prompt_pattern`
+            Lua pattern to identify a new REPL prompt. This match signals to
+            Conjure that the previous evaluation is complete and we're ready
+            to submit more code as well as collect all output prior to the
+            marker as the result.
+            Default: `"[%]e][=r]r?o?r?> "`
+
+                          *g:conjure#client#scheme#stdio#value_prefix_pattern*
+`g:conjure#client#scheme#stdio#value_prefix_pattern`
+            Lua pattern to identify a value output as opposed to a printed,
+            non-code, string. This is mostly only useful with `mit-scheme`
+            which prefixes values with `Value:`, for other REPLs (such as
+            Chez) you should either adapt this pattern to their value string
+            or set it to `v:false` to turn it off entirely and treat
+            everything as a value.
+            Default: `"^;Value: "`
+
+vim:tw=78:sw=2:ts=2:ft=help:norl:et:listchars=
