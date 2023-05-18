@@ -95,9 +95,18 @@ let g:conjure#filetype#markdown = 'conjure.client.clojure.nrepl'
 let g:sexp_filetypes = 'clojure,scheme,lisp,timl'
 let g:conjure#client#clojure#nrepl#connection#auto_repl#enabled = v:false
 
+" vim-pandoc and vim-pandoc-syntax
+
 " Uncomment to use vim-markdown for formatting
 " let g:pandoc#filetypes#handled = ["pandoc", "markdown"]
 " let g:pandoc#filetypes#pandoc_markdown = 0
+
+let g:pandoc#folding#fdc=0
+" let g:pandoc#syntax#conceal#urls=1
+
+let g:pandoc#folding#mode='stacked'
+let g:pandoc#modules#enabled=['yaml', 'bibliographies', 'completion', 'command', 'folding', 'formatting', 'indent', 'menu', 'metadata', 'keyboard', 'toc', 'spell', 'hypertext']
+
 
 " This doesn't seem to work
 let g:markdown_fenced_languages = ['clojure', 'python', 'ruby']
@@ -529,10 +538,6 @@ nmap <leader>vv :!pandoc -t html+smart -M title:'Pandoc Generated - "%"' --stand
 nmap <leader>vtv :!pandoc -t html+smart -M title:'Pandoc Generated - "%"' --toc --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/pandoc.css "%" \|bcat<cr><cr>
 nmap <leader>vp :!pandoc -t html+smart -M title:'Pandoc Generated - "%"' --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/buttondown.css "%" \|bcat<cr><cr>
 nmap <leader>vtp :!pandoc -t html+smart -M title:'Pandoc Generated - "%"' --toc --standalone --self-contained --data-dir %:p:h -c ~/.dotfiles/css/buttondown.css "%" \|bcat<cr><cr>
-
-" vim-pandoc and vim-pandoc-syntax
-let g:pandoc#folding#fdc=0
-" let g:pandoc#syntax#conceal#urls=1
 
 " clojure rainbow parens
 let g:rainbow_active = 1
