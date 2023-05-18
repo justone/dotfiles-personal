@@ -318,3 +318,7 @@
 	url = https://github.com/vim-ruby/vim-ruby.git
 	path = .vim/bundle/vim-ruby
 	branch = master
+[subtree ".vim/bundle/conjure"]
+	url = https://github.com/olical/conjure.git
+	path = .vim/bundle/conjure
+	branch = master
