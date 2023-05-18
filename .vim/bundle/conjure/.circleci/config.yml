@@ -1,0 +1,9 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: olical/aniseed-circleci:1.1.0
+    steps:
+      - checkout
+      - run: make deps
+      - run: make test

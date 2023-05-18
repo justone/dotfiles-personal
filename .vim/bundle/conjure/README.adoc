@@ -1,0 +1,146 @@
+++++
+<p align="center"><a href="https://www.etsy.com/uk/shop/MysticalScribbles?ref=profile_header"><img src="https://conjure.fun/images/lillian.png"/></a></p>
+++++
+
+== https://oli.me.uk/conversational-software-development/[Conversational software development] for https://neovim.io[Neovim] +
+https://conjure.fun/discord[image:https://img.shields.io/discord/732957595249410108.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2[Discord]]
+
+Conjure is an interactive environment for evaluating code within your running program.
+
+The core features of Conjure are language agnostic (although it's targeted at Lisps _for now_), with each language client providing their own extra tools. Here's the currently supported languages, contributions and 3rd party plugins that add clients are highly encouraged! You can find a https://github.com/Olical/conjure/wiki/Client-features[comparison table for all clients and supported features] in the wiki.
+
+ * https://clojure.org/[Clojure] over https://nrepl.org/[nREPL] (https://github.com/Olical/conjure/wiki/Quick-start:-Clojure[quickstart])
+ * https://fennel-lang.org/[Fennel] inside Neovim via Lua and https://github.com/Olical/aniseed[Aniseed] (https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(Aniseed)[quickstart])
+ * https://fennel-lang.org[Fennel] outside of Neovim within any Lua process through an stdio REPL (https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(stdio)[quickstart])
+ * https://janet-lang.org/[Janet] over https://github.com/janet-lang/spork/#networked-repl[spork/netrepl] (https://github.com/Olical/conjure/wiki/Quick-start:-Janet-(netrepl)[quickstart])
+ * https://racket-lang.org/[Racket] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Racket-(stdio)[quickstart])
+ * https://docs.hylang.org[Hy] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Hy-(stdio)[quickstart])
+ * https://www.gnu.org/software/mit-scheme/[Scheme] (MIT by default) over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Scheme-(stdio)[quickstart])
+ * https://www.gnu.org/software/guile/[Guile] over a socket file (https://github.com/Olical/conjure/wiki/Quick-start:-Guile-(socket)[quickstart])
+ * https://lisp-lang.org/[Common Lisp] over https://www.cliki.net/SWANK[Swank] (https://github.com/Olical/conjure/wiki/Quick-start:-Common-Lisp-(Swank)[quickstart])
+ * https://julialang.org/[Julia] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Julia-(stdio)[quickstart])
+ * https://www.rust-lang.org/[Rust] over stdio with https://github.com/google/evcxr[evcxr] (https://github.com/Olical/conjure/wiki/Quick-start:-Rust-(evcxr)[quickstart])
+ * https://www.lua.org/[Lua] inside Neovim (https://github.com/Olical/conjure/wiki/Quick-start:-Lua-(neovim)[quickstart])
+ * https://www.python.org/[Python] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Python-(stdio)[quickstart])
+
+You can learn more about the mappings and configuration inside Neovim with `:help conjure`. Each language client also has it's own specific help text under `:help conjure-client-{LANGUAGE}-{TRANSPORT}`, such as `:help conjure-client-clojure-nrepl`, which contains specific mappings and configuration for that client.
+
+You can also get an interactive guide to the core principals and mappings by executing `:ConjureSchool` or by using the "try before you install" script as described further down this page.
+
+== User experience
+
+What does wielding Conjure actually look like? What can you do with it?
+
+ * YouTube: https://youtu.be/ZSwbiZhvMdQ[How I use Conjure and Neovim to interact with Clojure (and more!)]
+ * Asciinema (see below)
+
+https://asciinema.org/a/325517[image:https://asciinema.org/a/325517.svg[asciicast]]
+
+ * Open a file of a supported file type such as `clojure` or `racket`.
+ * Some languages, such as Clojure, will automatically connect to your REPL or give you the commands and mappings to do so yourself.
+ * Use various mappings to execute the code you're interested in such as the current form, file, buffer or even form at a Neovim mark.
+ * Every result is kept in a log buffer that you can access at any time.
+ * Support for multiple asynchronous autocompletion frameworks, with https://github.com/Shougo/deoplete.nvim/[deoplete] built in (`<C-x><C-o>` also works!).
+ ** You can also use https://github.com/hrsh7th/nvim-cmp[nvim-cmp] with https://github.com/PaterJason/cmp-conjure[cmp-conjure]. (which I actually recommend!)
+
+Conjure allows you to send the right part of your code off for evaluation, see the results, wrap the results in more code and evaluate that. It keeps a log of your actions and results so you don't have to remember them, that context is extremely helpful when you're down the rabbit hole of a bug hunt.
+
+Evaluating a form under your cursor is as simple as `<prefix>ee`, where `<prefix>` defaults to `<localleader>`. Be sure to set your your `<localleader>` key or configure Conjure to use a different mapping prefix, see `:h maplocalleader` and `:h g:conjure#mapping#prefix` for more information.
+
+The goal is to give you a tool that lets you effortlessly run whatever you need to while keeping out of your way (but there with context and more information if you need it).
+
+Once installed you can run `:ConjureSchool` to begin an interactive tutorial.
+
+== Try without installing
+
+You can trial run Conjure with the interactive `:ConjureSchool` tutorial without actually installing it! The only prerequisites are `curl` and an up to date `nvim`.
+
+[source,bash]
+----
+curl -fL conjure.fun/school | sh
+----
+
+This will temporarily download the plugin, launch Neovim with `:ConjureSchool` running and then clean up after itself. You get to try out what Conjure has to offer without having to edit your Neovim configuration.
+
+== Installation
+
+Requires Neovim 0.7 or newer.
+
+Alternatively you can use https://github.com/Olical/magic-kit[Magic Kit], an opinionated starter kit that includes all sorts of essential tools.
+
+=== https://github.com/wbthomason/packer.nvim[packer.nvim]
+
+[source,lua]
+----
+use 'Olical/conjure'
+----
+
+=== https://github.com/junegunn/vim-plug[vim-plug]
+
+[source,viml]
+----
+Plug 'Olical/conjure'
+----
+
+== Mods
+
+Modifications or mods are extra plugins that improve Conjure in various ways. They may add completion plugin support, entire language clients or new mappings that do fun and interesting things. You can learn about creating your own by reading the source code of the projects listed below as well as https://github.com/Olical/conjure/wiki/Using-Conjure-programatically-(API)["Using Conjure programatically (API)"] and https://github.com/Olical/conjure/wiki/Client-features["Client features"].
+
+ * https://github.com/jlesquembre/coc-conjure[jlesquembre/coc-conjure]: Conjure completion support for https://github.com/neoclide/coc.nvim[coc.nvim].
+ * https://github.com/PaterJason/cmp-conjure[PaterJason/cmp-conjure]: https://github.com/hrsh7th/nvim-cmp[nvim-cmp] source for Conjure.
+ * https://gitlab.com/invertisment/conjure-clj-additions-cider-nrepl-mw[Invertisment/conjure-clj-additions-nrepl]: Jump to failing Clojure test and more.
+ * https://gitlab.com/invertisment/conjure-clj-additions-vanilla[Invertisment/conjure-clj-additions-vanilla]: Jump to failing Clojure test for Conjure when not using nREPL.
+
+== Tree sitter support
+
+____
+Warning! If you want to work with ANY language that isn't a Lisp dialect you will need to use tree sitter. If you do not use tree sitter only visual selection and vim motion based evaluations will work. You _need_ tree sitter if you wish to evaluate non Lisp languages with `<prefix>ee` and other such form based evaluation mappings.
+____
+
+When you ask Conjure to evaluate the form under your cursor it has to understand the code enough to be able to find the boundaries and extract the right characters from the buffer. This used to be done using Neovim's built in `findpairpos`, syntax highlighting regexes and exhaustive searching of the buffer. This is error prone, gets slow as the buffer grows and doesn't work with non-Lisp languages which lack clear boundaries.
+
+I highly recommend you set up tree sitter inside your Neovim configuration and `:TSInstall [language]` every language you're interested in working with. You should then keep those tree sitter modules up to date as you upgrade Neovim since the API seems to change slightly over time.
+
+Tree sitter allows you to work with non-Lisp languages like Julia as well as get far more accurate, smart and performant evaluations in languages like Clojure. You can learn more and get everything set up using the https://github.com/nvim-treesitter/nvim-treesitter[nvim-treesitter] repository.
+
+It's technically optional since Conjure contains legacy fallback code, but I highly recommend tree sitter when using Conjure, it's how you get cool things like smart comment block evaluations in Clojure and form based evaluations in Julia and Lua.
+
+== Getting started
+
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Clojure[Clojure (JVM)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Clojure-(babashka)[Clojure (babashka)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-ClojureScript-(shadow-cljs)[ClojureScript (shadow-cljs)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Janet-(netrepl)[Janet (netrepl)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(Aniseed)[Fennel (Aniseed)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(stdio)[Fennel (stdio)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Racket-(stdio)[Racket (stdio)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Hy-(stdio)[Hy (stdio)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Scheme-(stdio)[Scheme (stdio)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Guile-(socket)[Guile (socket)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Common-Lisp-(Swank)[Common Lisp (Swank)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Rust-(evcxr)[Rust (evcxr)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Lua-(neovim)[Lua (neovim)]
+ * https://github.com/Olical/conjure/wiki/Quick-start:-Python-(stdio)[Python (stdio)]
+ * https://github.com/Olical/conjure/wiki/Frequently-asked-questions[Frequently asked questions]
+
+All further documentation is found within link:doc/conjure.txt[`:help conjure`]. You can also use `:ConjureSchool` to get an interactive introduction to the workflow and mappings Conjure provides.
+
+Please do get in touch via https://conjure.fun/discord[Discord] or https://twitter.com/OliverCaldwell[Twitter] if you have any questions or issues.
+
+Broader documentation can be found in the https://github.com/Olical/conjure/wiki[Conjure wiki], there you'll find blog posts and guides that will help you get common workflows up and running. Contributions are encouraged!
+
+== Behind the curtain
+
+Conjure is written entirely in Lua (no VimL or external processes!) which is compiled from https://fennel-lang.org/[Fennel] by https://github.com/Olical/aniseed[Aniseed] ahead of time. Check out link:CONTRIBUTING.adoc[`CONTRIBUTING.adoc`] for more on how to work on Conjure using itself.
+
+Historically, Conjure was Clojure specific with an entirely different implementation, you can still find that version on the https://github.com/Olical/conjure/tree/legacy-jvm[legacy-jvm branch].
+
+== Unlicenced
+
+Find the full http://unlicense.org/[unlicense] in the `UNLICENSE` file, but here's a snippet.
+
+____
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this software, either in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and by any means.
+____

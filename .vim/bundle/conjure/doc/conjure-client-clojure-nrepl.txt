@@ -1,0 +1,487 @@
+                                                *conjure-client-clojure-nrepl*
+
+==============================================================================
+CONTENTS                               *conjure-client-clojure-nrepl-contents*
+
+    1. Introduction ........ |conjure-client-clojure-nrepl-introduction|
+    2. Mappings ................ |conjure-client-clojure-nrepl-mappings|
+    3. Configuration ...... |conjure-client-clojure-nrepl-configuration|
+    4. Hooks .                ..... |conjure-client-clojure-nrepl-hooks|
+
+==============================================================================
+INTRODUCTION                       *conjure-client-clojure-nrepl-introduction*
+
+Conjure supports Clojure evaluation over an nREPL connection with optional
+CIDER middleware for additional features. The `vim-jack-in` plugin can make
+starting an nREPL server from within Neovim trivial, I highly recommend it.
+
+ * https://nrepl.org
+ * https://docs.cider.mx/cider-nrepl/
+ * https://github.com/clojure-vim/vim-jack-in
+
+To get started you can boot an nREPL server and ensure the port was written to
+the `.nrepl-port` file. Once it's running all you need to do is open a Clojure
+file and start evaluating forms using the generic |conjure-mappings|.
+
+Please note that the CIDER middleware is required for completion in Clojure
+and ClojureScript.
+
+==============================================================================
+MAPPINGS                               *conjure-client-clojure-nrepl-mappings*
+
+These mappings are the defaults, you can change them as described in
+|conjure-mappings| and |conjure-configuration|. You'll also find a few
+commands in here, feel free to set up your own project specific mappings that
+call out to them.
+
+See |conjure-client-clojure-nrepl-configuration| for specific configuration
+options relevant to these mappings.
+
+:ConjureConnect [host] [port]
+                         Connect to the given host and port. The host defaults
+                         to `clojure.nrepl/connection.default-host`. When no
+                         arguments are provided it'll attempt to connect to a
+                         port file.
+                         `:ConjureConnect staging.my-app.com 5678`
+                         `:ConjureConnect 5678`
+                         `:ConjureConnect`
+
+                                                        *:ConjureShadowSelect*
+:ConjureShadowSelect [build]
+                         Select a shadow-cljs build for evaluation within this
+                         session. Calls through to the
+                         `shadow.cljs.devtools.api/nrepl-select` function.
+                         `:ConjureShadowSelect my-app`
+                         https://github.com/thheller/shadow-cljs
+
+                                                          *:ConjurePiggieback*
+:ConjurePiggieback [code]
+                         Piggieback your current session on top of a
+                         ClojureScript evaluation environment. You must
+                         provide some code to evaluate that returns a REPL
+                         environment. This can be used to connect to
+                         figwheel-main or nodejs etc.
+                         `:ConjurePiggieback (cljs.repl.node/repl-env)`
+                         `:ConjurePiggieback (figwheel.main.api/repl-env "dev")`
+                         Calls through to `cider.piggieback/cljs-repl`.
+                         https://github.com/nrepl/piggieback
+
+                                                        *:ConjureOutSubscribe*
+:ConjureOutSubscribe     Change `#'*out*` so that it also prints to active
+                         sessions, even outside an eval scope.
+
+                                                      *:ConjureOutUnsubscribe*
+:ConjureOutUnsubscribe   Change `#'*out*` so that it no longer prints to
+                         active sessions outside an eval scope.
+
+                                                        *:ConjureCljDebugInit*
+:ConjureCljDebugInit     Initialise the CIDER debugger system, this must be
+                         done before any breakpoints will be triggered. Once
+                         done, you can add `#dbg` tags to your code and
+                         evaluate it to have CIDER pause the execution.
+
+                                                       *:ConjureCljDebugInput*
+:ConjureCljDebugInput [input]
+                         Send a response to the CIDER debugger after it has
+                         prompted you for input. You'll see the possible
+                         inputs when the debugger is triggered such as
+                         `locals` which will print the current local values
+                         and then prompt again.
+
+<localleader>cd          Disconnect from the current nREPL server.
+
+<localleader>cf          Connect to a server using the port found in any of
+                         the files specified by
+                         `clojure.nrepl/connection.port-files`.
+
+<localleader>ei          Interrupt the oldest evaluation you have running.
+
+<localleader>ve          View the last exception as data.
+
+<localleader>v1          View the most recent evaluation result.
+
+<localleader>v2          View the 2nd most recent evaluation result.
+
+<localleader>v3          View the 3rd most recent evaluation result.
+
+<localleader>vs          View the source of the symbol under the cursor.
+
+<localleader>sc          Clone the current nREPL session.
+
+<localleader>sf          Create a fresh session from scratch.
+
+<localleader>sq          Close the current session.
+
+<localleader>sQ          Close all sessions.
+
+<localleader>sl          List all sessions.
+
+<localleader>sn          Assume the next session in the list.
+
+<localleader>sp          Assume the previous session in the list.
+
+<localleader>ss          Prompt to select any session in the list.
+
+<localleader>ta          Run all currently loaded tests.
+
+<localleader>tn          Run all tests within this namespace.
+
+<localleader>tN          Run all tests within the alternate namespace to this
+                         one. So if you're in `foo.bar` that would be
+                         `foo.bar-test` and if you're in `foo.bar-test` it
+                         would be `foo.bar`.
+
+<localleader>tc          Run the specific test under the cursor. You can
+                         execute this from anywhere in the form much like
+                         evaluating the root form under the cursor.
+
+<localleader>rr          Refresh all changed namespaces.
+
+<localleader>ra          Refresh all namespaces, even unchanged.
+
+<localleader>rc          Clear the namespace refresh cache.
+
+==============================================================================
+CONFIGURATION                     *conjure-client-clojure-nrepl-configuration*
+
+All configuration can be set as described in |conjure-configuration|.
+
+                      *g:conjure#client#clojure#nrepl#connection#default_host*
+`g:conjure#client#clojure#nrepl#connection#default_host`
+            When connecting to port files or via `:ConjureConnect` this is the
+            default host to use.
+            Default: `"localhost"`
+
+                        *g:conjure#client#clojure#nrepl#connection#port_files*
+`g:conjure#client#clojure#nrepl#connection#port_files`
+            List of file paths to check when starting up or hitting
+            `<localleader>cf` (by default). They're checked in order, the
+            first file to exist has it's contents parsed as a number.
+            Conjure will then connect to that port at the host specified by
+            `connection.default-host`.
+            Conjure checks every directory above your current one as well as
+            `~/.config/conjure`, so you can place a default `.nrepl-port`
+            file in there to always have a default port to attempt.
+            Default: `[".nrepl-port" ".shadow-cljs/nrepl.port"]`
+
+                 *g:conjure#client#clojure#nrepl#connection#auto_repl#enabled*
+`g:conjure#client#clojure#nrepl#connection#auto_repl#enabled`
+            Start the "auto-repl" process when Conjure tries to connect to an
+            existing nREPL and can't find any candidates. Useful for getting
+            into some sort of REPL environment quickly without having to
+            manage external processes.
+            Default: `true`
+
+                 *g:conjure#client#clojure#nrepl#connection#auto_repl#hidden*
+`g:conjure#client#clojure#nrepl#connection#auto_repl#hidden`
+            If your workflow is sensitive to open buffers you may notice that
+            the auto REPL opens a new terminal buffer for you to interact with
+            (or kill!) where required. If you don't need to interact with it,
+            ever, and want your buffer list as clean as possible you can set
+            this to true to hide it.
+            Default: `false`
+
+                     *g:conjure#client#clojure#nrepl#connection#auto_repl#cmd*
+`g:conjure#client#clojure#nrepl#connection#auto_repl#cmd`
+            The command to execute when starting the auto-repl. By default we
+            start a Babashka (if you have it installed) nREPL server on random
+            ports until one works. https://babashka.org/
+
+            This can be configured to start any kind of nREPL automatically
+            when required. Use `$port` to tell Conjure where the randomly
+            selected open port should go in the command.
+
+            If you don't specify a port we assume the REPL will create a
+            port file and we'll just rely on that for the connection, so
+            Conjure won't mess with the port file.
+            Default: `"bb nrepl-server localhost:$port"`
+
+               *g:conjure#client#clojure#nrepl#connection#auto_repl#port_file*
+`g:conjure#client#clojure#nrepl#connection#auto_repl#port_file`
+            When set, the selected port will be written to the port file when
+            the auto-repl starts up. It'll also be deleted on exit if the port
+            contained within the file is still the same as the selected port.
+
+            Only used if you used the `$port` variable in your `cmd` setting.
+            Default: `".nrepl-port"`
+
+                            *g:conjure#client#clojure#nrepl#eval#pretty_print*
+`g:conjure#client#clojure#nrepl#eval#pretty_print`
+            Should results be pretty printed by the nREPL server.
+            Relies on `clojure.pprint/write`.
+            Default: `true`
+
+                                 *g:conjure#client#clojure#nrepl#eval#raw_out*
+`g:conjure#client#clojure#nrepl#eval#raw_out`
+            Don't prefix stdout lines with `; (out)`, useful if you print data a
+            lot and don't want to have to strip the comment prefixes each
+            time.
+            Default: `false`
+
+                             *g:conjure#client#clojure#nrepl#eval#print_quota*
+`g:conjure#client#clojure#nrepl#eval#print_quota`
+            A hard limit on the number of bytes printed for each value.
+            Default: `nil`
+
+                       *g:conjure#client#clojure#nrepl#eval#print_buffer_size*
+`g:conjure#client#clojure#nrepl#eval#print_buffer_size`
+            The size of the buffer to use when streaming results. Defaults to
+            1024 within nREPL itself. You can increase this value to reduce
+            the amount of messages large results are split up into by nREPL.
+            Default: `nil`
+
+                          *g:conjure#client#clojure#nrepl#eval#print_function*
+`g:conjure#client#clojure#nrepl#eval#print_function`
+            A fully-qualified symbol naming a var whose function to use for
+            printing.
+            Must point to a function with signature [value writer options].
+            Default: `"conjure.internal/pprint"`
+
+                            *g:conjure#client#clojure#nrepl#eval#auto_require*
+`g:conjure#client#clojure#nrepl#eval#auto_require`
+            Automatically require the namespace of any new buffer you open, or
+            your current buffer after connection. This ensures buffers you're
+            editing are loaded. Can cause side effects you weren't expecting
+            if you have side effects at the top level of your namespace.
+            Default: `true`
+
+                     *g:conjure#client#clojure#nrepl#eval#print_options#level*
+`g:conjure#client#clojure#nrepl#eval#print_options#level`
+            Elide data in the output that surpasses this level of depth with
+            the pretty printer. Set it to `false` to disable this limit.
+            Default: `50`
+
+                    *g:conjure#client#clojure#nrepl#eval#print_options#length*
+`g:conjure#client#clojure#nrepl#eval#print_options#length`
+            Elide data in the output that surpasses this many items, great for
+            preventing infinite lazy sequences from melting your CPU. Set it
+            to `false` to disable this limit.
+            Default: `500`
+
+                       *g:conjure#client#clojure#nrepl#interrupt#sample_limit*
+`g:conjure#client#clojure#nrepl#interrupt#sample_limit`
+            How many characters to show of the code you just interrupted as a
+            preview in the log. The value is based on a percentage of the
+            width of the full editor.
+            Default: `0.3`
+
+                                *g:conjure#client#clojure#nrepl#refresh#after*
+`g:conjure#client#clojure#nrepl#refresh#after`
+            The namespace-qualified name of a zero-arity function to call
+            after reloading.
+            Default: `nil`
+
+                               *g:conjure#client#clojure#nrepl#refresh#before*
+`g:conjure#client#clojure#nrepl#refresh#before`
+            The namespace-qualified name of a zero-arity function to call
+            before reloading.
+            Default: `nil`
+
+                                 *g:conjure#client#clojure#nrepl#refresh#dirs*
+`g:conjure#client#clojure#nrepl#refresh#dirs`
+            List of directories to scan. If no directories given, defaults to
+            all directories on the classpath.
+            Default: `nil`
+
+                      *g:conjure#client#clojure#nrepl#test#current_form_names*
+`g:conjure#client#clojure#nrepl#test#current_form_names`
+            List of keywords that are used to decide if the
+            current root form is a test that should be ran.
+            Default: `["deftest"]`
+
+                                  *g:conjure#client#clojure#nrepl#test#runner*
+`g:conjure#client#clojure#nrepl#test#runner`
+            Test runner to use for the various test mappings. The following
+            are supported:
+             * `"clojure"`
+             * `"clojurescript" (cljs.test instead of clojure.test)`
+             * `"kaocha"`
+            More can be added through contributions where required.
+            Default: `"clojure"`
+
+                                 *g:conjure#client#clojure#nrepl#test#raw_out*
+`g:conjure#client#clojure#nrepl#test#raw_out`
+            Don't prefix test output lines with `; (out)`, useful if you want
+            to work with the test results to understand why something doesn't
+            match your expected data structure, for example.
+            Default: `false`
+
+                             *g:conjure#client#clojure#nrepl#test#call_suffix*
+`g:conjure#client#clojure#nrepl#test#call_suffix`
+            Overrides the string appended to the end of the test runner
+            function calls. This isn't used by default for the `clojure` test
+            runner, for `kaocha` this is how you can override the
+            configuration map.
+
+            For `koacha` the default is `"{:kaocha/color? false}"`, you can
+            replace this to change the configuration file:
+            >
+              "{:kaocha/color? false, :config-file \"tests.local.edn\""}
+<
+            This string is inserted into the code as is, so you can insert
+            Clojure code to add conditional logic (feel free to get creative).
+
+            Default: `nil`
+
+                           *g:conjure#client#clojure#nrepl#mapping#disconnect*
+`g:conjure#client#clojure#nrepl#mapping#disconnect`
+            Disconnect from the current nREPL server.
+            Default: `cd`
+
+                    *g:conjure#client#clojure#nrepl#mapping#connect_port_file*
+`g:conjure#client#clojure#nrepl#mapping#connect_port_file`
+            Connect to a local server via a port file.
+            Default: `cf`
+
+                            *g:conjure#client#clojure#nrepl#mapping#interrupt*
+`g:conjure#client#clojure#nrepl#mapping#interrupt`
+            Interrupt an evaluation.
+            Default: `ei`
+
+                       *g:conjure#client#clojure#nrepl#mapping#last_exception*
+`g:conjure#client#clojure#nrepl#mapping#last_exception`
+            View the last exception.
+            Default: `ve`
+
+                             *g:conjure#client#clojure#nrepl#mapping#result_1*
+`g:conjure#client#clojure#nrepl#mapping#result_1`
+            View the most recent result.
+            Default: `v1`
+
+                             *g:conjure#client#clojure#nrepl#mapping#result_2*
+`g:conjure#client#clojure#nrepl#mapping#result_2`
+            View the 2nd most recent result.
+            Default: `v2`
+
+                             *g:conjure#client#clojure#nrepl#mapping#result_3*
+`g:conjure#client#clojure#nrepl#mapping#result_3`
+            View the 3rd most recent result.
+            Default: `v3`
+
+                          *g:conjure#client#clojure#nrepl#mapping#view_source*
+`g:conjure#client#clojure#nrepl#mapping#view_source`
+            View the source of the symbol under the cursor.
+            Default: `vs`
+
+                        *g:conjure#client#clojure#nrepl#mapping#session_clone*
+`g:conjure#client#clojure#nrepl#mapping#session_clone`
+            Clone the current session.
+            Default: `sc`
+
+                        *g:conjure#client#clojure#nrepl#mapping#session_fresh*
+`g:conjure#client#clojure#nrepl#mapping#session_fresh`
+            Create a fresh session.
+            Default: `sf`
+
+                        *g:conjure#client#clojure#nrepl#mapping#session_close*
+`g:conjure#client#clojure#nrepl#mapping#session_close`
+            Close the current session.
+            Default: `sq`
+
+                    *g:conjure#client#clojure#nrepl#mapping#session_close_all*
+`g:conjure#client#clojure#nrepl#mapping#session_close_all`
+            Close all sessions.
+            Default: `sQ`
+
+                         *g:conjure#client#clojure#nrepl#mapping#session_list*
+`g:conjure#client#clojure#nrepl#mapping#session_list`
+            List all current sessions.
+            Default: `sl`
+
+                         *g:conjure#client#clojure#nrepl#mapping#session_next*
+`g:conjure#client#clojure#nrepl#mapping#session_next`
+            Assume the next session in the list.
+            Default: `sn`
+
+                         *g:conjure#client#clojure#nrepl#mapping#session_prev*
+`g:conjure#client#clojure#nrepl#mapping#session_prev`
+            Assume the previous session in the list.
+            Default: `sp`
+
+                       *g:conjure#client#clojure#nrepl#mapping#session_select*
+`g:conjure#client#clojure#nrepl#mapping#session_select`
+            Select a session from the list with an interactive prompt.
+            Default: `ss`
+
+                        *g:conjure#client#clojure#nrepl#mapping#run_all_tests*
+`g:conjure#client#clojure#nrepl#mapping#run_all_tests`
+            Run all loaded tests.
+            Default: `ta`
+
+                 *g:conjure#client#clojure#nrepl#mapping#run_current_ns_tests*
+`g:conjure#client#clojure#nrepl#mapping#run_current_ns_tests`
+            Run all tests within the current namespace.
+            Default: `tn`
+
+               *g:conjure#client#clojure#nrepl#mapping#run_alternate_ns_tests*
+`g:conjure#client#clojure#nrepl#mapping#run_alternate_ns_tests`
+            Run all tests within the alternate namespace. Executing in
+            `foo.bar` would test `foo.bar-test` and the other way around.
+            Default: `tN`
+
+                     *g:conjure#client#clojure#nrepl#mapping#run_current_test*
+`g:conjure#client#clojure#nrepl#mapping#run_current_test`
+            Run the test under the cursor, can be used from anywhere within
+            the form.
+            Default: `tc`
+
+                      *g:conjure#client#clojure#nrepl#mapping#refresh_changed*
+`g:conjure#client#clojure#nrepl#mapping#refresh_changed`
+            Refresh changed namespaces.
+            Default: `rr`
+
+                          *g:conjure#client#clojure#nrepl#mapping#refresh_all*
+`g:conjure#client#clojure#nrepl#mapping#refresh_all`
+            Refresh all namespaces.
+            Default: `ra`
+
+                        *g:conjure#client#clojure#nrepl#mapping#refresh_clear*
+`g:conjure#client#clojure#nrepl#mapping#refresh_clear`
+            Clear the namespace refresh cache.
+            Default: `rc`
+
+                 *g:conjure#client#clojure#nrepl#completion#cljs#use_suitable*
+`g:conjure#client#clojure#nrepl#completion#cljs#use_suitable`
+            Use `clj-suitable` to improve cljs completion.
+            Default: `true`
+
+                      *g:conjure#client#clojure#nrepl#completion#with_context*
+`g:conjure#client#clojure#nrepl#completion#with_context`
+            Extract the root form surrounding the cursor as you type to
+            provide local context aware completions (such as local let block
+            items). This can actually be a huge performance hit on slower
+            machines in large buffers with lots of top level forms.
+            Default: `false`
+
+==============================================================================
+HOOKS                                     *conjure-client-clojure-nrepl-hooks*
+
+See |conjure-hooks| for more general details on hooks and how to use them.
+Below are the hooks that this client defines and their behaviour.
+
+`(client-clojure-nrepl-passive-connect cb)`
+    Called when we don't currently have a connection but the user tried to do
+    something that required one. This will call
+    `conjure.client.clojure.nrepl.action/connect-port-file` providing the
+    callback (`cb`) as an argument to it.
+
+    If you're overriding this then you need to make sure `cb` is called if
+    it's not `nil`.
+
+    The original implementation returns the result of calling
+    `connect-port-file` which you could inspect to work out if a connection
+    attempt was made or not.
+
+    If you wish to check if the connection actually succeeded and didn't just
+    get attempted you'll need to call `connect-port-file` yourself and provide
+    some overrides for `nrepl.connect` under the `connect-opts` key in it's
+    `opts` argument. This allows you to set your own `on-failure` function
+    that replaces the default one from Conjure. In there you can perform
+    different actions such as starting your own REPL or cleaning up port
+    files.
+
+    I suggest you read the original source code for this to get a full
+    understanding, but this should be enough for you to get pretty creative
+    with it.
+
+vim:tw=78:sw=2:ts=2:ft=help:norl:et:listchars=
