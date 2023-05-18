@@ -334,3 +334,7 @@
 	url = https://github.com/m00qek/baleia.nvim.git
 	path = .vim/bundle/baleia.nvim
 	branch = main
+[subtree ".vim/bundle/vim-rest-console"]
+	url = git@github.com:diepm/vim-rest-console.git
+	path = .vim/bundle/vim-rest-console
+	branch = master
