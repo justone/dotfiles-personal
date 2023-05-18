@@ -48,6 +48,10 @@ let g:airline_powerline_fonts = 1
 " for gitgutter
 set updatetime=100
 
+let g:vmt_fence_text = 'MarkdownTOC'
+let g:vmt_fence_closing_text = '/MarkdownTOC'
+let g:vmt_fence_hidden_markdown_style = 'GFM'
+
 " Enable global session caching (for Taboo)
 set sessionoptions+=globals
 " add tab number to tabs
