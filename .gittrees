@@ -322,3 +322,7 @@
 	url = https://github.com/olical/conjure.git
 	path = .vim/bundle/conjure
 	branch = master
+[subtree ".vim/bundle/conjure-efroot"]
+	url = https://github.com/walterl/conjure-efroot.git
+	path = .vim/bundle/conjure-efroot
+	branch = master
