@@ -617,3 +617,19 @@ nnoremap <silent> crcf :call CocRequest('clojure-lsp', 'workspace/executeCommand
 if filereadable(expand("~/.vimrc.local.after"))
     source ~/.vimrc.local.after
 endif
+
+" Possible things to put in ~/.vimrc.local.after
+
+" Enable kaocha in test runner
+" let g:conjure#client#clojure#nrepl#test#call_suffix = '{:kaocha/reporter [kaocha.report/documentation]}'
+" let g:conjure#log#strip_ansi_escape_sequences_line_limit = 0
+" let g:conjure#client#clojure#nrepl#test#runner = 'kaocha'
+" if has('nvim')
+"   let s:baleia = luaeval("require('baleia').setup { line_starts_at = 3 }")
+"   autocmd BufWinEnter conjure-log-* call s:baleia.automatically(bufnr('%'))
+" endif
+
+" augroup disableCocInDiff
+"   autocmd!
+"   autocmd DiffUpdated * let b:coc_enabled=0
+" augroup END
