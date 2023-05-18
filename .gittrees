@@ -326,3 +326,7 @@
 	url = https://github.com/walterl/conjure-efroot.git
 	path = .vim/bundle/conjure-efroot
 	branch = master
+[subtree ".vim/bundle/conjure-macroexpand"]
+	url = git@github.com:walterl/conjure-macroexpand.git
+	path = .vim/bundle/conjure-macroexpand
+	branch = master
