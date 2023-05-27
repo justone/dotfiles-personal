@@ -2,11 +2,13 @@
 
 #_{:clj-kondo/ignore [:namespace-name-mismatch]}
 (ns todoist
-  (:require [cheshire.core :as json]
+  (:require [babashka.deps :as deps]
+            [cheshire.core :as json]
             [clojure.pprint :refer [pprint]]
-            [clojure.string :as string]
-            [clojure.tools.cli :as cli]
             [org.httpkit.client :as http]))
+
+(deps/add-deps '{:deps {io.github.justone/bb-scripts {:sha "861bfc964ef541c4c8f14b880bf98fae90fb8537"}}})
+(require '[lib.script.alpha :as sa])
 
 (def ^:private api-key-name
   "TODOIST_API_TOKEN")
@@ -34,30 +36,10 @@
       (json/decode true)
       pprint))
 
-(def cli-opts
-  [["-P" "--project-id id"
-    :missing "Must supply a project id"]
-   ["-c" "--content CONTENT"
-    :missing "Must supply content"]
-   ["-d" "--description DESC"]
-   ["-l" "--label LABEL"
-    :multi true
-    :default []
-    :update-fn conj]
-   ["-h" "--help"]])
-
-(defn -main
-  [& args]
-  (let [{:keys [options summary errors]} (cli/parse-opts args cli-opts)
-        {:keys [content description label project-id]} options
-        api-key (System/getenv api-key-name)]
+(defn add
+  [{{:keys [content description label project-id]} :options}]
+  (let [api-key (System/getenv api-key-name)]
     (cond
-      (:help options)
-      (println summary)
-
-      errors
-      (throw (ex-info (str (string/join "\n" errors) "\n\n" summary) {:babashka/exit 1}))
-
       (nil? api-key)
       (throw (ex-info (str "API key not found, set the " api-key-name " environment variable.") {:babashka/exit 1}))
 
@@ -73,8 +55,19 @@
                      (json/decode true))]
         (pprint (select-keys todo [:id :created_at :labels :content :description]))))))
 
+(def opts
+  {:cli-options [["-h" "--help" "Show help."]
+                 ["-P" "--project-id id" "Project ID."
+                  :missing "Must supply a project id"]
+                 ["-c" "--content CONTENT" "Content of todo (title)."
+                  :missing "Must supply content"]
+                 ["-d" "--description DESC" "Optional description."]
+                 ["-l" "--label LABEL" "Labels to apply."
+                  :multi true :default [] :update-fn conj] ]
+   :help (str "Add a todo to todoist.\n\nMust set the " api-key-name " environment variable.")})
+
 
 (when (= *file* (System/getProperty "babashka.file"))
-  (apply -main *command-line-args*))
+  (add (sa/simple-main opts)))
 
 ; vim: set ft=clojure:
