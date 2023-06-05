@@ -31,15 +31,15 @@
 	od = difftool --tool=opendiff -y
 	unstage = reset HEAD
 	lol = log --oneline --graph --decorate
-	lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
-	lgs = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
-	lgss = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
-	la = "log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
-	las = "log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
-	lass = "log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
-	lr = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
-	lrs = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
-	lrss = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cn) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
+	lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
+	lgs = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
+	lgss = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
+	la = "log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
+	las = "log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
+	lass = "log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
+	lr = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative"
+	lrs = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -12"
+	lrss = "log --exclude \"*stash*\" --exclude \"*/v*-rc*\" --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -6"
 	; from https://stackoverflow.com/a/60875067
 	; stash-index = "!f() { ! git diff --cached --exit-code --quiet && git stash push --quiet --keep-index -m \"temp for stash-index\" && git stash push \"$@\" && git stash pop --quiet stash@{1} && git stash show -p | git apply -R; }; f"
 	; from https://stackoverflow.com/a/60875082
