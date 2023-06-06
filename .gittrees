@@ -338,7 +338,3 @@
 	url = git@github.com:diepm/vim-rest-console.git
 	path = .vim/bundle/vim-rest-console
 	branch = master
-[subtree ".vim/bundle/vim-markdown-toc"]
-	url = git@github.com:diepm/vim-rest-console.git
-	path = .vim/bundle/vim-markdown-toc
-	branch = master
