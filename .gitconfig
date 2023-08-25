@@ -13,8 +13,13 @@
 	br = branch
 	rbr = branch --sort=-committerdate
 	rbrcsv = brcsv --sort=-committerdate
+	brt = "!git rbrcsv | jc --csv-s | tabl -j"
 	cbr = rev-parse --abbrev-ref HEAD
 	rd = !git commit --amend --date=now --no-edit && git show --format=fuller --stat
+	rup = reset --hard @{upstream}
+	lupss = lgss HEAD @{upstream}
+	lups = lgs HEAD @{upstream}
+	lup = lg HEAD @{upstream}
 	st = status
 	ss = status --short
 	ci = commit
