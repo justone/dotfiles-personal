@@ -59,9 +59,11 @@
 (def kubectl-cmd (or (which "kubectl")
                      (which "microk8s.kubectl")))
 
+(def extra-kubectl (atom []))
+
 (defn kubectl-data
   [& args]
-  (let [result (apply sh/sh kubectl-cmd args)]
+  (let [result (apply sh/sh kubectl-cmd (concat @extra-kubectl args))]
     (if (zero? (:exit result))
       result
       (throw (ex-info (:err result) result)))))
@@ -70,7 +72,7 @@
 
 (defn run-kubectl
   [& args]
-  (let [cmd (cons kubectl-cmd args)
+  (let [cmd (concat [kubectl-cmd] @extra-kubectl args)
         _ (perr (string/join " " cmd))
         pb (doto (ProcessBuilder. cmd)
              (.inheritIO))
@@ -304,7 +306,7 @@
 (defn calculate-age
   [start now]
   (-> (Duration/ofMillis (.until start now ChronoUnit/MILLIS))
-      (.truncatedTo ChronoUnit/MINUTES)
+      ; (.truncatedTo ChronoUnit/MINUTES)
       format-duration))
 
 (defn extract-version
@@ -392,10 +394,19 @@
   [{:name :name :align :left}
    {:name :doc :align :left}])
 
+(def cli-options
+  [["-c" "--context CONTEXT" "Specify context to use"]])
+
 (defn -main [& args]
-  (let [[subcommand & subargs] args
+  (let [
+        parsed (parse-opts args cli-options :in-order true)
+        {:keys [options arguments]} parsed
+        {:keys [context]} options
+        [subcommand & subargs] arguments
         fns (fuzzy-filter subcommand :name subcommands)
         chosen-fn (some-> fns first :fn)]
+    (when context
+      (reset! extra-kubectl ["--context" context]))
     (if (= 1 (count fns))
       (chosen-fn subargs)
       (if (and (< 0 (count args)) (< 1 (count fns)))
