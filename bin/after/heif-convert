@@ -1,0 +1,11 @@
+#!/usr/bin/env holen
+---
+desc: Convert HEIF to JPG
+strategies:
+    docker:
+        image: heif-convert:{{.Version}}
+        mount_pwd: true
+        pwd_workdir: true
+        run_as_user: true
+        versions:
+          - version: 'latest'
