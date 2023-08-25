@@ -2,16 +2,19 @@
 
 (ns k
   (:require
+    [babashka.deps :as deps]
     [babashka.pods :as pods]
     [cheshire.core :as json]
-    [clojure.java.shell :as sh]
-    [clojure.pprint :refer [pprint print-table]]
     [clj-yaml.core :as yaml]
+    [clojure.java.io :as io]
+    [clojure.java.shell :as sh]
     [clojure.string :as string]
-    [clojure.tools.cli :refer [parse-opts]]
-            )
+    [clojure.tools.cli :refer [parse-opts]])
 (:import (java.time Duration OffsetDateTime)
          (java.time.temporal ChronoUnit)))
+
+(deps/add-deps '{:deps {io.github.justone/bb-scripts {:sha "405061f90fd567c1ade5bdc4b8b5c70faca7eb6d"}}})
+(require '[lib.highlight :as highlight])
 
 (pods/load-pod "tabl")
 (require '[pod.tabl.doric :as doric])
@@ -263,12 +266,9 @@
   (let [deployments (->> (raw-deployments)
                          (map raw-deployment->deployment)
                          (fuzzy-filter (first args) :metadata/name))
-        deployment-name (some->> deployments first :metadata/name (str "deployment.v1.apps/"))]
+        deployment-name (some->> deployments first :metadata/name)]
     (if (= 1 (count deployments))
-      (do
-        (.waitFor (run-kubectl "scale" deployment-name "--replicas" "0"))
-        (Thread/sleep 1000)
-        (.waitFor (run-kubectl "scale" deployment-name "--replicas" "1")))
+      (.waitFor (run-kubectl "rollout" "restart" "deployment" deployment-name))
       (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
     nil))
 
@@ -324,7 +324,7 @@
   (let [{:keys [containers]} pod
         app-containers (remove (comp non-app-containers :container/name) containers)]
     {:name (:metadata/app pod)
-     :raw-name (:metadata/name pod)
+     :full-name (:metadata/name pod)
      :version (-> (or (find-container :api app-containers) (find-container :frontend app-containers) (first app-containers))
                   :container/image
                   extract-version)
@@ -334,7 +334,7 @@
 
 (def columns-pods
   [{:name :name :align :left}
-   {:name :raw-name :align :left}
+   {:name :full-name :align :left}
    {:name :version :align :left}
    {:name :state :align :left}
    {:name :age :align :left}
@@ -347,7 +347,10 @@
          (map raw-pod->pod)
          ; (filter :node/ip)
          (map (partial prep-pod now))
-         (doric/print-table columns-pods)))
+         (doric/table {:format 'tabl.format.k8s} columns-pods)
+         (string/split-lines)
+         (map #(highlight/add % #"Pending|Running|Failed" {:explicit {"Failed" 160 "Pending" 128 "Running" 34}}))
+         (run! println)))
   nil)
 
 ;; Pick context
