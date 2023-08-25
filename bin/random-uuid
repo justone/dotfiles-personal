@@ -1,0 +1,3 @@
+#!/bin/sh
+
+bb -e '(print (str (java.util.UUID/randomUUID)))'
