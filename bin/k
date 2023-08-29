@@ -73,9 +73,13 @@
 
 #_(kubectl-data "-o" "json" "get" "pod")
 
+(defn kubectl-raw-cmd
+  [& args]
+  (concat [kubectl-cmd] @extra-kubectl args))
+
 (defn run-kubectl
   [& args]
-  (let [cmd (concat [kubectl-cmd] @extra-kubectl args)
+  (let [cmd (apply kubectl-raw-cmd args)
         _ (perr (string/join " " cmd))
         pb (doto (ProcessBuilder. cmd)
              (.inheritIO))
@@ -166,6 +170,7 @@
     [(nth coll pick)]
     coll))
 
+
 ;; Describe
 
 (def describe-opts
@@ -181,18 +186,20 @@
         pods (->> (raw-pods)
                   (map raw-pod->pod)
                   (filter :node/ip)
-                  (fuzzy-filter (first arguments) :metadata/app)
+                  (fuzzy-filter (first arguments) :metadata/name)
                   (pick-nth pick))]
     (if (= 1 (count pods))
       (.waitFor (run-kubectl "describe" "pod" (-> pods first :metadata/name)))
-      (println "Too many matches:" (string/join ", " (map :metadata/app pods))))
+      (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
     nil))
+
 
 ;; Exec
 
 (def exec-opts
   [["-c" "--container CONT" "Container to select"]
-   ["-p" "--pick N" "Follow nth pod"]])
+   ["-p" "--pick N" "Follow nth pod"]
+   ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn find-container
   [k containers]
@@ -202,21 +209,34 @@
   [args]
   (let [parsed (parse-opts args exec-opts)
         {:keys [options arguments]} parsed
-        pick (some-> options :pick parse-long dec)
+        {:keys [pick container xpanes]} options
+        pick (some-> pick parse-long dec)
         pods (->> (raw-pods)
                   (map raw-pod->pod)
                   (filter :node/ip)
-                  (fuzzy-filter (first arguments) :metadata/app)
+                  (fuzzy-filter (first arguments) :metadata/name)
                   (pick-nth pick))
         first-pod (first pods)
-        {:keys [containers]} first-pod
-        container (or (find-container (keyword (:container options)) containers)
-                      (find-container :api containers)
-                      (find-container :frontend containers)
-                      (first containers))]
-    (if (= 1 (count pods))
-      (.waitFor (apply run-kubectl "exec" "-it" (-> pods first :metadata/name) "-c" (name (:container/name container)) "--" (rest arguments)))
-      (println "Too many matches:" (string/join ", " (map :metadata/app pods))))
+        container-name (fn [pod]
+                         (let [{:keys [containers]} pod
+                               container (or (find-container (keyword container) containers)
+                                             (find-container :api containers)
+                                             (find-container :frontend containers)
+                                             (first containers))]
+                           (:container/name container)))]
+
+    (cond
+      xpanes
+      (->> pods
+           (map #(apply kubectl-raw-cmd "exec" "-it" (:metadata/name %) "-c" (name (container-name %)) "--" (rest arguments)))
+           (map #(string/join " " %))
+           (run! println))
+
+      (= 1 (count pods))
+      (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" (rest arguments)))
+
+      :else
+      (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
     nil))
 
 
@@ -234,12 +254,12 @@
   [args]
   (let [parsed (parse-opts args logs-opts)
         {:keys [options arguments]} parsed
-        _ (clojure.pprint/pprint options)
+        ; _ (clojure.pprint/pprint options)
         pick (some-> options :pick parse-long dec)
         pods (->> (raw-pods)
                   (map raw-pod->pod)
                   (filter :node/ip)
-                  (fuzzy-filter (first arguments) :metadata/app)
+                  (fuzzy-filter (first arguments) :metadata/name)
                   (pick-nth pick))
         first-pod (first pods)
         {:keys [containers]} first-pod
@@ -255,7 +275,7 @@
       (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
 
       :else
-      (println "Too many matches:" (string/join ", " (map :metadata/app pods))))
+      (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
     nil))
 
 
@@ -316,7 +336,6 @@
       "N/A (latest)"
       (last image-parts))))
 
-
 (def non-app-containers #{:nginx})
 
 (defn prep-pod
@@ -353,14 +372,6 @@
          (run! println)))
   nil)
 
-;; Pick context
-
-(comment
-  (kubectl-data "-o" "json" "get" "pods")
-
-
-  ; (yaml/)
-  )
 
 ;; Pick context
 
