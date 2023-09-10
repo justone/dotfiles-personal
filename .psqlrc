@@ -16,3 +16,5 @@ set TimeZone = 'America/Los_Angeles';
 -- use :l and :ll to enact these
 \set l '\\pset numericlocale off'
 \set ll '\\pset numericlocale on'
+
+\set PROMPT1 '%[%033[35;1m%]%m:%[%033[;1m%]%/%[%033[33;1m%]%x%[%033[0m%]%R%# '
