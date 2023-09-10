@@ -1,3 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bb
 
-bb -e '(print (str (java.util.UUID/randomUUID)))'
+(print (str (java.util.UUID/randomUUID)))
+
+; vim: set ft=clojure:

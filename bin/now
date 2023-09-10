@@ -1,3 +1,5 @@
 #!/usr/bin/env bb
 
-(System/currentTimeMillis)
+(println (System/currentTimeMillis))
+
+; vim: set ft=clojure:

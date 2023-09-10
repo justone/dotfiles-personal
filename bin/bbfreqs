@@ -7,7 +7,9 @@
 (if-some [predstr (first *command-line-args*)]
   (binding [*print-meta* true]
     (let [pred (eval (read-string predstr))]
-      (run! prn (filter pred user/*input*))))
-  (println "usage: bbf [predicate]"))
+      (->> (frequencies (map pred user/*input*))
+           (map #(hash-map :value (first %) :count (second %)))
+           (run! prn))))
+  (println "usage: bbfreqs [transform-fn]"))
 
 ; vim: set ft=clojure:

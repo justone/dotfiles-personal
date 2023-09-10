@@ -5,6 +5,6 @@
 
 (when (= *file* (System/getProperty "babashka.file"))
   (println (read-line))
-  (apply p/shell {:in *in*} "rg" *command-line-args*))
+  (System/exit (:exit (apply p/shell {:in *in* :continue true} "rg" *command-line-args*))))
 
 ; vim: set ft=clojure:
