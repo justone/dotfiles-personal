@@ -223,8 +223,8 @@
                                              (find-container :api containers)
                                              (find-container :frontend containers)
                                              (first containers))]
-                           (:container/name container)))]
-
+                           (:container/name container)))
+        unique-apps (distinct (map :metadata/app pods))]
     (cond
       xpanes
       (->> pods
@@ -232,8 +232,10 @@
            (map #(string/join " " %))
            (run! println))
 
-      (= 1 (count pods))
-      (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" (rest arguments)))
+      (= 1 (count unique-apps))
+      (do (when (not= 1 (count pods))
+            (perr "Multiple pods detected, selecing first..."))
+          (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" (rest arguments))))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
