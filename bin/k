@@ -26,6 +26,22 @@
   (binding [*out* *err*]
     (apply println parts)))
 
+(defn duration->seconds
+  [dur-str]
+  (reduce
+    (fn [total [count-str unit]]
+      (let [cnt (parse-long count-str)
+            factor (case unit
+                     "s" 1
+                     "m" 60
+                     "h" (* 60 60)
+                     "d" (* 24 60 60)
+                     "w" (* 7 24 60 60))]
+        (+ total (* cnt factor))))
+    0
+    (->> (re-seq #"\d+|\w" dur-str)
+         (partition 2))))
+
 (defn format-duration
   [duration]
   (cond
@@ -171,6 +187,11 @@
     coll))
 
 
+;; Common
+
+(def non-app-containers #{:nginx})
+
+
 ;; Describe
 
 (def describe-opts
@@ -222,20 +243,22 @@
                                container (or (find-container (keyword container) containers)
                                              (find-container :api containers)
                                              (find-container :frontend containers)
-                                             (first containers))]
+                                             (first (remove (comp non-app-containers :container/name) containers)))]
                            (:container/name container)))
-        unique-apps (distinct (map :metadata/app pods))]
+        unique-apps (distinct (map :metadata/app pods))
+        command (or (next arguments)
+                    ["bash"])]
     (cond
       xpanes
       (->> pods
-           (map #(apply kubectl-raw-cmd "exec" "-it" (:metadata/name %) "-c" (name (container-name %)) "--" (rest arguments)))
+           (map #(apply kubectl-raw-cmd "exec" "-it" (:metadata/name %) "-c" (name (container-name %)) "--" command))
            (map #(string/join " " %))
            (run! println))
 
       (= 1 (count unique-apps))
       (do (when (not= 1 (count pods))
             (perr "Multiple pods detected, selecing first..."))
-          (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" (rest arguments))))
+          (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" command)))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
@@ -268,7 +291,7 @@
         container (or (find-container (keyword (:container options)) containers)
                       (find-container :api containers)
                       (find-container :frontend containers)
-                      (first containers))]
+                      (first (remove (comp non-app-containers :container/name) containers)))]
     (cond
       (= 1 (count pods))
       (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (-> first-pod :metadata/name) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
@@ -338,8 +361,6 @@
       "N/A (latest)"
       (last image-parts))))
 
-(def non-app-containers #{:nginx})
-
 (defn prep-pod
   [now pod]
   (let [{:keys [containers]} pod
@@ -361,17 +382,53 @@
    {:name :age :align :left}
    {:name :node-ip :align :left}])
 
+(def columns-pods-summary
+  [{:name :name :align :left}
+   {:name :count :align :right}
+   {:name :version :align :left}
+   {:name :youngest :align :left}
+   {:name :oldest :align :left}])
+
+(defn- summarize-pods
+  [prepped]
+  (for [[[name version] matches] (group-by (juxt :name :version) prepped)
+        :let [sorted-ages (sort-by duration->seconds (filter some? (map :age matches)))
+              oldest (last sorted-ages)
+              youngest (first sorted-ages)]]
+    {:count (count matches)
+     :name name
+     :version version
+     :youngest youngest
+     :oldest (if (= youngest oldest)
+               ""
+               oldest)
+     :ages (pr-str sorted-ages)}))
+
+(def pods-opts
+  [["-s" "--summary" "Summarize by app name and version" :default false]])
+
 (defn pods
-  [subargs]
-  (let [now (OffsetDateTime/now)]
-    (->> (raw-pods)
-         (map raw-pod->pod)
-         ; (filter :node/ip)
-         (map (partial prep-pod now))
-         (doric/table {:format 'tabl.format.k8s} columns-pods)
-         (string/split-lines)
-         (map #(highlight/add % #"Pending|Running|Failed" {:explicit {"Failed" 160 "Pending" 128 "Running" 34}}))
-         (run! println)))
+  [args]
+  (let [parsed (parse-opts args pods-opts)
+        {:keys [options]} parsed
+        now (OffsetDateTime/now)
+        prepped (->> (raw-pods)
+                     (map raw-pod->pod)
+                     (map (partial prep-pod now)))]
+    (cond
+      (:summary options)
+      (->> (summarize-pods prepped)
+           (sort-by (juxt :name :version :count))
+           (doric/table {:format 'tabl.format.k8s} columns-pods-summary)
+           (string/split-lines)
+           (run! println))
+
+      :else
+      (->> prepped
+           (doric/table {:format 'tabl.format.k8s} columns-pods)
+           (string/split-lines)
+           (map #(highlight/add % #"Pending|Running|Failed" {:explicit {"Failed" 160 "Pending" 128 "Running" 34}}))
+           (run! println))))
   nil)
 
 
@@ -425,7 +482,7 @@
       (reset! extra-kubectl ["--context" context]))
     (if (= 1 (count fns))
       (chosen-fn subargs)
-      (if (and (< 0 (count args)) (< 1 (count fns)))
+      (if (and (< 0 (count arguments)) (< 1 (count fns)))
         (println "Too many matches:" (string/join ", " (map :name fns)))
         (do
           (println "Quick Kubernetes tool, available subcommands:")
