@@ -6,7 +6,6 @@
     [babashka.pods :as pods]
     [cheshire.core :as json]
     [clj-yaml.core :as yaml]
-    [clojure.java.io :as io]
     [clojure.java.shell :as sh]
     [clojure.string :as string]
     [clojure.tools.cli :refer [parse-opts]])
