@@ -2,7 +2,7 @@
                    [lein-oneoff  "0.3.2"]
                    [lein-pprint  "1.3.2"]]
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [djblue/portal "0.34.2"]
+                        [djblue/portal "0.48.0"]
                         ; [hashp "0.2.1"]
                         [pjstadig/humane-test-output "0.11.0"]]
          ; :injections [(require 'sc.api)]
