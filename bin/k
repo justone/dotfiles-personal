@@ -290,13 +290,16 @@
         container (or (find-container (keyword (:container options)) containers)
                       (find-container :api containers)
                       (find-container :frontend containers)
-                      (first (remove (comp non-app-containers :container/name) containers)))]
+                      (first (remove (comp non-app-containers :container/name) containers)))
+        unique-apps (distinct (map :metadata/app pods))]
     (cond
-      (= 1 (count pods))
-      (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (-> first-pod :metadata/name) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
-
       (:all options)
       (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
+
+      (= 1 (count unique-apps))
+      (do (when (not= 1 (count pods))
+            (perr "Multiple pods detected, selecing first..."))
+          (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (-> first-pod :metadata/name) (str "--follow=" (:follow options)) "-c" (name (:container/name container)))))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
