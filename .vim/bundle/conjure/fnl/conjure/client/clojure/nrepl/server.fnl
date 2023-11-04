@@ -80,10 +80,20 @@
           ;; So it's as if we set the options to [] which is _not_ good.
           :associative 1
 
-          :level (or (config.get-in [:client :clojure :nrepl :eval :print_options :level])
-                     nil)
-          :length (or (config.get-in [:client :clojure :nrepl :eval :print_options :length])
-                      nil)}
+          :level
+          (or
+            (config.get-in [:client :clojure :nrepl :eval :print_options :level])
+            nil)
+
+          :length
+          (or
+            (config.get-in [:client :clojure :nrepl :eval :print_options :length])
+            nil)
+
+          :right-margin
+          (or
+            (config.get-in [:client :clojure :nrepl :eval :print_options :right_margin])
+            nil)}
 
          :nrepl.middleware.print/quota
          (config.get-in [:client :clojure :nrepl :eval :print_quota])
@@ -169,16 +179,18 @@
           (cb [])
           (a.run!
             (fn [id]
-              (enrich-session-id
-                id
-                (fn [t]
-                  (table.insert rich t)
-                  (when (= total (a.count rich))
-                    (table.sort
-                      rich
-                      #(< (a.get $1 :name)
-                          (a.get $2 :name)))
-                    (cb rich)))))
+              (log.dbg "with-sessions id for enrichment" id)
+              (when id
+                (enrich-session-id
+                  id
+                  (fn [t]
+                    (table.insert rich t)
+                    (when (= total (a.count rich))
+                      (table.sort
+                        rich
+                        #(< (a.get $1 :name)
+                            (a.get $2 :name)))
+                      (cb rich))))))
             sess-ids))))))
 
 (defn clone-session [session]
@@ -187,9 +199,10 @@
      :session (a.get session :id)}
     (nrepl.with-all-msgs-fn
       (fn [msgs]
-        (enrich-session-id
-          (a.some #(a.get $1 :new-session) msgs)
-          assume-session)))))
+        (let [session-id (a.some #(a.get $1 :new-session) msgs)]
+          (log.dbg "clone-session id for enrichment" id)
+          (when session-id
+            (enrich-session-id session-id assume-session)))))))
 
 (defn assume-or-create-session []
   (a.assoc (state.get :conn) :session nil)

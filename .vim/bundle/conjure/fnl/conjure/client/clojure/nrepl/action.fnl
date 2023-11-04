@@ -231,13 +231,16 @@
             (log.append ["; Unsupported target"
                          (.. "; " (a.pr-str info))])))))))
 
+(defn escape-backslashes [s]
+  (s:gsub "\\" "\\\\"))
+
 (defn eval-file [opts]
   (try-ensure-conn
     (fn []
       (server.eval
         (a.assoc opts :code (.. "(#?(:cljs cljs.core/load-file"
                                 " :default clojure.core/load-file)"
-                                " \"" opts.file-path "\")"))
+                                " \"" (escape-backslashes opts.file-path) "\")"))
         (eval-cb-fn opts)))))
 
 (defn interrupt []
@@ -391,7 +394,7 @@
                     (server.assume-session (a.get sessions n))
                     (log.append ["; Invalid session number."])))))))))))
 
-(def- test-runners
+(def test-runners
   {:clojure
    {:namespace "clojure.test"
     :all-fn "run-all-tests"

@@ -326,9 +326,13 @@ local function def_str(opts)
   return try_ensure_conn(_54_)
 end
 _2amodule_2a["def-str"] = def_str
+local function escape_backslashes(s)
+  return s:gsub("\\", "\\\\")
+end
+_2amodule_2a["escape-backslashes"] = escape_backslashes
 local function eval_file(opts)
   local function _59_()
-    return server.eval(a.assoc(opts, "code", ("(#?(:cljs cljs.core/load-file" .. " :default clojure.core/load-file)" .. " \"" .. opts["file-path"] .. "\")")), eval_cb_fn(opts))
+    return server.eval(a.assoc(opts, "code", ("(#?(:cljs cljs.core/load-file" .. " :default clojure.core/load-file)" .. " \"" .. escape_backslashes(opts["file-path"]) .. "\")")), eval_cb_fn(opts))
   end
   return try_ensure_conn(_59_)
 end
@@ -527,7 +531,7 @@ local function select_session_interactive()
 end
 _2amodule_2a["select-session-interactive"] = select_session_interactive
 local test_runners = {clojure = {namespace = "clojure.test", ["all-fn"] = "run-all-tests", ["ns-fn"] = "run-tests", ["single-fn"] = "test-vars", ["default-call-suffix"] = "", ["name-prefix"] = "[(resolve '", ["name-suffix"] = ")]"}, clojurescript = {namespace = "cljs.test", ["all-fn"] = "run-all-tests", ["ns-fn"] = "run-tests", ["single-fn"] = "test-vars", ["default-call-suffix"] = "", ["name-prefix"] = "[(resolve '", ["name-suffix"] = ")]"}, kaocha = {namespace = "kaocha.repl", ["all-fn"] = "run-all", ["ns-fn"] = "run", ["single-fn"] = "run", ["default-call-suffix"] = "{:kaocha/color? false}", ["name-prefix"] = "#'", ["name-suffix"] = ""}}
-_2amodule_locals_2a["test-runners"] = test_runners
+_2amodule_2a["test-runners"] = test_runners
 local function test_cfg(k)
   local runner = cfg({"test", "runner"})
   return (a["get-in"](test_runners, {runner, k}) or error(str.join({"No test-runners configuration for ", runner, " / ", k})))
