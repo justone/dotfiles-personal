@@ -1,13 +1,13 @@
 #!/bin/sh
 
 #_(
-  "exec" "bb" "-I" "-O" "$0" "$@"
+  "exec" "bb" "-I" "-O" "--stream" "$0" "$@"
   )
 
-(if-some [predstr (first *command-line-args*)]
+(if-some [transform-str (first *command-line-args*)]
   (binding [*print-meta* true]
-    (let [pred (eval (read-string predstr))]
-      (run! prn (map pred user/*input*))))
+    (let [transform (eval (read-string transform-str))]
+      (prn (transform user/*input*))))
   (println "usage: bbm [predicate]"))
 
 ; vim: set ft=clojure:

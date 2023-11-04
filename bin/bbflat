@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Yup, that's it. Because `--stream` only modifies `-I`, this makes it so that
+# incoming vectors are flattened.
+#
+# $ echo "[1 2 3] [5 6 7]" | bbflat
+# 1
+# 2
+# 3
+# 5
+# 6
+# 7
+
+bb -I -O --stream '*input*'
+
