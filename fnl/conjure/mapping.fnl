@@ -175,6 +175,11 @@
     {:desc "Evaluate buffer"})
 
   (buf
+    :EvalPrevious (cfg :eval_previous)
+    (util.wrap-require-fn-call :conjure.eval :previous)
+    {:desc "Evaluate previous evaluation"})
+
+  (buf
     :EvalVisual (cfg :eval_visual)
     (util.wrap-require-fn-call :conjure.eval :selection)
     {:desc "Evaluate visual select"
@@ -206,9 +211,10 @@
 (defn init [filetypes]
   (nvim.ex.augroup :conjure_init_filetypes)
   (nvim.ex.autocmd_)
-  (nvim.ex.autocmd
-    :FileType (str.join "," filetypes)
-    (bridge.viml->lua :conjure.mapping :on-filetype {}))
+  (when (= true (config.get-in [:mapping :enable_ft_mappings]))
+    (nvim.ex.autocmd
+      :FileType (str.join "," filetypes)
+      (bridge.viml->lua :conjure.mapping :on-filetype {})))
 
   (nvim.ex.autocmd
     :CursorMoved :*
@@ -227,7 +233,7 @@
   (nvim.ex.autocmd
     :VimLeavePre :*
     (bridge.viml->lua :conjure.log :clear-close-hud-passive-timer {}))
-  (nvim.ex.autocmd :ExitPre :* (viml->fn on-exit))
+  (nvim.ex.autocmd :VimLeavePre :* (viml->fn on-exit))
   (nvim.ex.autocmd :QuitPre :* (viml->fn on-quit))
   (nvim.ex.augroup :END))
 

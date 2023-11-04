@@ -92,9 +92,10 @@
       (with-last-result-hook opts))))
 
 (defn- assoc-context [opts]
-  (set opts.context
-       (or nvim.b.conjure#context
-           (extract.context)))
+  (when (not opts.context)
+    (set opts.context
+        (or nvim.b.conjure#context
+            (extract.context))))
   opts)
 
 (defn- client-exec-fn [action f-name base-opts]
@@ -141,7 +142,15 @@
       (a.kv-pairs (or nvim.b.conjure#eval#gsubs
                       nvim.g.conjure#eval#gsubs)))))
 
+(defonce previous-evaluations
+  {})
+
 (defn eval-str [opts]
+  (a.assoc
+    previous-evaluations
+    (a.get (client.current-client-module-name) :module-name :unknown)
+    opts)
+
   (highlight-range opts.range)
   (event.emit :eval :str)
   (a.update opts :code apply-gsubs)
@@ -150,6 +159,12 @@
      opts
      (with-last-result-hook opts)))
   nil)
+
+(defn previous []
+  (let [client-name (a.get (client.current-client-module-name) :module-name :unknown)
+        opts (a.get previous-evaluations client-name)]
+    (when opts
+      (eval-str opts))))
 
 (defn wrap-emit [name f]
   (fn [...]

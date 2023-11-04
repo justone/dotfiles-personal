@@ -1,11 +1,26 @@
-(module conjure.client.fennel.stdio
+;;------------------------------------------------------------
+;; A client for snd/s7 (sound editor with s7 scheme scripting)
+;;
+;; Based on: fnl/conjure/client/scheme/stdio.fnl
+;;           fnl/conjure/client/sql/stdio.fnl
+;;
+;; Uses fnl/conjure/remote/stdio-rt.fnl; not fnl/conjure/remote/stdio.fnl.
+;;
+;; The `snd` program should be runnable on the command line.
+;;
+;; NOTE: Conflicts with the Scheme client due to the same filetype suffix.
+;;       To use this instead of the default Scheme client, set
+;;       `g:conjure#filetype#scheme` to `"conjure.client.snd-s7.stdio"`.
+;;       client in fnl/conjure/config.fnl.
+;;
+;;------------------------------------------------------------
+
+(module conjure.client.snd-s7.stdio
   {autoload {a conjure.aniseed.core
              str conjure.aniseed.string
              nvim conjure.aniseed.nvim
-             stdio conjure.remote.stdio
-             afs conjure.aniseed.fs
+             stdio conjure.remote.stdio-rt
              config conjure.config
-             text conjure.text
              mapping conjure.mapping
              client conjure.client
              log conjure.log
@@ -14,22 +29,21 @@
 
 (config.merge
   {:client
-   {:fennel
+   {:snd-s7
     {:stdio
      {:mapping {:start "cs"
                 :stop "cS"
-                :eval_reload "eF"}
-      :command "fennel"
-      :prompt_pattern ">> "}}}})
+                :interrupt "ei"}
+      :command "snd"
+      :prompt_pattern "> "}}}})
 
-(def- cfg (config.get-in-fn [:client :fennel :stdio]))
+(def- cfg (config.get-in-fn [:client :snd-s7 :stdio]))
 
 (defonce- state (client.new-state #(do {:repl nil})))
 
-(def buf-suffix ".fnl")
+(def buf-suffix ".scm")
 (def comment-prefix "; ")
 (def form-node? ts.node-surrounded-by-form-pair-chars?)
-(def comment-node? ts.lisp-comment-node?)
 
 (defn- with-repl-or-warn [f opts]
   (let [repl (state :repl)]
@@ -37,13 +51,21 @@
       (f repl)
       (log.append [(.. comment-prefix "No REPL running")]))))
 
+;;;;-------- from client/sql/stdio.fnl ----------------------
 (defn- format-message [msg]
   (str.split (or msg.out msg.err) "\n"))
 
+(defn- remove-blank-lines [msg]
+  (->> (format-message msg)
+       (a.filter #(not (= "" $1)))))
+
 (defn- display-result [msg]
-  (log.append
-    (->> (format-message msg)
-         (a.filter #(not (= "" $1))))))
+  (log.append (remove-blank-lines msg)))
+
+(defn ->list [s]
+  (if (a.first s)
+    s
+    [s]))
 
 (defn eval-str [opts]
   (with-repl-or-warn
@@ -51,39 +73,29 @@
       (repl.send
         (.. opts.code "\n")
         (fn [msgs]
-          (when (and (= 1 (a.count msgs))
-                     (= "" (a.get-in msgs [1 :out])))
-            (a.assoc-in msgs [1 :out] (.. comment-prefix "Empty result.")))
-
-          (let [msgs (a.filter #(not= ".." (. $1 :out)) msgs)]
+          (let [msgs (->list msgs)]
             (when opts.on-result
-              (opts.on-result (str.join "\n" (format-message (a.last msgs)))))
-            (a.run! display-result msgs)))
-        {:batch? true}))))
+              (opts.on-result (str.join "\n" (remove-blank-lines (a.last msgs)))))
+            (a.run! display-result msgs))
+          )
+        {:batch? false}))))
+;;;;-------- End from client/sql/stdio.fnl ------------------
 
 (defn eval-file [opts]
-  (eval-str (a.assoc opts :code (a.slurp opts.file-path))))
+  (eval-str (a.assoc opts :code (.. "(load \"" opts.file-path "\")"))))
 
-(defn eval-reload []
-  (let [file-path (nvim.fn.expand "%")
-        relative-no-suf (nvim.fn.fnamemodify file-path ":.:r")
-        module-path (string.gsub relative-no-suf afs.path-sep ".")]
-    (log.append [(.. comment-prefix ",reload " module-path)] {:break? true})
-    (eval-str
-      {:action :eval
-       :origin :reload
-       :file-path file-path
-       :code (.. ",reload " module-path)})))
-
-(defn doc-str [opts]
-  (eval-str (a.update opts :code #(.. ",doc " $1 "\n"))))
+(defn interrupt []
+  (with-repl-or-warn
+    (fn [repl]
+      (log.append [(.. comment-prefix " Sending interrupt signal.")] {:break? true})
+      (repl.send-signal vim.loop.constants.SIGINT))))
 
 (defn- display-repl-status [status]
-  (let [repl (state :repl)]
-    (when repl
-      (log.append
-        [(.. comment-prefix (a.pr-str (a.get-in repl [:opts :cmd])) " (" status ")")]
-        {:break? true}))))
+  (log.append
+    [(.. comment-prefix
+         (cfg [:command])
+         " (" (or status "no status") ")")]
+    {:break? true}))
 
 (defn stop []
   (let [repl (state :repl)]
@@ -123,7 +135,7 @@
 
          :on-stray-output
          (fn [msg]
-           (display-result msg))}))))
+           (log.append (format-msg msg)))}))))
 
 (defn on-load []
   (start))
@@ -133,19 +145,16 @@
 
 (defn on-filetype []
   (mapping.buf
-    :FnlStart
-    (cfg [:mapping :start])
+    :SndStart (cfg [:mapping :start])
     start
     {:desc "Start the REPL"})
 
   (mapping.buf
-    :FnlStop
-    (cfg [:mapping :stop])
+    :SndStop (cfg [:mapping :stop])
     stop
     {:desc "Stop the REPL"})
 
   (mapping.buf
-    :FnlEvalReload
-    (cfg [:mapping :eval_reload])
-    eval-reload
-    {:desc "Use ,reload on the file"}))
+    :SdnInterrupt (cfg [:mapping :interrupt])
+    interrupt
+    {:desc "Interrupt the REPL"}))

@@ -82,6 +82,52 @@ use 'Olical/conjure'
 Plug 'Olical/conjure'
 ----
 
+=== https://github.com/folke/lazy.nvim[lazy.nvim]
+
+[source,lua]
+----
+return { "Olical/conjure" }
+----
+
+To take advantage of lazy loading, a bit more involved configuration is required:
+[%collapsible]
+====
+[source,lua]
+----
+return {
+    "Olical/conjure",
+    ft = { "clojure", "fennel", "python" }, -- etc
+    -- [Optional] cmp-conjure for cmp
+    dependencies = {
+        {
+            "PaterJason/cmp-conjure",
+            config = function()
+                local cmp = require("cmp")
+                local config = cmp.get_config()
+                table.insert(config.sources, {
+                    name = "buffer",
+                    option = {
+                        sources = {
+                            { name = "conjure" },
+                        },
+                    },
+                })
+                cmp.setup(config)
+            end,
+        },
+    },
+    config = function(_, opts)
+        require("conjure.main").main()
+        require("conjure.mapping")["on-filetype"]()
+    end,
+    init = function()
+	       -- Set configuration options here
+        vim.g["conjure#debug"] = true
+    end,
+}
+----
+====
+
 == Mods
 
 Modifications or mods are extra plugins that improve Conjure in various ways. They may add completion plugin support, entire language clients or new mappings that do fun and interesting things. You can learn about creating your own by reading the source code of the projects listed below as well as https://github.com/Olical/conjure/wiki/Using-Conjure-programatically-(API)["Using Conjure programatically (API)"] and https://github.com/Olical/conjure/wiki/Client-features["Client features"].
@@ -107,23 +153,7 @@ It's technically optional since Conjure contains legacy fallback code, but I hig
 
 == Getting started
 
- * https://github.com/Olical/conjure/wiki/Quick-start:-Clojure[Clojure (JVM)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Clojure-(babashka)[Clojure (babashka)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-ClojureScript-(shadow-cljs)[ClojureScript (shadow-cljs)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Janet-(netrepl)[Janet (netrepl)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(Aniseed)[Fennel (Aniseed)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(stdio)[Fennel (stdio)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Racket-(stdio)[Racket (stdio)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Hy-(stdio)[Hy (stdio)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Scheme-(stdio)[Scheme (stdio)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Guile-(socket)[Guile (socket)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Common-Lisp-(Swank)[Common Lisp (Swank)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Rust-(evcxr)[Rust (evcxr)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Lua-(neovim)[Lua (neovim)]
- * https://github.com/Olical/conjure/wiki/Quick-start:-Python-(stdio)[Python (stdio)]
- * https://github.com/Olical/conjure/wiki/Frequently-asked-questions[Frequently asked questions]
-
-All further documentation is found within link:doc/conjure.txt[`:help conjure`]. You can also use `:ConjureSchool` to get an interactive introduction to the workflow and mappings Conjure provides.
+The majority of the documentation can be found within link:doc/conjure.txt[`:help conjure`]. You can also use `:ConjureSchool` to get an interactive introduction to the workflow and mappings Conjure provides. Refer to the list at the top of this file for links to the various quickstart guides for each language.
 
 Please do get in touch via https://conjure.fun/discord[Discord] or https://twitter.com/OliverCaldwell[Twitter] if you have any questions or issues.
 

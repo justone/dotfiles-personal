@@ -233,7 +233,17 @@ You can disable a mapping entirely by setting it to `v:false` like so.
 These need to be set before you enter a relevant buffer since the mappings are
 defined as you enter a buffer and can't be altered after the fact.
 
-Tip: Booleans in Vim Script are written as `v:true` and `v:false`.
+Conjure sets up filetype-specific mappings for each of the filetypes listed in
+`g:conjure#filetypes`. These mappings are determined by the client filetype
+and set when that filetype is loaded.
+
+You can disable all of the filetype-specific default mappings by setting
+`g:conjure#mapping#enable_ft_mappings` to `v:false` like so.
+
+    `:let g:conjure#mapping#enable_ft_mappings  = v:false`
+
+Tip: Booleans in Vim Script are written as `v:true` and `v:false`. If you're
+configuring these values from Lua it's just `true` and `false`.
 
                                                          *g:conjure#filetypes*
 `g:conjure#filetypes`
@@ -249,7 +259,7 @@ Tip: Booleans in Vim Script are written as `v:true` and `v:false`.
 
             Default: >
               ["clojure", "fennel", "janet", "hy", "julia", "racket",
-               "scheme", "lua", "lisp", "python", "rust"]
+               "scheme", "lua", "lisp", "python", "rust", "sql"]
 <
                                                   *g:conjure#filetype#clojure*
 `g:conjure#filetype#clojure`
@@ -284,8 +294,10 @@ Tip: Booleans in Vim Script are written as `v:true` and `v:false`.
 `g:conjure#filetype#scheme`
             Client to use for `scheme` buffers. You can use Guile over a
             socket file instead by setting this to
-            `"conjure.client.guile.socket"`.
-            Help: |conjure-client-scheme-stdio|, |conjure-client-guile-socket|
+            `"conjure.client.guile.socket"`. To edit scripts for the snd/s7
+            sound editor, set this to `"conjure.client.snd-s7.stdio"`.
+            Help: |conjure-client-scheme-stdio|,
+            |conjure-client-guile-socket|, or |conjure-client-snd-s7-stdio.
             Default: `"conjure.client.scheme.stdio"`
 
                                                    *g:conjure#filetype#racket*
@@ -293,6 +305,12 @@ Tip: Booleans in Vim Script are written as `v:true` and `v:false`.
             Client to use for `racket` buffers.
             Help: |conjure-client-racket-stdio|
             Default: `"conjure.client.racket.stdio"`
+
+                                                   *g:conjure#filetype#sql*
+`g:conjure#filetype#sql`
+            Client to use for `SQL` buffers.
+            Help: |conjure-client-sql-stdio|
+            Default: `"conjure.client.sql.stdio"`
 
                                       *g:conjure#filetype_suffixes#[filetype]*
 `g:conjure#filetype_suffixes#[filetype]`
@@ -460,6 +478,11 @@ Tip: Booleans in Vim Script are written as `v:true` and `v:false`.
             Evaluates the word under the cursor.
             Default: `"ew"`
 
+                                             *g:conjure#mapping#eval_previous*
+`g:conjure#mapping#eval_previous`
+            Evaluates the previous evaluation again.
+            Default: `"ep"`
+
                                          *g:conjure#mapping#eval_comment_word*
 `g:conjure#mapping#eval_comment_word`
             Evaluates the word under the cursor and inserts the result as a
@@ -475,12 +498,6 @@ Tip: Booleans in Vim Script are written as `v:true` and `v:false`.
 `g:conjure#mapping#eval_marked_form`
             Evaluates the form at the marks location.
             Default: `"em"`
-
-                                         *g:conjure#mapping#eval_comment_form*
-`g:conjure#mapping#eval_comment_form`
-            Evaluates the form under the cursor and displays the result as a
-            comment at the end of the current line or below the current line.
-            Default: `"ec"`
 
                                                  *g:conjure#mapping#eval_file*
 `g:conjure#mapping#eval_file`
@@ -902,6 +919,8 @@ your dotfiles.
  - |conjure-client-julia-stdio|
  - |conjure-client-lua-stdio|
  - |conjure-client-python-stdio|
+ - |conjure-client-snd-s7-stdio|
+ - |conjure-client-sql-stdio|
  - |conjure-client-rust-evcxr|
  - |conjure-client-common-lisp-swank|
 
