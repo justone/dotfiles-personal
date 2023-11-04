@@ -219,6 +219,7 @@
 (def exec-opts
   [["-c" "--container CONT" "Container to select"]
    ["-p" "--pick N" "Follow nth pod"]
+   ["-m" "--multiple" "Run against multiple pods in sequence"]
    ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn find-container
@@ -229,7 +230,7 @@
   [args]
   (let [parsed (parse-opts args exec-opts)
         {:keys [options arguments]} parsed
-        {:keys [pick container xpanes]} options
+        {:keys [pick container multiple xpanes]} options
         pick (some-> pick parse-long dec)
         pods (->> (raw-pods)
                   (map raw-pod->pod)
@@ -248,6 +249,10 @@
         command (or (next arguments)
                     ["bash"])]
     (cond
+      multiple
+      (doseq [pod pods]
+        (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name pod) "-c" (name (container-name pod)) "--" command)))
+
       xpanes
       (->> pods
            (map #(apply kubectl-raw-cmd "exec" "-it" (:metadata/name %) "-c" (name (container-name %)) "--" command))
