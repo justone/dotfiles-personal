@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+highlight '<|>' -e "34:>" -e "130:<"
