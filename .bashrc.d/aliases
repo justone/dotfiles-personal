@@ -85,7 +85,7 @@ else
 fi
 
 # setting PMB_KEY in tmux env
-alias ptk='tmux set-environment PMB_KEY $(PMB_KEY= pmb get-key)'
+alias ptk='tmux set-environment PMB_KEY $(PMB_KEY= pmb key get)'
 
 # strip ansi color codes
 alias nocolor="perl -pe 's/\e\[?.*?[\@-~]//g'"
