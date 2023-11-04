@@ -97,6 +97,7 @@ set -g visual-activity off
 # moar history
 set -g history-limit 75000
 
+set -g status-left-length 100
 set -g status-left '#[fg=green][ #[fg=red]#H#[fg=green]:#[fg=white]#S #[fg=green]][#[default]'
 #set -g status-right '#[fg=green]][#[fg=white] #T #[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
 #set -g status-right '#[fg=green]][ #[fg=blue]%Y-%m-%d #[fg=white]%H:%M#[default]'
