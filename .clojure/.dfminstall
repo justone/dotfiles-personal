@@ -1,0 +1,3 @@
+.clj-kondo skip
+.cpcache skip
+.lsp skip
