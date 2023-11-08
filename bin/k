@@ -374,7 +374,9 @@
         app-containers (remove (comp non-app-containers :container/name) containers)]
     {:name (:metadata/app pod)
      :full-name (:metadata/name pod)
-     :version (-> (or (find-container :api app-containers) (find-container :frontend app-containers) (first app-containers))
+     :version (-> (or (find-container :api app-containers)
+                      (find-container :frontend app-containers)
+                      (first (remove (comp non-app-containers :container/name) containers)))
                   :container/image
                   extract-version)
      :node-ip (:node/ip pod)
