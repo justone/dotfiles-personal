@@ -24,10 +24,7 @@
 	ss = status --short
 	ci = commit
 	di = diff
-	dti = "!DFT_DISPLAY=side-by-side-show-both DFT_SYNTAX_HIGHLIGHT=off GIT_EXTERNAL_DIFF=difft git diff"
 	cdi = diff --cached
-	cdti = "!DFT_DISPLAY=side-by-side-show-both DFT_SYNTAX_HIGHLIGHT=off GIT_EXTERNAL_DIFF=difft git diff --cached"
-	dtshow = "!DFT_DISPLAY=side-by-side-show-both DFT_SYNTAX_HIGHLIGHT=off GIT_EXTERNAL_DIFF=difft git show --ext-diff"
 	co = checkout
 	sw = switch
 	w = whatchanged
