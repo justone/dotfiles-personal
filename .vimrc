@@ -84,10 +84,6 @@ if filereadable(expand(".vimrc.project"))
 endif
 
 " conjure
-au BufNewFile,BufRead,BufWinEnter conjure-log-* setlocal winfixwidth
-" au BufNewFile,BufRead,BufWinEnter conjure-log-* setlocal winfixheight
-au BufNewFile,BufRead,BufWinEnter conjure-log-* normal 80|
-" au BufNewFile,BufRead,BufWinEnter conjure-log-* normal 18_
 let g:conjure#client#clojure#nrepl#eval#auto_require = v:false
 let g:conjure#log#botright = v:true
 " let g:conjure#client#clojure#nrepl#eval#print_options#length = 100
@@ -98,6 +94,9 @@ let g:conjure#filetype#pandoc = 'conjure.client.clojure.nrepl'
 let g:conjure#filetype#markdown = 'conjure.client.clojure.nrepl'
 let g:sexp_filetypes = 'clojure,scheme,lisp,timl'
 let g:conjure#client#clojure#nrepl#connection#auto_repl#enabled = v:false
+" set these two to something out of the way so I can override them below
+let g:conjure#mapping#log_split = 'lxs'
+let g:conjure#mapping#log_vsplit = 'lxv'
 
 " vim-pandoc and vim-pandoc-syntax
 
@@ -581,6 +580,21 @@ function! OpenURL(url)
     endif
   endif
 endfunction
+
+function! ConjureLogVertSplit()
+  :ConjureLogVSplit
+  :setlocal winfixwidth
+  :normal 80|
+endfunction
+
+function! ConjureLogHorizSplit()
+  :ConjureLogSplit
+  :setlocal winfixheight
+  :normal 12_
+endfunction
+
+nmap <silent> <Leader>lv  :call ConjureLogVertSplit()<CR><C-w><C-p>
+nmap <silent> <Leader>ls  :call ConjureLogHorizSplit()<CR><C-w><C-p>
 
 " open web browser, mostly for vim-fugitive
 command! -nargs=1 Browse call OpenURL(<f-args>)
