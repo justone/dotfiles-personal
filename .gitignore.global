@@ -12,7 +12,8 @@ nate-scratch
 znate.vim
 .vimrc.project
 *.log
-.lsp/
+.lsp/.cache/
+.clj-kondo/.cache/
 *.vim
 !.vim/
 .lein-repl-history
