@@ -332,8 +332,8 @@ runtime macros/matchit.vim
 set foldmethod=marker
 
 " printing options
-set popt=paper:letter
-set printdevice=dev_np24
+" set popt=paper:letter
+" set printdevice=dev_np24
 
 " ruby settings
 au BufNewFile,BufRead *.rhtml set sw=2 ts=2 bs=2 et smarttab
