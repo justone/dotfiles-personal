@@ -3,18 +3,18 @@
            :try {:extra-deps {deps-try/deps-try {:git/url "https://gitlab.com/eval/deps-try"
                                                  :sha "9ccf64be248d5d9aa641df9e94feaea913bc0687"}}
                  :main-opts ["-m" "deps-try.main"]}
-           :repl {:extra-deps {io.github.justone/cljdev {:git/sha "e3acb0fefcb3d97b70f4ef26c9064b18c73daa28"}}
+           :repl {:extra-deps {io.github.justone/cljdev {:git/sha "71fcb369c173047ea04ec5815ac9c1dacb84ef02"}}
                   :main-opts  ["-m" "cljdev.repl"]
                   :exec-fn cljdev.repl/start}
-           :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.1.932"}}
+           :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.8.1169"}}
                       :main-opts ["-m" "antq.core"]}
-           :new {:extra-deps {com.github.seancorfield/clj-new {:mvn/version "1.1.309"}}
+           :new {:extra-deps {com.github.seancorfield/clj-new {:mvn/version "1.2.404"}}
                  :main-opts ["-m" "clj-new.create"]
                  :exec-fn clj-new/create
                  :exec-args {:template "app"}}
            :dev-resources {:extra-paths ["nate-scratch/dev-resources"]}
            :dev-portal {:extra-deps {djblue/portal {:local/root "/home/nate/projects/portal/"}}}
-           :portal {:extra-deps {djblue/portal {:mvn/version "0.49.1"}}}
+           :portal {:extra-deps {djblue/portal {:mvn/version "0.51.1"}}}
            :reveal {:extra-deps {vlaaad/reveal {:mvn/version "1.3.265"}}}
            :re-find {:extra-deps {MageMasher/re-find.fx
                                   {:git/url "https://github.com/MageMasher/re-find.fx"
@@ -24,7 +24,7 @@
                                                 :sha "c9a4dec89032f2003cc439c473fcd3c41e809669"}}
                    :main-opts ["-m" "carve.main"]}
            :test {:extra-paths ["test"]
-                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.861"}}
+                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
                   :main-opts  ["-m" "kaocha.runner"]}
            :cli/events {:deps {clojurians-zulip/feeds {:git/url "https://gitlab.com/clojurians-zulip/feeds.git"
                                                        :sha "6ddf0786e65d592dee6c258ec764d32ef4cb6060"}}
