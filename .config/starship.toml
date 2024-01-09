@@ -10,7 +10,6 @@ $git_state\
 $git_metrics\
 $git_status\
 $hg_branch\
-$docker_context\
 $package\
 $cmake\
 $dart\
@@ -58,8 +57,11 @@ $status\
 $shell\
 $character"""
 
-java.disabled = true
 battery.disabled = true
+
+[java]
+version_format = "v${major}"
+style = 'red'
 
 [aws]
 symbol = ""
