@@ -112,3 +112,10 @@ function less-suffix() {
   READLINE_POINT=${#READLINE_LINE}
 }
 bind -x '"\C-x\C-l": less-suffix'
+
+# binding to prefix with hwatch
+function hwatch-prefix() {
+  READLINE_LINE="hwatch -c -n 15 '$READLINE_LINE'"
+  READLINE_POINT=${#READLINE_LINE}
+}
+bind -x '"\C-x\C-w": hwatch-prefix'
