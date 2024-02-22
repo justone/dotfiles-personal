@@ -114,9 +114,12 @@
       :items))
 
 (defn raw-container->container
-  [raw-container]
-  {:container/name (keyword (:name raw-container))
-   :container/image (:image raw-container)})
+  [statuses raw-container]
+  (let [cname (:name raw-container)
+        [state {:keys [reason]}] (-> (get statuses cname) :state first)]
+   {:container/name (keyword cname)
+   :container/image (:image raw-container)
+   :container/status (if (= :running state) "Running" reason)}))
 
 (defn parse-date-time
   [input]
@@ -124,11 +127,12 @@
 
 (defn raw-pod->pod
   [raw-pod]
-  (let [name (-> raw-pod :metadata :name)]
+  (let [name (-> raw-pod :metadata :name)
+        container-statuses (into {} (map (juxt :name identity) (-> raw-pod :status :containerStatuses)))]
     (with-meta
       {:metadata/app (or (-> raw-pod :metadata :labels :app) name)
        :metadata/name name
-       :containers (mapv raw-container->container (-> raw-pod :spec :containers))
+       :containers (mapv #(raw-container->container container-statuses %) (-> raw-pod :spec :containers))
        :node/name (-> raw-pod :spec :nodeName)
        :node/ip (-> raw-pod :status :hostIP)
        :status/state (-> raw-pod :status :phase)
@@ -380,7 +384,7 @@
                   :container/image
                   extract-version)
      :node-ip (:node/ip pod)
-     :state (:status/state pod)
+     :state (string/join "," (distinct (map :container/status containers)))
      :age (some-> (:status/start-time pod) (calculate-age now))}))
 
 (def columns-pods
@@ -416,6 +420,17 @@
 (def pods-opts
   [["-s" "--summary" "Summarize by app name and version" :default false]])
 
+(def status-colors
+  "Colors for each status. Picked from the output of `highlight --print-colors`"
+  {"ContainerCreating" 63
+   "ContainerStatusUnknown" 226
+   "CrashLoopBackOff" 220
+   "PodInitializing" 63
+   "Error" 220
+   "Failed" 160
+   "Pending" 128
+   "Running" 34})
+
 (defn pods
   [args]
   (let [parsed (parse-opts args pods-opts)
@@ -436,7 +451,8 @@
       (->> prepped
            (doric/table {:format 'tabl.format.k8s} columns-pods)
            (string/split-lines)
-           (map #(highlight/add % #"Pending|Running|Failed" {:explicit {"Failed" 160 "Pending" 128 "Running" 34}}))
+           (map #(highlight/add % (re-pattern (string/join "|" (keys status-colors)))
+                                {:explicit status-colors}))
            (run! println))))
   nil)
 
