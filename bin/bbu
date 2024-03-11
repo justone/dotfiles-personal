@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#_(
+  "exec" "bb" "-I" "-O" "--stream" "$0" "$@"
+  )
+
+(binding [*print-meta* true]
+  (let [data user/*input*]
+   (if (map? data)
+    (prn data)
+    (->> (flatten data)
+         (run! prn)))))
+
+; vim: set ft=clojure:
