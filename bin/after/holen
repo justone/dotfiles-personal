@@ -6,7 +6,7 @@ use FindBin qw($RealScript $Script $RealBin);
 use File::Path qw(make_path);
 use File::Basename;
 
-my $version = 'v0.4.2';
+my $version = 'v0.4.3';
 
 my $base_url = 'https://github.com/holen-app/holen/releases/download';
 my $os       = $^O;
@@ -20,7 +20,10 @@ make_path($local_dir);
 my $local = "$local_dir/holen";
 
 my $os_bits_to_name = {
-    darwin => { x86_64 => 'holen_darwin_amd64', },
+    darwin => {
+        x86_64 => 'holen_darwin_amd64',
+        arm64 => 'holen_darwin_arm64'
+    },
     linux  => {
         x86_64 => 'holen_linux_amd64',
         armv6l => 'holen_linux_arm'
@@ -128,7 +131,8 @@ sub INFO {
 }
 
 __END__
-8b071e84d979eef5917e85d23dbb901b  holen_darwin_amd64
-e6ee1eeae1f85b7a83fafcc8f671eaf9  holen_linux_amd64
-ce25b697157e6dea890262cf6c5e7b33  holen_linux_arm
-8b01bb06a857007ae502b00adf8c6b5f  holen_windows_amd64.exe
+57ce1fc998a73454cc2a2ad2a4bdd87c  holen_darwin_amd64
+eefc012a7523254e6d21c263425d8934  holen_darwin_arm64
+b90ce88fa8d719ecd06a5f954b223c2f  holen_linux_amd64
+649e3195df0187f10bca36b7accc4108  holen_linux_arm
+17c6084f27a64430de4698dd12a0b29e  holen_windows_amd64.exe
