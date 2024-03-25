@@ -1,8 +1,13 @@
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 func! Test_GoBuildErrors()
+  let l:wd = getcwd()
   try
+    let g:go_gopls_enabled = 0
     let l:filename = 'cmd/bad.go'
     let l:tmp = gotest#load_fixture(l:filename)
-    exe 'cd ' . l:tmp . '/src/cmd'
 
     " set the compiler type so that the errorformat option will be set
     " correctly.
@@ -23,8 +28,13 @@ func! Test_GoBuildErrors()
 
     call gotest#assert_quickfix(actual, l:expected)
   finally
+    call go#util#Chdir(l:wd)
     call delete(l:tmp, 'rf')
   endtry
 endfunc
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et
