@@ -1,6 +1,10 @@
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 function! go#play#Share(count, line1, line2) abort
   if !executable('curl')
-    echohl ErrorMsg | echomsg "vim-go: require 'curl' command" | echohl None
+    call go#util#EchoError('cannot share: curl cannot be found')
     return
   endif
 
@@ -8,7 +12,9 @@ function! go#play#Share(count, line1, line2) abort
   let share_file = tempname()
   call writefile(split(content, "\n"), share_file, "b")
 
-  let l:cmd = ['curl', '-s', '-X', 'POST', 'https://play.golang.org/share',
+  let l:cmd = ['curl', '-s',
+        \ '-H', 'Content-Type: text/plain; charset=utf-8',
+        \ '-X', 'POST', 'https://go.dev/_/share',
         \ '--data-binary', '@' . l:share_file]
   let [l:snippet_id, l:err] = go#util#Exec(l:cmd)
 
@@ -16,12 +22,11 @@ function! go#play#Share(count, line1, line2) abort
   call delete(share_file)
 
   if l:err != 0
-    echom 'A error has occurred. Run this command to see what the problem is:'
-    echom go#util#Shelljoin(l:cmd)
+    call go#util#EchoError(['A error has occurred. Run this command to see what the problem is:', go#util#Shelljoin(l:cmd)])
     return
   endif
 
-  let url = "http://play.golang.org/p/".snippet_id
+  let url = printf("https://go.dev/play/p/%s", snippet_id)
 
   " copy to clipboard
   if has('unix') && !has('xterm_clipboard') && !has('clipboard')
@@ -31,10 +36,10 @@ function! go#play#Share(count, line1, line2) abort
   endif
 
   if go#config#PlayOpenBrowser()
-    call go#tool#OpenBrowser(url)
+    call go#util#OpenBrowser(url)
   endif
 
-  echo "vim-go: snippet uploaded: ".url
+  call go#util#EchoInfo('snippet uploaded: ' . url)
 endfunction
 
 
@@ -65,5 +70,9 @@ function! s:get_visual_selection() abort
   let lines[0] = lines[0][col1 - 1:]
   return join(lines, "\n")
 endfunction
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et

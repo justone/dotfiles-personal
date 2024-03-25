@@ -1,3 +1,7 @@
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 let s:toggle = 0
 
 " Buffer creates a new cover profile with 'go test -coverprofile' and changes
@@ -21,32 +25,26 @@ endfunction
 " the code. Calling it again reruns the tests and shows the last updated
 " coverage.
 function! go#coverage#Buffer(bang, ...) abort
-  " we use matchaddpos() which was introduce with 7.4.330, be sure we have
-  " it: http://ftp.vim.org/vim/patches/7.4/7.4.330
+
+  " check if the version of Vim being tested supports matchaddpos()
   if !exists("*matchaddpos")
-    call go#util#EchoError("GoCoverage is supported with Vim version 7.4-330 or later")
+    call go#util#EchoError("GoCoverage is not supported by your version of Vim.")
     return -1
   endif
 
   " check if there is any test file, if not we just return
-  let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-  let dir = getcwd()
   try
-    execute cd . fnameescape(expand("%:p:h"))
+    let l:dir = go#util#Chdir(expand("%:p:h"))
     if empty(glob("*_test.go"))
       call go#util#EchoError("no test files available")
       return
     endif
   finally
-    execute cd . fnameescape(dir)
+    call go#util#Chdir(l:dir)
   endtry
 
   let s:toggle = 1
   let l:tmpname = tempname()
-
-  if go#config#EchoCommandInfo()
-    call go#util#EchoProgress("testing...")
-  endif
 
   if go#util#has_job()
     call s:coverage_job({
@@ -54,8 +52,13 @@ function! go#coverage#Buffer(bang, ...) abort
           \ 'complete': function('s:coverage_callback', [l:tmpname]),
           \ 'bang': a:bang,
           \ 'for': 'GoTest',
+          \ 'statustype': 'coverage',
           \ })
     return
+  endif
+
+  if go#config#EchoCommandInfo()
+    call go#util#EchoProgress("testing...")
   endif
 
   let args = [a:bang, 0, "-coverprofile", l:tmpname]
@@ -63,26 +66,10 @@ function! go#coverage#Buffer(bang, ...) abort
     call extend(args, a:000)
   endif
 
-  let disabled_term = 0
-  if go#config#TermEnabled()
-    let disabled_term = 1
-    call go#config#SetTermEnabled(0)
-  endif
-
   let id = call('go#test#Test', args)
 
-  if disabled_term
-    call go#config#SetTermEnabled(1)
-  endif
-
-  if has('nvim')
-    call go#jobcontrol#AddHandler(function('s:coverage_handler'))
-    let s:coverage_handler_jobs[id] = l:tmpname
-    return
-  endif
-
   if go#util#ShellError() == 0
-    call go#coverage#overlay(l:tmpname)
+    call go#coverage#Overlay(l:tmpname)
   endif
 
   call delete(l:tmpname)
@@ -96,7 +83,7 @@ function! go#coverage#Clear() abort
 
   " remove the autocmd we defined
   augroup vim-go-coverage
-    autocmd!
+    autocmd! * <buffer>
   augroup end
 endfunction
 
@@ -106,10 +93,11 @@ function! go#coverage#Browser(bang, ...) abort
   let l:tmpname = tempname()
   if go#util#has_job()
     call s:coverage_job({
-          \ 'cmd': ['go', 'test', '-tags', go#config#BuildTags(), '-coverprofile', l:tmpname],
+          \ 'cmd': ['go', 'test', '-tags', go#config#BuildTags(), '-coverprofile', l:tmpname] + a:000,
           \ 'complete': function('s:coverage_browser_callback', [l:tmpname]),
           \ 'bang': a:bang,
           \ 'for': 'GoTest',
+          \ 'statustype': 'coverage',
           \ })
     return
   endif
@@ -120,14 +108,9 @@ function! go#coverage#Browser(bang, ...) abort
   endif
 
   let id = call('go#test#Test', args)
-  if has('nvim')
-    call go#jobcontrol#AddHandler(function('s:coverage_browser_handler'))
-    let s:coverage_browser_handler_jobs[id] = l:tmpname
-    return
-  endif
 
   if go#util#ShellError() == 0
-    call go#tool#ExecuteInDir(['go', 'tool', 'cover', '-html=' . l:tmpname])
+    call go#util#ExecInDir(['go', 'tool', 'cover', '-html=' . l:tmpname])
   endif
 
   call delete(l:tmpname)
@@ -202,7 +185,7 @@ function! go#coverage#genmatch(cov) abort
 endfunction
 
 " Reads the given coverprofile file and annotates the current buffer
-function! go#coverage#overlay(file) abort
+function! go#coverage#Overlay(file) abort
   if !filereadable(a:file)
     return
   endif
@@ -225,8 +208,7 @@ function! go#coverage#overlay(file) abort
 
   let fname = expand('%')
 
-  " when called for a _test.go file, run the coverage for the actuall file
-  " file
+  " when called for a test file, run the coverage for the actual file
   if fname =~# '^\f\+_test\.go$'
     let l:root = split(fname, '_test.go$')[0]
     let fname = l:root . ".go"
@@ -257,7 +239,7 @@ function! go#coverage#overlay(file) abort
 
   " clear the matches if we leave the buffer
   augroup vim-go-coverage
-    autocmd!
+    autocmd! * <buffer>
     autocmd BufWinLeave <buffer> call go#coverage#Clear()
   augroup end
 
@@ -275,54 +257,23 @@ function s:coverage_job(args)
   " autowrite is not enabled for jobs
   call go#cmd#autowrite()
 
-  let status_dir =  expand('%:p:h')
-  let Complete = a:args.complete
-  function! s:complete(job, exit_status, data) closure
-    let status = {
-          \ 'desc': 'last status',
-          \ 'type': "coverage",
-          \ 'state': "finished",
-          \ }
+  let disabled_term = 0
+  if go#config#TermEnabled()
+    let disabled_term = 1
+    call go#config#SetTermEnabled(0)
+  endif
 
-    if a:exit_status
-      let status.state = "failed"
-    endif
+  call go#job#Spawn(a:args.cmd, a:args)
 
-    call go#statusline#Update(status_dir, status)
-    return Complete(a:job, a:exit_status, a:data)
-  endfunction
-
-  let a:args.complete = funcref('s:complete')
-  let callbacks = go#job#Spawn(a:args)
-
-  let start_options = {
-        \ 'callback': callbacks.callback,
-        \ 'exit_cb': callbacks.exit_cb,
-        \ 'close_cb': callbacks.close_cb,
-        \ }
-
-  " pre start
-  let dir = getcwd()
-  let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-  let jobdir = fnameescape(expand("%:p:h"))
-  execute cd . jobdir
-
-  call go#statusline#Update(status_dir, {
-        \ 'desc': "current status",
-        \ 'type': "coverage",
-        \ 'state': "started",
-        \})
-
-  call job_start(a:args.cmd, start_options)
-
-  " post start
-  execute cd . fnameescape(dir)
+  if disabled_term
+    call go#config#SetTermEnabled(1)
+  endif
 endfunction
 
 " coverage_callback is called when the coverage execution is finished
 function! s:coverage_callback(coverfile, job, exit_status, data)
   if a:exit_status == 0
-    call go#coverage#overlay(a:coverfile)
+    call go#coverage#Overlay(a:coverfile)
   endif
 
   call delete(a:coverfile)
@@ -330,45 +281,14 @@ endfunction
 
 function! s:coverage_browser_callback(coverfile, job, exit_status, data)
   if a:exit_status == 0
-    call go#tool#ExecuteInDir(['go', 'tool', 'cover', '-html=' . a:coverfile])
+    call go#util#ExecInDir(['go', 'tool', 'cover', '-html=' . a:coverfile])
   endif
 
   call delete(a:coverfile)
 endfunction
 
-" -----------------------
-" | Neovim job handlers |
-" -----------------------
-
-let s:coverage_handler_jobs = {}
-let s:coverage_browser_handler_jobs = {}
-
-function! s:coverage_handler(job, exit_status, data) abort
-  if !has_key(s:coverage_handler_jobs, a:job.id)
-    return
-  endif
-  let l:tmpname = s:coverage_handler_jobs[a:job.id]
-  if a:exit_status == 0
-    call go#coverage#overlay(l:tmpname)
-  endif
-
-  call delete(l:tmpname)
-  unlet s:coverage_handler_jobs[a:job.id]
-endfunction
-
-function! s:coverage_browser_handler(job, exit_status, data) abort
-  if !has_key(s:coverage_browser_handler_jobs, a:job.id)
-    return
-  endif
-
-  let l:tmpname = s:coverage_browser_handler_jobs[a:job.id]
-  if a:exit_status == 0
-    call go#tool#ExecuteInDir(['go', 'tool', 'cover', '-html=' . l:tmpname])
-  endif
-
-  call delete(l:tmpname)
-  unlet s:coverage_browser_handler_jobs[a:job.id]
-endfunction
-
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et

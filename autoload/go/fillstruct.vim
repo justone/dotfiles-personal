@@ -1,10 +1,30 @@
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 function! go#fillstruct#FillStruct() abort
+  let l:mode = go#config#FillStructMode()
+  if l:mode is 'gopls'
+    if !go#config#GoplsEnabled()
+      call go#util#EchoError("go_fillstruct_mode is 'gopls', but gopls is disabled")
+      return
+    endif
+
+    call go#lsp#FillStruct()
+    return
+  endif
+
   let l:cmd = ['fillstruct',
       \ '-file', bufname(''),
       \ '-offset', go#util#OffsetCursor(),
       \ '-line', line('.')]
       " Needs: https://github.com/davidrjenni/reftools/pull/14
       "\ '-tags', go#config#BuildTags()]
+
+  let l:buildtags = go#config#BuildTags()
+  if l:buildtags isnot ''
+    let l:cmd += ['-tags', l:buildtags]
+  endif
 
   " Read from stdin if modified.
   if &modified
@@ -60,5 +80,9 @@ function! go#fillstruct#FillStruct() abort
     call setpos('.', l:pos)
   endtry
 endfunction
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et

@@ -315,6 +315,39 @@ abbr func TestXYZ(t *testing.T) { ... }
 	func Test${1:Function}(t *testing.T) {
 		${0}
 	}
+# test t.Run
+snippet tr
+abbr t.Run("test name", func(t *testing.T){ ... })
+  t.Run("${0}", func(t *testing.T){
+
+  })
+# test table snippet
+snippet tt
+abbr var test = {...}{...} for {t.Run(){...}}
+    var tests = []struct {
+        name string
+        expected string
+        given string
+    }{
+        {"${2}", "${3}", "${4}",},
+    }
+    for _, tt := range tests {
+        tt := tt
+        t.Run(tt.name, func(t *testing.T){
+            actual := ${1:Function}(tt.given)
+            if actual != tt.expected {
+                t.Errorf("given(%s): expected %s, actual %s", tt.given, tt.expected, actual)
+            }
+        })
+    }
+# fuzz function
+snippet fuzz
+abbr func FuzzXYZ(f *testing.F) { ... }
+	func Fuzz${1:Function}(f *testing.F) {
+        f.Fuzz(func(t *testing.T, ${2:ff}) {
+            ${0}
+        })
+	}
 # test server
 snippet tsrv
 abbr ts := httptest.NewServer(...)
