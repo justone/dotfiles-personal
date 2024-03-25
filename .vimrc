@@ -263,6 +263,8 @@ let g:vrc_auto_format_response_patterns = {
 	\'json': 'jq "."'
 	\}
 
+let g:vrc_allow_get_request_body = 1
+
 " enable pathogen
 filetype off
 " let g:pathogen_blacklist = ['tagbar']
@@ -493,6 +495,7 @@ if strlen($TMUX)
 
         let g:VimuxRunnerType = 'pane'
         let g:VimuxUseNearest = 1
+        let g:VimuxHeight = "13"
 
         function! ToggleVimuxType()
             if g:VimuxRunnerType == 'window'
