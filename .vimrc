@@ -368,6 +368,8 @@ let g:ack_use_cword_for_empty_search = 1
 
 " Don't jump to first match
 cnoreabbrev Ack Ack!
+cnoreabbrev Rg Ack!
+cnoreabbrev Rgc Ack! --no-ignore-vcs --type clojure --type edn
 
 " Maps <leader>/ so we're ready to type the search keyword
 nnoremap <leader>A :Ack!<CR>
