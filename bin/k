@@ -273,6 +273,48 @@
     nil))
 
 
+;; Copy
+
+(def copy-opts
+  [["-c" "--container CONT" "Container to select"]
+   ["-p" "--pick N" "Follow nth pod"]])
+
+(defn copy
+  [args]
+  (let [parsed (parse-opts args copy-opts)
+        {:keys [options arguments]} parsed
+        {:keys [pick container]} options
+        pick (some-> pick parse-long dec)
+        pods (->> (raw-pods)
+                  (map raw-pod->pod)
+                  (filter :node/ip)
+                  (fuzzy-filter (first arguments) :metadata/name)
+                  (pick-nth pick))
+        first-pod (first pods)
+        container-name (fn [pod]
+                         (let [{:keys [containers]} pod
+                               container (or (find-container (keyword container) containers)
+                                             (find-container :api containers)
+                                             (find-container :frontend containers)
+                                             (first (remove (comp non-app-containers :container/name) containers)))]
+                           (:container/name container)))
+        unique-apps (distinct (map :metadata/app pods))
+        ;; prepend the pod name to the arguments if they start with a colon
+        cp-args (->> (rest arguments)
+                     (map #(if (string/starts-with? % ":")
+                             (str (:metadata/name first-pod) %)
+                             %)))]
+    (cond
+      (= 1 (count unique-apps))
+      (do (when (not= 1 (count pods))
+            (perr "Multiple pods detected, selecing first..."))
+          (.waitFor (apply run-kubectl "cp" "-c" (name (container-name first-pod)) cp-args)))
+
+      :else
+      (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
+    nil))
+
+
 ;; Logs
 
 (def logs-opts
@@ -486,6 +528,7 @@
    {:name "restart"       :doc "restart a deployment" :fn restart}
    {:name "start"         :doc "start a deployment"   :fn start}
    {:name "stop"          :doc "stop a deployment"    :fn stop}
+   {:name "copy"          :doc "copy to or from pod"  :fn copy}
    {:name "pick-context"  :doc "pick k8s context"     :fn pick-context}])
 
 (def columns-subcommands
