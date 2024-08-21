@@ -1,8 +1,9 @@
 {:user  {:plugins [[cider/cider-nrepl "0.28.6"]
                    [lein-oneoff  "0.3.2"]
                    [lein-pprint  "1.3.2"]]
+         :aliases {"outdated" ["with-profile" "antq" "run" "-m" "antq.core"]}
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [djblue/portal "0.51.1"]
+                        [djblue/portal "0.57.2"]
                         ; [hashp "0.2.1"]
                         [pjstadig/humane-test-output "0.11.0"]]
          ; :injections [(require 'sc.api)]
@@ -12,6 +13,7 @@
 
                       ; (require 'hashp.core)
 
+                      (in-ns 'user)
                       (binding [*out* *err*] (println " - add-tap pprint to *err*"))
                       (require 'clojure.pprint)
                       ; Create named tap function, so we can remove if desired
@@ -22,6 +24,8 @@
                       (add-tap #'pprint-tap)
                       ]
          :repl-options {:timeout 120000}}
+
+:antq {:dependencies [[com.github.liquidz/antq "RELEASE"]]}
 
  ;; kaocha test runner
  :kaocha {:aliases
