@@ -1,0 +1,13 @@
+#!/bin/bash
+
+for s in `tmux list-sessions -F '#{session_name}'` ; do
+  echo -e "\ntmux session name: $s\n--------------------"
+  for w in `tmux list-windows -t "$s" -F '#{window_id},#{window_index}'`; do
+    id=$(echo $w | cut -d, -f 1)
+    idx=$(echo $w | cut -d, -f 2)
+    echo -e "\nwindow: $idx"
+    for p in `tmux list-panes -F '#{pane_pid}' -t "$id"` ; do
+      pstree $p
+    done
+  done
+done
