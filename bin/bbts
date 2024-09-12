@@ -13,9 +13,12 @@
 
 (def timestamp-format (DateTimeFormatter/ofPattern "yyyy-MM-dd h:mm:ss.SS a"))
 
+(def zone-id
+  (ZoneId/systemDefault))
+
 (defn format-ts
   [ts]
-  (.format (OffsetDateTime/ofInstant (Instant/ofEpochMilli ts) (ZoneId/systemDefault)) timestamp-format))
+  (.format (OffsetDateTime/ofInstant (Instant/ofEpochMilli ts) zone-id) timestamp-format))
 
 #_(java.time.Instant/ofEpochMilli 1655238854479)
 
