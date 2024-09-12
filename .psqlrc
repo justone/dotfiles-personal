@@ -12,6 +12,8 @@ set TimeZone = 'America/Los_Angeles';
 -- use :x and :xx to enact these
 \set x '\\setenv PAGER less'
 \set xx '\\setenv PAGER \'pspg -s 5 -X\''
+\set queries_all 'SELECT pid, age(clock_timestamp(), query_start), usename, state, wait_event_type, wait_event, query FROM pg_stat_activity WHERE query != \'<IDLE>\' AND query NOT ILIKE \'%pg_stat_activity%\' ORDER BY query_start desc;'
+\set queries_mine 'SELECT pid, age(clock_timestamp(), query_start), usename, state, wait_event_type, wait_event, query FROM pg_stat_activity WHERE query != \'<IDLE>\' AND query NOT ILIKE \'%pg_stat_activity%\' and usename = (select current_user) ORDER BY query_start desc;'
 
 -- use :l and :ll to enact these
 \set l '\\pset numericlocale off'
