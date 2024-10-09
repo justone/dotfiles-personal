@@ -192,7 +192,8 @@
 
 ;; Common
 
-(def non-app-containers #{:nginx})
+(def non-app-containers
+  #{:nginx})
 
 
 ;; Describe
@@ -319,38 +320,47 @@
 
 (def logs-opts
   [["-c" "--container CONT" "Container to select"]
-   ["-n" "--number NUMLINES" "How many lines to go back" :default 500]
+   ["-n" "--number NUMLINES" "How many lines to go back" :default 10]
    ["-f" "--follow" "Follow log" :default false]
    ["-a" "--all" "Follow all pods" :default false]
    ["-p" "--pick N" "Follow nth pod"]
+   ["-x" "--xpanes" "Output command lines for piping to xpanes"]
    ])
 
 (defn logs
   [args]
   (let [parsed (parse-opts args logs-opts)
         {:keys [options arguments]} parsed
+        {:keys [all container follow number pick xpanes]} options
         ; _ (clojure.pprint/pprint options)
-        pick (some-> options :pick parse-long dec)
+        pick (some-> pick parse-long dec)
         pods (->> (raw-pods)
                   (map raw-pod->pod)
                   (filter :node/ip)
                   (fuzzy-filter (first arguments) :metadata/name)
                   (pick-nth pick))
         first-pod (first pods)
-        {:keys [containers]} first-pod
-        container (or (find-container (keyword (:container options)) containers)
-                      (find-container :api containers)
-                      (find-container :frontend containers)
-                      (first (remove (comp non-app-containers :container/name) containers)))
+        container-name (fn [pod]
+                         (let [{:keys [containers]} pod
+                               container (or (find-container (keyword container) containers)
+                                             (find-container :api containers)
+                                             (find-container :frontend containers)
+                                             (first (remove (comp non-app-containers :container/name) containers)))]
+                           (:container/name container)))
         unique-apps (distinct (map :metadata/app pods))]
     (cond
-      (:all options)
-      (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" (:follow options)) "-c" (name (:container/name container))))
+      all
+      (.waitFor (run-kubectl "logs" (str "--tail=" number) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" follow) "-c" (name (container-name first-pod))))
+
+      xpanes
+      (->> pods
+           (map #(string/join " " (kubectl-raw-cmd "logs" (str "--tail=" number) (-> % :metadata/name) (str "--follow=" follow) "-c" (name (container-name %)))))
+           (run! println))
 
       (= 1 (count unique-apps))
       (do (when (not= 1 (count pods))
             (perr "Multiple pods detected, selecing first..."))
-          (.waitFor (run-kubectl "logs" (str "--tail=" (:number options)) (-> first-pod :metadata/name) (str "--follow=" (:follow options)) "-c" (name (:container/name container)))))
+          (.waitFor (run-kubectl "logs" (str "--tail=" number) (-> first-pod :metadata/name) (str "--follow=" follow) "-c" (name (container-name first-pod)))))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
