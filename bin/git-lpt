@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Git Log Pretty Table
+# Originally from https://github.com/mrnugget/dotfiles/blob/master/githelpers
+
+HASH="%C(always,red)%h%C(always,reset)"
+RELATIVE_TIME="%C(always,green)%ar%C(always,reset)"
+AUTHOR="%C(always,bold blue)%an%C(always,reset)"
+REFS="%C(always,yellow)%d%C(always,reset)"
+SUBJECT="%<(50,trunc)%s"
+
+FORMAT="$HASH $RELATIVE_TIME{$AUTHOR{$SUBJECT{$REFS"
+
+git log --graph --pretty="tformat:$FORMAT" "$@" | column -t -s '{' | less -XRS --quit-if-one-screen
