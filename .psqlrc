@@ -6,6 +6,12 @@ set TimeZone = 'America/Los_Angeles';
 \timing
 \echo
 
+-- Automatically use extended mode
+\x auto
+
+-- Could be useful sometimes
+-- \set HISTFILE ~/.psql_history-:DBNAME
+
 -- \pset border 2
 -- \pset linestyle unicode
 
