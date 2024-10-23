@@ -528,7 +528,15 @@
       (println "Too many matches:" (string/join ", " (map :name contexts))))
     nil))
 
-; Main entrypoint
+;; Raw
+
+(defn raw
+  [args]
+  (.waitFor (apply run-kubectl args))
+  nil)
+
+
+;; Main entrypoint
 
 (def subcommands
   [{:name "describe"      :doc "describe a pod"       :fn describe}
@@ -539,6 +547,7 @@
    {:name "start"         :doc "start a deployment"   :fn start}
    {:name "stop"          :doc "stop a deployment"    :fn stop}
    {:name "copy"          :doc "copy to or from pod"  :fn copy}
+   {:name "raw"           :doc "send through to raw"  :fn raw}
    {:name "pick-context"  :doc "pick k8s context"     :fn pick-context}])
 
 (def columns-subcommands
