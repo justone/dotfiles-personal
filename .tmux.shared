@@ -65,6 +65,9 @@ bind-key "'" choose-tree -s -O time
 # number windows from 1
 set -g base-index 1
 
+# renumber automatically
+set -g renumber-windows on
+
 # don't wait after escape
 set -s escape-time 0
 
