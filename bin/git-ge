@@ -6,6 +6,7 @@ if [[ -d git-extras ]]; then
     git pull
 else
     git clone https://github.com/tj/git-extras
+    cd git-extras
 fi
 
 rm -rf install
