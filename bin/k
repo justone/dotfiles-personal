@@ -12,10 +12,10 @@
 (:import (java.time Duration OffsetDateTime)
          (java.time.temporal ChronoUnit)))
 
-(deps/add-deps '{:deps {io.github.justone/bb-scripts {:sha "405061f90fd567c1ade5bdc4b8b5c70faca7eb6d"}}})
-(require '[lib.highlight :as highlight])
+(deps/add-deps '{:deps {org.endot/scribe {:mvn/version "1.0.0"}}})
+(require '[scribe.highlight :as highlight])
 
-(pods/load-pod "tabl")
+(pods/load-pod 'justone/tabl "0.3.0")
 (require '[pod.tabl.doric :as doric])
 
 ;; Utility functions
