@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # bash completion support for git-extras.
 
 _git_changelog(){
@@ -23,6 +24,35 @@ _git_changelog(){
 
 _git_authors(){
   __gitcomp "-l --list --no-email"
+}
+
+_git_brv(){
+  __gitcomp "-r --reverse"
+}
+
+_git_coauthor(){
+  local oldIfs=$IFS
+  IFS=$'\n'
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local selection=
+  if ((COMP_CWORD == 2)); then
+    for line in $(git authors --list); do
+      selection+="${line% *}"$'\n'
+    done
+  elif ((COMP_CWORD == 3)); then
+    local chosen_name="${COMP_WORDS[COMP_CWORD-1]}"
+    for line in $(git authors --list); do
+      if [ "$chosen_name" = "${line% *}" ]; then
+        local email=${line#*<}
+        email=${email%>*}
+        selection+="$email"$'\n'
+      fi
+    done
+  fi
+  compopt +o default
+  compopt -o filenames
+  COMPREPLY=($(compgen -W "$selection" -- "$cur"))
+  IFS=$oldIfs
 }
 
 _git_contrib(){
@@ -66,6 +96,7 @@ _git_effort(){
 
   case "$cur" in
   --*)
+    # shellcheck disable=SC2154
     __gitcomp "
       --above
       $__git_log_common_options
@@ -81,7 +112,7 @@ _git_extras(){
 }
 
 __git_extras_workflow(){
-  __gitcomp "$(__git_heads | grep -- ^$1/ | sed s/^$1\\///g) finish"
+  __gitcomp "$(__git_heads | grep -- "^$1/" | sed s/^"$1"\\///g) finish"
 }
 
 _git_feature(){
@@ -153,4 +184,12 @@ _git_info(){
 
 _git_browse(){
   __git_complete_remote_or_refspec
+}
+
+_git_browse_ci(){
+  __git_complete_remote_or_refspec
+}
+
+_git_rename_file() {
+  __gitcomp "-h --help"
 }
