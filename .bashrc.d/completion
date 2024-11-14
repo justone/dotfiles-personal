@@ -10,3 +10,8 @@
 if [[ -e /usr/local/etc/bash_completion ]]; then
     . /usr/local/etc/bash_completion
 fi
+
+# Include brew bash completion
+if [[ -e /opt/homebrew/etc/bash_completion ]]; then
+    . /opt/homebrew/etc/bash_completion
+fi
