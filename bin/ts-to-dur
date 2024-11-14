@@ -1,0 +1,61 @@
+#!/usr/bin/env bb
+
+#_{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns ts-to-dur
+  (:require [babashka.deps :as deps]
+            [clojure.string :as string])
+  (:import (java.time Duration ZonedDateTime)
+           (java.time.temporal ChronoUnit)))
+
+(deps/add-deps '{:deps {org.endot/scribe {:mvn/version "1.0.0"}}})
+(require '[scribe.main :as sm])
+
+(def ts-re
+  #"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|-\d{2}:\d{2})")
+
+(defn format-duration
+  [duration]
+  (cond
+    (> 1 (.toMinutes duration))
+    (str (.toSecondsPart duration) "s")
+
+    (> 1 (.toHours duration))
+    (str (.toMinutesPart duration) "m")
+
+    (> 1 (.toDays duration))
+    (str (.toHoursPart duration) "h")
+
+    (> 7 (.toDays duration))
+    (str (.toDaysPart duration) "d")
+
+    :else
+    (str (.toDaysPart duration) "d")))
+
+(defn duration-since
+  [when since]
+  (Duration/ofMillis (.until since when ChronoUnit/MILLIS)))
+
+(defn ts-to-dur
+  [now ts-str]
+  (format-duration (duration-since now (ZonedDateTime/parse ts-str))))
+
+(defn dur-length
+  [line now]
+  (reduce max 0 (map count (map #(ts-to-dur now %) (re-seq ts-re line)))))
+
+(defn main
+  [_parsed]
+  (let [now (ZonedDateTime/now)
+        lines (string/split-lines (slurp *in*))
+        max-len (reduce max 0 (map #(dur-length % now) lines))]
+    (doseq [line lines]
+      (println (string/replace line ts-re (comp #(format (str "%" max-len "s") %) (partial ts-to-dur now)))))))
+
+(def ^:private main-opts
+  {:usage "Convert timestamps into durations."
+   :cli-options [["-h" "--help" "Show help."]]})
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (main (sm/basic main-opts)))
+
+; vim: set ft=clojure:
