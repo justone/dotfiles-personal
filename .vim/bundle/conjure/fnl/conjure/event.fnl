@@ -1,11 +1,11 @@
-(module conjure.event
-  {autoload {nvim conjure.aniseed.nvim
-             a conjure.aniseed.core
-             text conjure.text
-             client conjure.client
-             str conjure.aniseed.string}})
+(local {: autoload} (require :nfnl.module))
+(local nvim (autoload :conjure.aniseed.nvim))
+(local a (autoload :conjure.aniseed.core))
+(local text (autoload :conjure.text))
+(local client (autoload :conjure.client))
+(local str (autoload :conjure.aniseed.string))
 
-(defn emit [...]
+(fn emit [...]
   (let [names (a.map text.upper-first [...])]
     (client.schedule
       (fn []
@@ -13,3 +13,5 @@
           (nvim.ex.doautocmd :User (.. :Conjure (str.join names)))
           (table.remove names)))))
   nil)
+
+{: emit}

@@ -1,111 +1,84 @@
-local _2afile_2a = "fnl/conjure/client/clojure/nrepl/init.fnl"
-local _2amodule_name_2a = "conjure.client.clojure.nrepl"
-local _2amodule_2a
-do
-  package.loaded[_2amodule_name_2a] = {}
-  _2amodule_2a = package.loaded[_2amodule_name_2a]
-end
-local _2amodule_locals_2a
-do
-  _2amodule_2a["aniseed/locals"] = {}
-  _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
-end
-local autoload = (require("conjure.aniseed.autoload")).autoload
-local a, action, auto_repl, client, config, debugger, eval, mapping, nvim, parse, server, str, text, ts, util = autoload("conjure.aniseed.core"), autoload("conjure.client.clojure.nrepl.action"), autoload("conjure.client.clojure.nrepl.auto-repl"), autoload("conjure.client"), autoload("conjure.config"), autoload("conjure.client.clojure.nrepl.debugger"), autoload("conjure.eval"), autoload("conjure.mapping"), autoload("conjure.aniseed.nvim"), autoload("conjure.client.clojure.nrepl.parse"), autoload("conjure.client.clojure.nrepl.server"), autoload("conjure.aniseed.string"), autoload("conjure.text"), autoload("conjure.tree-sitter"), autoload("conjure.util")
-do end (_2amodule_locals_2a)["a"] = a
-_2amodule_locals_2a["action"] = action
-_2amodule_locals_2a["auto-repl"] = auto_repl
-_2amodule_locals_2a["client"] = client
-_2amodule_locals_2a["config"] = config
-_2amodule_locals_2a["debugger"] = debugger
-_2amodule_locals_2a["eval"] = eval
-_2amodule_locals_2a["mapping"] = mapping
-_2amodule_locals_2a["nvim"] = nvim
-_2amodule_locals_2a["parse"] = parse
-_2amodule_locals_2a["server"] = server
-_2amodule_locals_2a["str"] = str
-_2amodule_locals_2a["text"] = text
-_2amodule_locals_2a["ts"] = ts
-_2amodule_locals_2a["util"] = util
+-- [nfnl] Compiled from fnl/conjure/client/clojure/nrepl/init.fnl by https://github.com/Olical/nfnl, do not edit.
+local _local_1_ = require("nfnl.module")
+local autoload = _local_1_["autoload"]
+local a = autoload("conjure.aniseed.core")
+local action = autoload("conjure.client.clojure.nrepl.action")
+local auto_repl = autoload("conjure.client.clojure.nrepl.auto-repl")
+local config = autoload("conjure.config")
+local debugger = autoload("conjure.client.clojure.nrepl.debugger")
+local mapping = autoload("conjure.mapping")
+local parse = autoload("conjure.client.clojure.nrepl.parse")
+local server = autoload("conjure.client.clojure.nrepl.server")
+local str = autoload("conjure.aniseed.string")
+local ts = autoload("conjure.tree-sitter")
+local util = autoload("conjure.util")
 local buf_suffix = ".cljc"
-_2amodule_2a["buf-suffix"] = buf_suffix
 local comment_prefix = "; "
-_2amodule_2a["comment-prefix"] = comment_prefix
 local cfg = config["get-in-fn"]({"client", "clojure", "nrepl"})
-do end (_2amodule_locals_2a)["cfg"] = cfg
 local reader_macro_pairs = {{"#{", "}"}, {"#(", ")"}, {"#?(", ")"}, {"'(", ")"}, {"'[", "]"}, {"'{", "}"}, {"`(", ")"}, {"`[", "]"}, {"`{", "}"}}
-_2amodule_locals_2a["reader-macro-pairs"] = reader_macro_pairs
 local reader_macros = {"@", "^{", "^:"}
-_2amodule_locals_2a["reader-macros"] = reader_macros
 local function form_node_3f(node)
   return (ts["node-surrounded-by-form-pair-chars?"](node, reader_macro_pairs) or ts["node-prefixed-by-chars?"](node, reader_macros))
 end
-_2amodule_2a["form-node?"] = form_node_3f
 local function symbol_node_3f(node)
   return string.find(node:type(), "kwd")
 end
-_2amodule_2a["symbol-node?"] = symbol_node_3f
 local comment_node_3f = ts["lisp-comment-node?"]
-_2amodule_2a["comment-node?"] = comment_node_3f
-config.merge({client = {clojure = {nrepl = {connection = {default_host = "localhost", port_files = {".nrepl-port", ".shadow-cljs/nrepl.port"}, auto_repl = {enabled = true, cmd = "bb nrepl-server localhost:$port", port_file = ".nrepl-port", hidden = false}}, eval = {pretty_print = true, auto_require = true, print_quota = nil, print_function = "conjure.internal/pprint", print_options = {length = 500, level = 50, right_margin = 72}, raw_out = false}, interrupt = {sample_limit = 0.3}, refresh = {after = nil, before = nil, dirs = nil}, test = {current_form_names = {"deftest"}, runner = "clojure", call_suffix = nil, raw_out = false}, mapping = {disconnect = "cd", connect_port_file = "cf", interrupt = "ei", last_exception = "ve", result_1 = "v1", result_2 = "v2", result_3 = "v3", view_source = "vs", session_clone = "sc", session_fresh = "sf", session_close = "sq", session_close_all = "sQ", session_list = "sl", session_next = "sn", session_prev = "sp", session_select = "ss", run_all_tests = "ta", run_current_ns_tests = "tn", run_alternate_ns_tests = "tN", run_current_test = "tc", refresh_changed = "rr", refresh_all = "ra", refresh_clear = "rc"}, completion = {cljs = {use_suitable = true}, with_context = false}}}}})
+config.merge({client = {clojure = {nrepl = {connection = {default_host = "localhost", port_files = {".nrepl-port", ".shadow-cljs/nrepl.port"}, auto_repl = {enabled = true, cmd = "bb nrepl-server localhost:$port", port_file = ".nrepl-port", hidden = false}}, eval = {pretty_print = true, auto_require = true, print_quota = nil, print_function = "cider.nrepl.pprint/pprint", print_options = {length = 500, level = 50, right_margin = 72}, raw_out = false}, interrupt = {sample_limit = 0.3}, refresh = {after = nil, before = nil, dirs = nil, backend = "tools.namespace"}, test = {current_form_names = {"deftest"}, runner = "clojure", call_suffix = nil, raw_out = false}, completion = {cljs = {use_suitable = true}, with_context = false}, tap = {queue_size = 16}}}}})
+if config["get-in"]({"mapping", "enable_defaults"}) then
+  config.merge({client = {clojure = {nrepl = {mapping = {disconnect = "cd", connect_port_file = "cf", interrupt = "ei", last_exception = "ve", result_1 = "v1", result_2 = "v2", result_3 = "v3", view_source = "vs", view_tap = "vt", session_clone = "sc", session_fresh = "sf", session_close = "sq", session_close_all = "sQ", session_list = "sl", session_next = "sn", session_prev = "sp", session_select = "ss", run_all_tests = "ta", run_current_ns_tests = "tn", run_alternate_ns_tests = "tN", run_current_test = "tc", refresh_changed = "rr", refresh_all = "ra", refresh_clear = "rc"}}}}})
+else
+end
 local function context(header)
-  local _1_ = header
-  if (nil ~= _1_) then
-    local _2_ = parse["strip-shebang"](_1_)
-    if (nil ~= _2_) then
-      local _3_ = parse["strip-meta"](_2_)
-      if (nil ~= _3_) then
-        local _4_ = parse["strip-comments"](_3_)
-        if (nil ~= _4_) then
-          local _5_ = string.match(_4_, "%(%s*ns%s+([^)]*)")
-          if (nil ~= _5_) then
-            local _6_ = str.split(_5_, "%s+")
-            if (nil ~= _6_) then
-              return a.first(_6_)
+  if (nil ~= header) then
+    local tmp_3_auto = parse["strip-shebang"](header)
+    if (nil ~= tmp_3_auto) then
+      local tmp_3_auto0 = parse["strip-meta"](tmp_3_auto)
+      if (nil ~= tmp_3_auto0) then
+        local tmp_3_auto1 = parse["strip-comments"](tmp_3_auto0)
+        if (nil ~= tmp_3_auto1) then
+          local tmp_3_auto2 = string.match(tmp_3_auto1, "%(%s*ns%s+([^)]*)")
+          if (nil ~= tmp_3_auto2) then
+            local tmp_3_auto3 = str.split(tmp_3_auto2, "%s+")
+            if (nil ~= tmp_3_auto3) then
+              return a.first(tmp_3_auto3)
             else
-              return _6_
+              return nil
             end
           else
-            return _5_
+            return nil
           end
         else
-          return _4_
+          return nil
         end
       else
-        return _3_
+        return nil
       end
     else
-      return _2_
+      return nil
     end
   else
-    return _1_
+    return nil
   end
 end
-_2amodule_2a["context"] = context
 local function eval_file(opts)
   return action["eval-file"](opts)
 end
-_2amodule_2a["eval-file"] = eval_file
 local function eval_str(opts)
   return action["eval-str"](opts)
 end
-_2amodule_2a["eval-str"] = eval_str
 local function doc_str(opts)
   return action["doc-str"](opts)
 end
-_2amodule_2a["doc-str"] = doc_str
 local function def_str(opts)
   return action["def-str"](opts)
 end
-_2amodule_2a["def-str"] = def_str
 local function completions(opts)
   return action.completions(opts)
 end
-_2amodule_2a["completions"] = completions
 local function connect(opts)
   return action["connect-host-port"](opts)
 end
-_2amodule_2a["connect"] = connect
 local function on_filetype()
   mapping.buf("CljDisconnect", cfg({"mapping", "disconnect"}), util["wrap-require-fn-call"]("conjure.client.clojure.nrepl.server", "disconnect"), {desc = "Disconnect from the current REPL"})
   mapping.buf("CljConnectPortFile", cfg({"mapping", "connect_port_file"}), util["wrap-require-fn-call"]("conjure.client.clojure.nrepl.action", "connect-port-file"), {desc = "Connect to port specified in .nrepl-port etc"})
@@ -130,28 +103,26 @@ local function on_filetype()
   mapping.buf("CljRefreshChanged", cfg({"mapping", "refresh_changed"}), util["wrap-require-fn-call"]("conjure.client.clojure.nrepl.action", "refresh-changed"), {desc = "Refresh changed namespaces"})
   mapping.buf("CljRefreshAll", cfg({"mapping", "refresh_all"}), util["wrap-require-fn-call"]("conjure.client.clojure.nrepl.action", "refresh-all"), {desc = "Refresh all namespaces"})
   mapping.buf("CljRefreshClear", cfg({"mapping", "refresh_clear"}), util["wrap-require-fn-call"]("conjure.client.clojure.nrepl.action", "refresh-clear"), {desc = "Clear the refresh cache"})
-  local function _13_(_241)
+  mapping.buf("CljViewTap", cfg({"mapping", "view_tap"}), util["wrap-require-fn-call"]("conjure.client.clojure.nrepl.action", "view-tap"), {desc = "Show all tapped values and clear the queue"})
+  local function _9_(_241)
     return action["shadow-select"](a.get(_241, "args"))
   end
-  nvim.buf_create_user_command(0, "ConjureShadowSelect", _13_, {force = true, nargs = 1})
-  local function _14_(_241)
+  vim.api.nvim_buf_create_user_command(0, "ConjureShadowSelect", _9_, {force = true, nargs = 1})
+  local function _10_(_241)
     return action.piggieback(a.get(_241, "args"))
   end
-  nvim.buf_create_user_command(0, "ConjurePiggieback", _14_, {force = true, nargs = 1})
-  nvim.buf_create_user_command(0, "ConjureOutSubscribe", action["out-subscribe"], {force = true, nargs = 0})
-  nvim.buf_create_user_command(0, "ConjureOutUnsubscribe", action["out-unsubscribe"], {force = true, nargs = 0})
-  nvim.buf_create_user_command(0, "ConjureCljDebugInit", debugger.init, {force = true})
-  nvim.buf_create_user_command(0, "ConjureCljDebugInput", debugger["debug-input"], {force = true, nargs = 1})
+  vim.api.nvim_buf_create_user_command(0, "ConjurePiggieback", _10_, {force = true, nargs = 1})
+  vim.api.nvim_buf_create_user_command(0, "ConjureOutSubscribe", action["out-subscribe"], {force = true, nargs = 0})
+  vim.api.nvim_buf_create_user_command(0, "ConjureOutUnsubscribe", action["out-unsubscribe"], {force = true, nargs = 0})
+  vim.api.nvim_buf_create_user_command(0, "ConjureCljDebugInit", debugger.init, {force = true})
+  vim.api.nvim_buf_create_user_command(0, "ConjureCljDebugInput", debugger["debug-input"], {force = true, nargs = 1})
   return action["passive-ns-require"]()
 end
-_2amodule_2a["on-filetype"] = on_filetype
 local function on_load()
   return action["connect-port-file"]()
 end
-_2amodule_2a["on-load"] = on_load
 local function on_exit()
   auto_repl["delete-auto-repl-port-file"]()
   return server.disconnect()
 end
-_2amodule_2a["on-exit"] = on_exit
-return _2amodule_2a
+return {["buf-suffix"] = buf_suffix, ["comment-node?"] = comment_node_3f, ["comment-prefix"] = comment_prefix, completions = completions, connect = connect, context = context, ["def-str"] = def_str, ["doc-str"] = doc_str, ["eval-file"] = eval_file, ["eval-str"] = eval_str, ["form-node?"] = form_node_3f, ["on-exit"] = on_exit, ["on-filetype"] = on_filetype, ["on-load"] = on_load, ["symbol-node?"] = symbol_node_3f}

@@ -1,18 +1,19 @@
-(module conjure.client.clojure.nrepl.server
-  {autoload {a conjure.aniseed.core
-             uuid conjure.uuid
-             timer conjure.timer
-             log conjure.log
-             extract conjure.extract
-             client conjure.client
-             str conjure.aniseed.string
-             config conjure.config
-             debugger conjure.client.clojure.nrepl.debugger
-             ui conjure.client.clojure.nrepl.ui
-             state conjure.client.clojure.nrepl.state
-             nrepl conjure.remote.nrepl}})
+(local autoload (require :nfnl.autoload))
+(local a (autoload :conjure.aniseed.core))
+(local client (autoload :conjure.client))
+(local config (autoload :conjure.config))
+(local debugger (autoload :conjure.client.clojure.nrepl.debugger))
+(local extract (autoload :conjure.extract))
+(local log (autoload :conjure.log))
+(local nrepl (autoload :conjure.remote.nrepl))
+(local state (autoload :conjure.client.clojure.nrepl.state))
+(local str (autoload :conjure.aniseed.string))
+(local timer (autoload :conjure.timer))
+(local ui (autoload :conjure.client.clojure.nrepl.ui))
+(local uuid (autoload :conjure.uuid))
+(local fs (autoload :nfnl.fs))
 
-(defn with-conn-or-warn [f opts]
+(fn with-conn-or-warn [f opts]
   (let [conn (state.get :conn)]
     (if conn
       (f conn)
@@ -22,17 +23,17 @@
         (when (a.get opts :else)
           (opts.else))))))
 
-(defn connected? []
+(fn connected? []
   (if (state.get :conn)
     true
     false))
 
-(defn send [msg cb]
+(fn send [msg cb]
   (with-conn-or-warn
     (fn [conn]
       (conn.send msg cb))))
 
-(defn- display-conn-status [status]
+(fn display-conn-status [status]
   (with-conn-or-warn
     (fn [conn]
       (log.append [(str.join
@@ -41,72 +42,87 @@
                         (str.join [": " conn.port_file_path]))])]
                   {:break? true}))))
 
-(defn disconnect []
+(fn disconnect []
   (with-conn-or-warn
     (fn [conn]
       (conn.destroy)
       (display-conn-status :disconnected)
       (a.assoc (state.get) :conn nil))))
 
-(defn close-session [session cb]
+(fn close-session [session cb]
   (send
     {:op :close :session (a.get session :id)}
     cb))
 
-(defn assume-session [session]
+(fn assume-session [session]
   (a.assoc (state.get :conn) :session (a.get session :id))
   (log.append [(str.join ["; Assumed session: " (session.str)])]
               {:break? true}))
 
-(defn un-comment [code]
+(fn un-comment [code]
   (when code
     (string.gsub code "^#_" "")))
 
-(defn eval [opts cb]
+(fn print-opts []
+  (let [print-fn (config.get-in [:client :clojure :nrepl :eval :print_function])]
+    (when (and (config.get-in [:client :clojure :nrepl :eval :pretty_print]) print-fn)
+      {:nrepl.middleware.print/print print-fn
+       :nrepl.middleware.print/options
+       {;; This forces this table to remain associative even if level and length aren't set.
+        ;; If you have an empty table in Fennel / Lua like {} it actually becomes sequential by default.
+        ;; So it's as if we set the options to [] which is _not_ good.
+        :associative 1
+
+        :level
+        (or
+          (config.get-in [:client :clojure :nrepl :eval :print_options :level])
+          nil)
+
+        :length
+        (or
+          (config.get-in [:client :clojure :nrepl :eval :print_options :length])
+          nil)
+
+        :right-margin
+        (or
+          (config.get-in [:client :clojure :nrepl :eval :print_options :right_margin])
+          nil)}
+
+       :nrepl.middleware.print/quota
+       (config.get-in [:client :clojure :nrepl :eval :print_quota])
+
+       :nrepl.middleware.print/buffer-size
+       (config.get-in [:client :clojure :nrepl :eval :print_buffer_size])})))
+
+(fn eval [opts cb]
   (with-conn-or-warn
     (fn [_]
       (send
-        {:op :eval
-         :ns opts.context
-         :code (un-comment opts.code)
-         :file opts.file-path
-         :line (a.get-in opts [:range :start 1])
-         :column (-?> (a.get-in opts [:range :start 2]) (a.inc))
-         :session opts.session
-
-         :nrepl.middleware.print/options
-         {;; This forces this table to remain associative even if level and length aren't set.
-          ;; If you have an empty table in Fennel / Lua like {} it actually becomes sequential by default.
-          ;; So it's as if we set the options to [] which is _not_ good.
-          :associative 1
-
-          :level
-          (or
-            (config.get-in [:client :clojure :nrepl :eval :print_options :level])
-            nil)
-
-          :length
-          (or
-            (config.get-in [:client :clojure :nrepl :eval :print_options :length])
-            nil)
-
-          :right-margin
-          (or
-            (config.get-in [:client :clojure :nrepl :eval :print_options :right_margin])
-            nil)}
-
-         :nrepl.middleware.print/quota
-         (config.get-in [:client :clojure :nrepl :eval :print_quota])
-
-         :nrepl.middleware.print/buffer-size
-         (config.get-in [:client :clojure :nrepl :eval :print_buffer_size])
-
-         :nrepl.middleware.print/print
-         (when (config.get-in [:client :clojure :nrepl :eval :pretty_print])
-           (config.get-in [:client :clojure :nrepl :eval :print_function]))}
+        (a.merge
+          {:op :eval
+           :ns opts.context
+           :code (un-comment opts.code)
+           :file opts.file-path
+           :line (a.get-in opts [:range :start 1])
+           :column (-?> (a.get-in opts [:range :start 2]) (a.inc))
+           :session opts.session}
+          (print-opts))
         cb))))
 
-(defn- with-session-ids [cb]
+(fn load-file [opts cb]
+  (with-conn-or-warn
+    (fn [_]
+      (send
+        (a.merge
+          {:op :load-file
+           :file opts.code
+           :file-name (fs.filename opts.file-path)
+           :file-path opts.file-path
+           :session opts.session}
+          (print-opts))
+        cb))))
+
+(fn with-session-ids [cb]
   (with-conn-or-warn
     (fn [_]
       (send
@@ -118,15 +134,15 @@
               (table.sort sessions))
             (cb sessions)))))))
 
-(defn pretty-session-type [st]
+(fn pretty-session-type [st]
   (a.get
     {:clj :Clojure
      :cljs :ClojureScript
      :cljr :ClojureCLR}
     st
-    "Unknown https://conjure.fun/unknown-env"))
+    "Unknown https://github.com/Olical/conjure/wiki/Frequently-asked-questions#what-does-unknown-mean-in-the-log-when-connecting-to-a-clojure-nrepl"))
 
-(defn session-type [id cb]
+(fn session-type [id cb]
   (let [state {:done? false}]
 
     ;; Let's not wait forever just to check the type of a session.
@@ -159,7 +175,7 @@
               (set state.done? true)
               (cb (when st (str.trim st))))))))))
 
-(defn enrich-session-id [id cb]
+(fn enrich-session-id [id cb]
   (session-type
     id
     (fn [st]
@@ -170,7 +186,7 @@
         (a.assoc t :str #(str.join [t.name " (" t.pretty-type ")"]))
         (cb t)))))
 
-(defn with-sessions [cb]
+(fn with-sessions [cb]
   (with-session-ids
     (fn [sess-ids]
       (let [rich []
@@ -193,7 +209,7 @@
                       (cb rich))))))
             sess-ids))))))
 
-(defn clone-session [session]
+(fn clone-session [session]
   (send
     {:op :clone
      :session (a.get session :id)}
@@ -204,7 +220,7 @@
           (when session-id
             (enrich-session-id session-id assume-session)))))))
 
-(defn assume-or-create-session []
+(fn assume-or-create-session []
   (a.assoc (state.get :conn) :session nil)
   (with-sessions
     (fn [sessions]
@@ -212,24 +228,82 @@
         (clone-session)
         (assume-session (a.first sessions))))))
 
-(defn- eval-preamble [cb]
-  (send
-    {:op :eval
-     :code (.. "(ns conjure.internal"
-               "  (:require [clojure.pprint :as pp]))"
-               "(defn pprint [val w opts]"
-               "  (apply pp/write val"
-               "    (mapcat identity (assoc opts :stream w))))")}
-    (when cb
-      (nrepl.with-all-msgs-fn cb))))
+(fn eval-preamble [cb]
+  (let [queue-size (config.get-in [:client :clojure :nrepl :tap :queue_size])]
+    (send
+      {:op :eval
+       :code (str.join
+               "\n"
+               ["(create-ns 'conjure.internal)"
+                 "(intern 'conjure.internal 'initial-ns (symbol (str *ns*)))"
 
-(defn- capture-describe []
+                 "(ns conjure.internal"
+                 "  (:require [clojure.pprint :as pp] [clojure.test] [clojure.data] [clojure.string]))"
+
+                 ;; This is a shim that inserts a pprint fn in the place that CIDER would create it if it's not found.
+                 ;; We shim instead of creating our own distinct function because babashka requires us
+                 ;; to refer to `cider.nrepl.pprint/pprint` if we want to use pretty printing.
+                 ;; https://github.com/Olical/conjure/issues/406
+                 "(when-not (find-ns 'cider.nrepl.pprint)"
+                 "  (create-ns 'cider.nrepl.pprint)"
+                 "  (intern 'cider.nrepl.pprint 'pprint"
+                 "    (fn pprint [val w opts]"
+                 "      (apply pp/write val"
+                 "        (mapcat identity (assoc opts :stream w))))))"
+
+                 "(defn bounded-conj [queue x limit]"
+                 "  (->> x (conj queue) (take limit)))"
+
+                 (.. "(def tap-queue-size " queue-size ")")
+                 "(defonce tap-queue! (atom (list)))"
+
+                 ;; Must be a defonce so that we always have the same function
+                 ;; reference to remove-tap and add-tap. If we make a new
+                 ;; function each time we'll end up adding more and more tap
+                 ;; functions.
+                 "(defonce enqueue-tap!"
+                 "  (fn [x] (swap! tap-queue! bounded-conj x tap-queue-size)))"
+
+                 ;; No setup for older Clojure versions.
+                 "(when (resolve 'add-tap)"
+                 "  (remove-tap enqueue-tap!)"
+                 "  (add-tap enqueue-tap!))"
+
+                 "(defn dump-tap-queue! []"
+                 "  (reverse (first (reset-vals! tap-queue! (list)))))"
+
+                 "(defmethod clojure.test/report :fail [m]"
+                 "  (clojure.test/with-test-out"
+                 "    (clojure.test/inc-report-counter :fail)"
+                 "    (println \"\nFAIL in\" (clojure.test/testing-vars-str m))"
+                 "    (when (seq clojure.test/*testing-contexts*) (println (clojure.test/testing-contexts-str)))"
+                 "    (when-let [message (:message m)] (println message))"
+                 "    (print \"expected:\" (with-out-str (prn (:expected m))))"
+                 "    (print \"  actual:\" (with-out-str (prn (:actual m))))"
+                 "    (when (and (seq? (:actual m))"
+                 "               (= #'clojure.core/not (resolve (first (:actual m))))"
+                 "               (seq? (second (:actual m)))"
+                 "               (= #'clojure.core/= (resolve (first (second (:actual m)))))"
+                 "               (= 3 (count (second (:actual m)))))"
+                 "      (let [[missing extra _] (clojure.data/diff (second (second (:actual m))) (last (second (:actual m))))"
+                 "            missing-str (with-out-str (pp/pprint missing))"
+                 "            missing-lines (clojure.string/split-lines missing-str)"
+                 "            extra-str (with-out-str (pp/pprint extra))"
+                 "            extra-lines (clojure.string/split-lines extra-str)]"
+                 "        (when (some? missing) (doseq [m missing-lines] (println \"- \" m)))"
+                 "        (when (some? extra) (doseq [e extra-lines] (println \"+ \" e)))))))"
+
+                 "(in-ns initial-ns)"])}
+      (when cb
+        (nrepl.with-all-msgs-fn cb)))))
+
+(fn capture-describe []
   (send
     {:op :describe}
     (fn [msg]
       (a.assoc (state.get :conn) :describe msg))))
 
-(defn with-conn-and-ops-or-warn [op-names f opts]
+(fn with-conn-and-ops-or-warn [op-names f opts]
   "Takes a sequential table of op names and calls your function f with an
   associative table of the shape {:op-name true} if any exist. If not, your
   function is not called and a warning is displayed."
@@ -257,7 +331,7 @@
               (opts.else))))))
     opts))
 
-(defn handle-input-request [msg]
+(fn handle-input-request [msg]
   (send
     {:op :stdin
      :stdin (.. (or (extract.prompt "Input required: ")
@@ -265,7 +339,7 @@
                 "\n")
      :session msg.session}))
 
-(defn connect [{: host : port : cb : port_file_path : connect-opts}]
+(fn connect [{: host : port : cb : port_file_path : connect-opts}]
   (when (state.get :conn)
     (disconnect))
 
@@ -319,3 +393,22 @@
 
       {:seen-ns {}
        :port_file_path port_file_path})))
+
+{: assume-or-create-session
+ : assume-session
+ : clone-session
+ : close-session
+ : connect
+ : connected?
+ : disconnect
+ : enrich-session-id
+ : eval
+ : handle-input-request
+ : pretty-session-type
+ : send
+ : session-type
+ : un-comment
+ : with-conn-and-ops-or-warn
+ : with-conn-or-warn
+ : with-sessions
+ : load-file}

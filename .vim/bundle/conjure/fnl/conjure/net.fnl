@@ -1,10 +1,10 @@
-(module conjure.net
-  {autoload {a conjure.aniseed.core
-             nvim conjure.aniseed.nvim
-             bridge conjure.bridge}
-   require-macros [conjure.macros]})
+(local {: autoload} (require :nfnl.module))
+(local a (autoload :conjure.aniseed.core))
+(local bridge (autoload :conjure.bridge))
 
-(defn resolve [host]
+(import-macros {: augroup : autocmd} :conjure.macros)
+
+(fn resolve [host]
   ;; Mostly to work around jeejah binding to localhost instead of 127.0.0.1 and
   ;; libuv net requiring IP addresses.
   (if (= host "::")
@@ -15,10 +15,9 @@
              (a.first))
         (a.get :addr))))
 
-(defonce- state
-  {:sock-drawer []})
+(local state {:sock-drawer []})
 
-(defn- destroy-sock [sock]
+(fn destroy-sock [sock]
   (when (not (sock:is_closing))
     (sock:read_stop)
     (sock:shutdown)
@@ -26,7 +25,7 @@
 
   (set state.sock-drawer (a.filter #(not= sock $1) state.sock-drawer)))
 
-(defn connect [{:  host : port : cb}]
+(fn connect [{:  host : port : cb}]
   (let [sock (vim.loop.new_tcp)
         resolved-host (resolve host)]
 
@@ -41,9 +40,15 @@
      :host host
      :port port}))
 
-(defn destroy-all-socks []
+(fn destroy-all-socks []
   (a.run! destroy-sock state.sock-drawer))
 
-(augroup
-  conjure-net-sock-cleanup
-  (autocmd :VimLeavePre :* (viml->fn :destroy-all-socks)))
+(local group (vim.api.nvim_create_augroup "conjure-net-sock-cleanup" {}))
+(vim.api.nvim_create_autocmd
+  :VimLeavePre
+  {: group
+   :pattern "*"
+   :callback destroy-all-socks})
+
+{: resolve
+ : connect}

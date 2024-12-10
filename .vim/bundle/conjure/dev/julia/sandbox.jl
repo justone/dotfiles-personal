@@ -1,4 +1,12 @@
+using Pkg
+Pkg.activate("project")
+Pkg.activate
+
+rand(10000)
+
 1 + 1
+
+(a, b) = (1, 2)
 
 function add(x, y)
     println("x is $x and y is $y")

@@ -1,17 +1,17 @@
-(module conjure.school
-  {autoload {nvim conjure.aniseed.nvim
-             buffer conjure.buffer
-             config conjure.config
-             editor conjure.editor
-             str conjure.aniseed.string
-             a conjure.aniseed.core}})
+(local {: autoload} (require :nfnl.module))
+(local a (autoload :conjure.aniseed.core))
+(local buffer (autoload :conjure.buffer))
+(local config (autoload :conjure.config))
+(local editor (autoload :conjure.editor))
+(local nvim (autoload :conjure.aniseed.nvim))
+(local str (autoload :conjure.aniseed.string))
 
-(def- buf-name "conjure-school.fnl")
+(local buf-name "conjure-school.fnl")
 
-(defn- upsert-buf []
+(fn upsert-buf []
   (buffer.upsert-hidden buf-name))
 
-(defn- append [lines]
+(fn append [lines]
   (let [buf (upsert-buf)
         current-buf-str (str.join "\n" (nvim.buf_get_lines 0 0 -1 true))
         to-insert-str (str.join "\n" lines)]
@@ -22,19 +22,19 @@
         -1 false lines)
       true)))
 
-(defn- map-str [m]
+(fn map-str [m]
   (.. (config.get-in [:mapping :prefix])
       (config.get-in [:mapping m])))
 
-(defn- progress [n]
-  (.. "Lesson ["n "/7] complete!"))
+(fn progress [n]
+  (.. "Lesson [" n "/7] complete!"))
 
-(defn- append-or-warn [current-progress lines]
+(fn append-or-warn [current-progress lines]
   (if (append lines)
     (progress current-progress)
     "You've already completed this lesson! You can (u)ndo and run it again though if you'd like."))
 
-(defn start []
+(fn start []
   (when (not (editor.has-filetype? :fennel))
     (nvim.echo
       "Warning: No Fennel filetype found, falling back to Clojure syntax."
@@ -45,13 +45,20 @@
     (nvim.ex.autocmd "BufNewFile,BufRead *.fnl setlocal filetype=clojure")
     (nvim.ex.augroup :END))
 
-  (let [buf (upsert-buf)]
+  (let [maplocalleader-was-unset?
+        (when (and (= "<localleader>" (config.get-in [:mapping :prefix]))
+                   (a.empty? nvim.g.maplocalleader))
+          (set nvim.g.maplocalleader ",")
+          true)
+
+        buf (upsert-buf)]
     (nvim.ex.edit buf-name)
     (nvim.buf_set_lines buf 0 -1 false [])
     (append
       (a.concat
-        ["(module user.conjure-school"
-         "  {require {school conjure.school}})"
+        [
+         "(local {: autoload} (require :nfnl.module))"
+         "(local school (require :conjure.school))"
          ""
          ";; Welcome to Conjure school!"
          ";; Grab yourself a nice beverage and let's get evaluating. I hope you enjoy!"
@@ -66,17 +73,13 @@
          ";; You can learn how to change these mappings with :help conjure-mappings"
          ""
          (.. ";; Let's begin by evaluating the whole buffer using " (map-str :eval_buf))]
-        (when (= "<localleader>" (config.get-in [:mapping :prefix]))
-          (if (a.empty? nvim.g.maplocalleader)
-            (do
-              (set nvim.g.maplocalleader ",")
-              (nvim.ex.edit)
-              [";; Your <localleader> wasn't configured so I've defaulted it to comma (,) for now."
-               ";; See :help localleader for more information. (let maplocalleader=\",\")"])
-            [(.. ";; Your <localleader> is currently mapped to \"" nvim.g.maplocalleader "\"")]))
+        (if maplocalleader-was-unset?
+          [";; Your <localleader> wasn't configured so I've defaulted it to comma (,) for now."
+           ";; See :help localleader for more information. (let maplocalleader=\",\")"]
+          [(.. ";; Your <localleader> is currently mapped to \"" nvim.g.maplocalleader "\"")])
         ["(school.lesson-1)"]))))
 
-(defn lesson-1 []
+(fn lesson-1 []
   (append-or-warn
     1
     [""
@@ -104,7 +107,7 @@
      "(comment"
         "  (school.lesson-2))"]))
 
-(defn lesson-2 []
+(fn lesson-2 []
   (append-or-warn
     2
     [""
@@ -116,7 +119,7 @@
         "  (print \"Hello, World!\")"
         "  (school.lesson-3))"]))
 
-(defn lesson-3 []
+(fn lesson-3 []
   (append-or-warn
     3
     [""
@@ -128,7 +131,7 @@
      (.. ";; We'll try that in the next lesson, place your cursor inside the form below and press " (map-str :eval_replace_form))
      "(school.lesson-4)"]))
 
-(defn lesson-4 []
+(fn lesson-4 []
   (append-or-warn
     4
     [""
@@ -139,10 +142,10 @@
      ";; If you use a capital letter like mF you can even open a different file and evaluate that marked form without changing buffers!"
      "(school.lesson-5)"]))
 
-(def lesson-5-message
+(local lesson-5-message
   "This is the contents of school.lesson-5-message!")
 
-(defn lesson-5 []
+(fn lesson-5 []
   (append-or-warn
     5
     [""
@@ -157,10 +160,10 @@
      ";; Try evaluating the form below using a visual selection."
      "(school.lesson-6)"]))
 
-(def lesson-6-message
+(local lesson-6-message
   "This is the contents of school.lesson-6-message!")
 
-(defn lesson-6 []
+(fn lesson-6 []
   (append-or-warn
     6
     [""
@@ -173,7 +176,7 @@
      (.. ";; Use " (map-str :eval_motion) "a( to evaluate the lesson form.")
          "(school.lesson-7)"]))
 
-(defn lesson-7 []
+(fn lesson-7 []
   (append-or-warn
     7
     [""
@@ -183,3 +186,16 @@
      ";; For example, conjure-client-fennel-aniseed or conjure-client-clojure-nrepl."
      ""
      ";; I hope you have a wonderful time in Conjure!"]))
+
+{
+ : start
+ : lesson-1
+ : lesson-2
+ : lesson-3
+ : lesson-4
+ : lesson-5
+ : lesson-6
+ : lesson-7
+ : lesson-5-message
+ : lesson-6-message
+ }
