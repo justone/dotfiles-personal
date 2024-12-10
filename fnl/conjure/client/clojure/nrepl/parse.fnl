@@ -1,14 +1,14 @@
-(module conjure.client.clojure.nrepl.parse)
-
-(defn strip-meta [s]
+(fn strip-meta [s]
   (-?> s
        (string.gsub "%^:.-%s+" "")
        (string.gsub "%^%b{}%s+" "")))
 
-(defn strip-comments [s]
+(fn strip-comments [s]
   (-?> s
        (string.gsub ";.-[\n$]" "")))
 
-(defn strip-shebang [s]
+(fn strip-shebang [s]
   (-?> s
        (string.gsub "^#![^\n]*\n" "")))
+
+{: strip-comments : strip-meta : strip-shebang}

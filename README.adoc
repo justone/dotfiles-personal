@@ -1,9 +1,9 @@
 ++++
-<p align="center"><a href="https://www.etsy.com/uk/shop/MysticalScribbles?ref=profile_header"><img src="https://conjure.fun/images/lillian.png"/></a></p>
+<p align="center"><a href="https://www.etsy.com/uk/shop/MysticalScribbles?ref=profile_header"><img src="https://conjure.oli.me.uk/images/lillian.png"/></a></p>
 ++++
 
 == https://oli.me.uk/conversational-software-development/[Conversational software development] for https://neovim.io[Neovim] +
-https://conjure.fun/discord[image:https://img.shields.io/discord/732957595249410108.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2[Discord]]
+https://discord.gg/wXAMr8F[image:https://img.shields.io/discord/732957595249410108.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2[Discord]]
 
 Conjure is an interactive environment for evaluating code within your running program.
 
@@ -13,6 +13,7 @@ The core features of Conjure are language agnostic (although it's targeted at Li
  * https://fennel-lang.org/[Fennel] inside Neovim via Lua and https://github.com/Olical/aniseed[Aniseed] (https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(Aniseed)[quickstart])
  * https://fennel-lang.org[Fennel] outside of Neovim within any Lua process through an stdio REPL (https://github.com/Olical/conjure/wiki/Quick-start:-Fennel-(stdio)[quickstart])
  * https://janet-lang.org/[Janet] over https://github.com/janet-lang/spork/#networked-repl[spork/netrepl] (https://github.com/Olical/conjure/wiki/Quick-start:-Janet-(netrepl)[quickstart])
+ * https://janet-lang.org/[Janet] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Janet-(stdio)[quickstart])
  * https://racket-lang.org/[Racket] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Racket-(stdio)[quickstart])
  * https://docs.hylang.org[Hy] over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Hy-(stdio)[quickstart])
  * https://www.gnu.org/software/mit-scheme/[Scheme] (MIT by default) over stdio (https://github.com/Olical/conjure/wiki/Quick-start:-Scheme-(stdio)[quickstart])
@@ -57,7 +58,7 @@ You can trial run Conjure with the interactive `:ConjureSchool` tutorial without
 
 [source,bash]
 ----
-curl -fL conjure.fun/school | sh
+curl -fL conjure.oli.me.uk/school | sh
 ----
 
 This will temporarily download the plugin, launch Neovim with `:ConjureSchool` running and then clean up after itself. You get to try out what Conjure has to offer without having to edit your Neovim configuration.
@@ -95,38 +96,56 @@ To take advantage of lazy loading, a bit more involved configuration is required
 [source,lua]
 ----
 return {
+  {
     "Olical/conjure",
     ft = { "clojure", "fennel", "python" }, -- etc
-    -- [Optional] cmp-conjure for cmp
-    dependencies = {
-        {
-            "PaterJason/cmp-conjure",
-            config = function()
-                local cmp = require("cmp")
-                local config = cmp.get_config()
-                table.insert(config.sources, {
-                    name = "buffer",
-                    option = {
-                        sources = {
-                            { name = "conjure" },
-                        },
-                    },
-                })
-                cmp.setup(config)
-            end,
-        },
-    },
-    config = function(_, opts)
-        require("conjure.main").main()
-        require("conjure.mapping")["on-filetype"]()
-    end,
+    lazy = true,
     init = function()
-	       -- Set configuration options here
-        vim.g["conjure#debug"] = true
+      -- Set configuration options here
+      -- Uncomment this to get verbose logging to help diagnose internal Conjure issues
+      -- This is VERY helpful when reporting an issue with the project
+      -- vim.g["conjure#debug"] = true
     end,
+
+    -- Optional cmp-conjure integration
+    dependencies = { "PaterJason/cmp-conjure" },
+  },
+  {
+    "PaterJason/cmp-conjure",
+    lazy = true,
+    config = function()
+      local cmp = require("cmp")
+      local config = cmp.get_config()
+      table.insert(config.sources, { name = "conjure" })
+      return cmp.setup(config)
+    end,
+  },
 }
 ----
 ====
+
+== Configuration
+
+All configuration is performed through global Neovim variables, this may change to a `.setup(...)` Lua first approach some day but for now you can configure things by setting variables early, before Conjure loads. For example, if you wish to rebind or disable the default documentation lookup key (`K`) because you don't need it or it conflicts with your LSP configuration you can do so like this:
+
+```lua
+-- Disable the documentation mapping
+vim.g["conjure#mapping#doc_word"] = false
+
+-- Rebind it from K to <prefix>gk
+vim.g["conjure#mapping#doc_word"] = "gk"
+
+-- Reset it to the default unprefixed K (note the special table wrapped syntax)
+vim.g["conjure#mapping#doc_word"] = {"K"}
+```
+
+```viml
+# And the same disabling but in Vim Script
+# Note the v:false in Vim Script!
+let g:conjure#mapping#doc_word = v:false
+```
+
+Please see `:help conjure` for the full list of possible configuration variables and values.
 
 == Mods
 
@@ -155,13 +174,13 @@ It's technically optional since Conjure contains legacy fallback code, but I hig
 
 The majority of the documentation can be found within link:doc/conjure.txt[`:help conjure`]. You can also use `:ConjureSchool` to get an interactive introduction to the workflow and mappings Conjure provides. Refer to the list at the top of this file for links to the various quickstart guides for each language.
 
-Please do get in touch via https://conjure.fun/discord[Discord] or https://twitter.com/OliverCaldwell[Twitter] if you have any questions or issues.
+Please do get in touch via https://discord.gg/wXAMr8F[Discord] or https://twitter.com/OliverCaldwell[Twitter] if you have any questions or issues.
 
 Broader documentation can be found in the https://github.com/Olical/conjure/wiki[Conjure wiki], there you'll find blog posts and guides that will help you get common workflows up and running. Contributions are encouraged!
 
 == Behind the curtain
 
-Conjure is written entirely in Lua (no VimL or external processes!) which is compiled from https://fennel-lang.org/[Fennel] by https://github.com/Olical/aniseed[Aniseed] ahead of time. Check out link:CONTRIBUTING.adoc[`CONTRIBUTING.adoc`] for more on how to work on Conjure using itself.
+Conjure is written entirely in Lua (no VimL or external processes!) which is compiled from https://fennel-lang.org/[Fennel] by https://github.com/Olical/nfnl[nfnl] ahead of time. Check out link:CONTRIBUTING.md[`CONTRIBUTING.md`] for more on how to work on Conjure using itself.
 
 Historically, Conjure was Clojure specific with an entirely different implementation, you can still find that version on the https://github.com/Olical/conjure/tree/legacy-jvm[legacy-jvm branch].
 

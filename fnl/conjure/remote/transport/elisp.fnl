@@ -1,19 +1,19 @@
-(module conjure.remote.transport.elisp
-  {autoload {a conjure.aniseed.core
-             str conjure.aniseed.string
-             text conjure.text
-             stack conjure.stack}})
+(local {: autoload} (require :nfnl.module))
+(local a (autoload :conjure.aniseed.core))
+(local stack (autoload :conjure.stack))
+(local str (autoload :conjure.aniseed.string))
+(local text (autoload :conjure.text))
 
-(defn- err [...]
-  (error (str.join [*module-name* ": " ...])))
+(fn err [...]
+  (error (str.join ["conjure.remote.transport.elisp: " ...])))
 
-(def- symbol-char-pat "[a-zA-Z0-9_-]")
-(def- number-char-pat "[0-9.-]")
-(def- whitespace-char-pat "%s")
+(local symbol-char-pat "[a-zA-Z0-9_-]")
+(local number-char-pat "[0-9.-]")
+(local whitespace-char-pat "%s")
 
 ;; Beware, here be dragons. Really cool magic dragons, but dragons all the same.
 ;; Grab a coffee, put on your seat belt. Good luck.
-(defn- read* [cs ctxs result]
+(fn read* [cs ctxs result]
   (if (a.empty? cs)
     result
     (let [prev-cs cs
@@ -116,5 +116,7 @@
         ;; Catch all, stop processing if we're confused.
         (err "Unknown `ctx`: " ctx-name)))))
 
-(defn read [s]
+(fn read [s]
   (read* (text.chars s) [] nil))
+
+{: read}

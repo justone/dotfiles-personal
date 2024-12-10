@@ -19,6 +19,9 @@
 (add 1 2)
 
 (rand-int 10)
+(tap> 1)
+(tap> 2)
+(tap> 3)
 
 (def some-state (atom 20))
 @some-state
@@ -86,6 +89,13 @@
 (t/deftest test-b
   (t/testing "bar"
     (t/is (= 10 10))))
+
+(comment
+  (require '[matcher-combinators.test])
+
+  (t/deftest test-matching-with-explicit-matchers
+    (t/is (match? [{:a 1} {:b 2}]
+                  [{:a 1 :c 2}]))))
 
 (let [some-local-thing 10
       some-other-local-thing 20]

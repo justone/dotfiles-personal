@@ -1,12 +1,12 @@
-(module conjure.config
-  {autoload {nvim conjure.aniseed.nvim
-             a conjure.aniseed.core
-             str conjure.aniseed.string}})
+(local autoload (require :nfnl.autoload))
+(local nvim (autoload :conjure.aniseed.nvim))
+(local a (autoload :conjure.aniseed.core))
+(local str (autoload :conjure.aniseed.string))
 
-(defn- ks->var [ks]
+(fn ks->var [ks]
   (.. "conjure#" (str.join "#" ks)))
 
-(defn get-in [ks]
+(fn get-in [ks]
   (let [key (ks->var ks)
         v (or (a.get nvim.b key) (a.get nvim.g key))]
     (if (and (a.table? v)
@@ -15,18 +15,18 @@
       (a.get v vim.val_idx)
       v)))
 
-(defn filetypes []
+(fn filetypes []
   (get-in [:filetypes]))
 
-(defn get-in-fn [prefix-ks]
+(fn get-in-fn [prefix-ks]
   (fn [ks]
     (get-in (a.concat prefix-ks ks))))
 
-(defn assoc-in [ks v]
+(fn assoc-in [ks v]
   (a.assoc nvim.g (ks->var ks) v)
   v)
 
-(defn merge [tbl opts ks]
+(fn merge [tbl opts ks]
   "Merge a table into the config recursively. Won't overwrite any existing
   value by default, set opts.overwrite? to true if this is desired."
   (let [ks (or ks [])
@@ -79,37 +79,8 @@
 
    :mapping
    {:prefix "<localleader>"
-
-    :log_split "ls"
-    :log_vsplit "lv"
-    :log_tab "lt"
-    :log_buf "le"
-    :log_toggle "lg"
-    :log_close_visible "lq"
-    :log_reset_soft "lr"
-    :log_reset_hard "lR"
-    :log_jump_to_latest "ll"
-
-    :eval_current_form "ee"
-    :eval_comment_current_form "ece"
-
-    :eval_root_form "er"
-    :eval_comment_root_form "ecr"
-
-    :eval_word "ew"
-    :eval_comment_word "ecw"
-
-    :eval_replace_form "e!"
-    :eval_marked_form "em"
-    :eval_file "ef"
-    :eval_buf "eb"
-    :eval_visual "E"
-    :eval_motion "E"
-    :eval_previous "ep"
-    :def_word "gd"
-    :doc_word ["K"]
-
-    :enable_ft_mappings true}
+    :enable_ft_mappings true
+    :enable_defaults true}
 
    :completion
    {:omnifunc :ConjureOmnifunc
@@ -122,15 +93,19 @@
 
    :log
    {:wrap false
+    :diagnostics false
+    :treesitter true
     :hud {:width 0.42
           :height 0.3
+          :zindex 1
           :enabled true
           :passive_close_delay 0
           :minimum_lifetime_ms 20
           :overlap_padding 0.1
           :border :single
           :anchor :NE
-          :ignore_low_priority false}
+          :ignore_low_priority false
+          :open_when :last-log-line-not-visible}
     :botright false
     :jump_to_latest {:enabled false
                      :cursor_scroll_position "top"}
@@ -144,7 +119,7 @@
                     :end "}%~~~"}}}
 
    :extract
-   {:context_header_lines 24
+   {:context_header_lines -1
     :form_pairs [["(" ")"]
                  ["{" "}"]
                  ["[" "]" true]]
@@ -152,3 +127,41 @@
 
    :preview
    {:sample_limit 0.3}})
+
+(when (get-in [:mapping :enable_defaults])
+  (merge
+    {:mapping
+     {:log_split "ls"
+      :log_vsplit "lv"
+      :log_tab "lt"
+      :log_buf "le"
+      :log_toggle "lg"
+      :log_close_visible "lq"
+      :log_reset_soft "lr"
+      :log_reset_hard "lR"
+      :log_jump_to_latest "ll"
+
+      :eval_current_form "ee"
+      :eval_comment_current_form "ece"
+
+      :eval_root_form "er"
+      :eval_comment_root_form "ecr"
+
+      :eval_word "ew"
+      :eval_comment_word "ecw"
+
+      :eval_replace_form "e!"
+      :eval_marked_form "em"
+      :eval_file "ef"
+      :eval_buf "eb"
+      :eval_visual "E"
+      :eval_motion "E"
+      :eval_previous "ep"
+      :def_word "gd"
+      :doc_word ["K"]}}))
+
+{: get-in
+ : filetypes
+ : get-in-fn
+ : assoc-in
+ : merge}

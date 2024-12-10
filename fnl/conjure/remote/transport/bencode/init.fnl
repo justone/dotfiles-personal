@@ -1,11 +1,11 @@
-(module conjure.remote.transport.bencode
-  {autoload {impl conjure.remote.transport.bencode.impl
-             a conjure.aniseed.core}})
+(local {: autoload} (require :nfnl.module))
+(local impl (autoload :conjure.remote.transport.bencode.impl))
+(local a (autoload :conjure.aniseed.core))
 
-(defn new []
+(fn new []
   {:data ""})
 
-(defn decode-all [bs part]
+(fn decode-all [bs part]
   (var progress 1)
   (var end? false)
   (let [s (.. bs.data part)
@@ -20,5 +20,9 @@
     (a.assoc bs :data (string.sub s progress))
     acc))
 
-(defn encode [...]
+(fn encode [...]
   (impl.encode ...))
+
+{: new
+ : decode-all
+ : encode}

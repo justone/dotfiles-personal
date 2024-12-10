@@ -1,20 +1,19 @@
-(module conjure.remote.nrepl
-  {autoload {a conjure.aniseed.core
-             net conjure.net
-             timer conjure.timer
-             uuid conjure.uuid
-             log conjure.log
-             client conjure.client
-             bencode conjure.remote.transport.bencode}})
+(local {: autoload} (require :nfnl.module))
+(local a (autoload :conjure.aniseed.core))
+(local bencode (autoload :conjure.remote.transport.bencode))
+(local client (autoload :conjure.client))
+(local log (autoload :conjure.log))
+(local net (autoload :conjure.net))
+(local uuid (autoload :conjure.uuid))
 
-(defn with-all-msgs-fn [cb]
+(fn with-all-msgs-fn [cb]
   (let [acc []]
     (fn [msg]
       (table.insert acc msg)
       (when msg.status.done
         (cb acc)))))
 
-(defn enrich-status [msg]
+(fn enrich-status [msg]
   (let [ks (a.get msg :status)
         status {}]
     (a.run!
@@ -24,7 +23,7 @@
     (a.assoc msg :status status)
     msg))
 
-(defn connect [opts]
+(fn connect [opts]
   "Connects to a remote nREPL server.
   * opts.host: The host string.
   * opts.port: Port as a string.
@@ -123,3 +122,5 @@
               :cb (handle-connect-fn)})))
 
     conn))
+
+{: connect : enrich-status : with-all-msgs-fn}

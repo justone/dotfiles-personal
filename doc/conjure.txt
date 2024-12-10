@@ -237,13 +237,22 @@ Conjure sets up filetype-specific mappings for each of the filetypes listed in
 `g:conjure#filetypes`. These mappings are determined by the client filetype
 and set when that filetype is loaded.
 
-You can disable all of the filetype-specific default mappings by setting
-`g:conjure#mapping#enable_ft_mappings` to `v:false` like so.
+You can disable all of the filetype code by setting
+`g:conjure#mapping#enable_ft_mappings` to `v:false` like so (the name is a
+little misleading, it will prevent Conjure from doing ANY filetype autocommand
+specific work, including setting up mappings).
 
     `:let g:conjure#mapping#enable_ft_mappings  = v:false`
 
 Tip: Booleans in Vim Script are written as `v:true` and `v:false`. If you're
 configuring these values from Lua it's just `true` and `false`.
+
+If you want to set all of the default mappings to `false` so you can just
+configure the ones you care about one at a time you can set:
+>
+    :let g:conjure#mapping#enable_defaults = v:false
+    vim.g["conjure#mapping#enable_defaults"] = false
+<
 
                                                          *g:conjure#filetypes*
 `g:conjure#filetypes`
@@ -280,8 +289,11 @@ configuring these values from Lua it's just `true` and `false`.
 
                                                     *g:conjure#filetype#janet*
 `g:conjure#filetype#janet`
-            Client to use for `janet` buffers.
-            Help: |conjure-client-janet-netrepl|
+            Client to use for `janet` buffers. Conjure also ships with an
+            alternative `"conjure.client.janet.stdio"` client which allows
+            you to work with Janet without installing and running a netrepl
+            server.
+            Help: |conjure-client-janet-netrepl|, |conjure-client-janet-stdio|
             Default: `"conjure.client.janet.netrepl"`
 
                                                        *g:conjure#filetype#hy*
@@ -403,6 +415,27 @@ configuring these values from Lua it's just `true` and `false`.
 `g:conjure#mapping#prefix`
             The key that proceeds most mappings.
             Default: `"<localleader>"`
+
+                                         *g:conjure#mapping#enable_ft_mappings*
+`g:conjure#mapping#enable_ft_mappings`
+            Toggles the `on-filetype` callback that is fired for the
+            `Filetype` autocommand fired for each supported language. By
+            disabling this you opt out of ALL Conjure mapping code and must
+            manually configure your mappings, the mapping configuration options listed
+            here will no longer work because they're entirely disabled.
+            Default: `true`
+
+                                            *g:conjure#mapping#enable_defaults*
+`g:conjure#mapping#enable_defaults`
+            Setting this to `false` will prevent all of the
+            `g:conjure#mapping#*` defaults from being configured, which means you
+            need to set the mappings you care about, Conjure will then hook
+            them up with it's mapping code but using your keys. This is a good
+            way to disable Conjure's mappings and opt into the ones you care
+            about gradually. This must be set BEFORE you first load a buffer
+            for a language you're working with because the configuration is
+            read at `Filetype` autocommand time.
+            Default: `true`
 
                                                  *g:conjure#mapping#log_split*
 `g:conjure#mapping#log_split`
@@ -571,6 +604,13 @@ configuring these values from Lua it's just `true` and `false`.
             A float between 0.0 and 1.0.
             Default: `0.3`
 
+                                                    *g:conjure#log#hud#zindex*
+`g:conjure#log#hud#zindex`
+            The zindex of the HUD window, you may need to tweak this to get
+            the HUD to play nicely with other plugins that create floating
+            windows. The zindex must be a positive integer.
+            Default: `1`
+
                                                    *g:conjure#log#hud#enabled*
 `g:conjure#log#hud#enabled`
             Should the HUD be displayed at all.
@@ -635,11 +675,38 @@ configuring these values from Lua it's just `true` and `false`.
 <
             Default: `false`
 
+                                                 *g:conjure#log#hud#open_when*
+`g:conjure#log#hud#open_when`
+            Decide when the HUD will open. By default we open when the last
+            line in the log isn't visible. So if you have the log open in a
+            split but you can't quite see the bottom, the HUD will still open.
+
+            Set this to `"log-win-not-visible"` if you would like the HUD to
+            never open if you have the log open in a window at all. Even if
+            you can't see the bottom line.
+
+            You can set `g:conjure#log#hud#enabled` to `false` if you never
+            want to see the HUD.
+            Default: `"last-log-line-not-visible"`
+
                                                       *g:conjure#log#botright*
 `g:conjure#log#botright`
             Force the log to always open at the bottom or far right of the
             editor, taking up the full width or height respectively.
             Default: `false`
+
+
+                                                   *g:conjure#log#diagnostics*
+`g:conjure#log#diagnostics`
+            Enables diagnostics in the log buffer. This should hide the
+            warnings you would normally see from your LSP setup if
+            switched off.
+            Default: `false`
+                                                    *g:conjure#log#treesitter*
+`g:conjure#log#treesitter`
+            Enables treesitter in the log buffer. You may want this off if you
+            notice large logs slowing down your editor.
+            Default: `true`
 
                                                   *g:conjure#log#break_length*
 `g:conjure#log#break_length`
@@ -713,12 +780,13 @@ configuring these values from Lua it's just `true` and `false`.
 `g:conjure#extract#context_header_lines`
             How many lines of the file should be checked for a context
             (namespace name) such as `(module foo.bar)` or `(ns foo.bar)`
-            which is used for setting the right context for evaluations.
-            If you have buffers with huge comment headers you may want to set
-            this higher.
-            If a specific buffer isn't extracting the context correctly, you
-            can override it by setting `b:conjure#context`.
-            Default: `24`
+            which is used for setting the right context for evaluations. You
+            can hard code a context for a particular buffer by setting
+            `b:conjure#context`.
+            This defaults to `-1` which means "all lines" but you can set it
+            to something like `30` if you're experiencing performance issues
+            in some buffers or projects.
+            Default: `-1`
 
                                                 *g:conjure#extract#form_pairs*
 `g:conjure#extract#form_pairs`
@@ -912,6 +980,7 @@ your dotfiles.
  - |conjure-client-fennel-stdio|
  - |conjure-client-clojure-nrepl|
  - |conjure-client-janet-netrepl|
+ - |conjure-client-janet-stdio|
  - |conjure-client-hy-stdio|
  - |conjure-client-racket-stdio|
  - |conjure-client-scheme-stdio|
@@ -1127,6 +1196,18 @@ examples: https://github.com/Olical/conjure/wiki/Client-features
                mixing up the return types of this system and may cause deep
                regret at a later date but for now, it's pretty darn useful
                when we really need it.
+
+`modify-client-exec-fn-opts`
+            Function(action, f-name, opts)
+            Called when a client function is about to be executed. You can
+            (optionally) implement this in your client to allow you to modify
+            the `opts` table (through mutation) before it's used. For example,
+            this means you can set `:passive?` on the table in order to
+            prevent the request from being displayed in the log and HUD.
+
+            Useful if you wish to handle the full display lifecycle of this
+            client function in your client code instead of relying on the
+            shared infrastructure.
 
 `comment-node?`
             Function(node)

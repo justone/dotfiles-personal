@@ -1,3 +1,6 @@
+;; [nfnl-macro]
+
+;; TODO Deprecated, we should remove this, just use the vim.* API.
 {:augroup
  (fn [name ...]
    `(do
@@ -12,8 +15,4 @@
 
  :_:
  (fn [name ...]
-   `((. nvim.ex ,(tostring name)) ,...))
-
- :viml->fn
- (fn [name]
-   `(.. "lua require('" *module-name* "')['" ,(tostring name) "']()"))}
+   `((. nvim.ex ,(tostring name)) ,...))}
