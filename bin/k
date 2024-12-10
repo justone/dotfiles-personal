@@ -209,6 +209,7 @@
 
 (def describe-opts
   [["-c" "--container CONT" "Container to select"]
+   ["-a" "--all" "Look at all pods, not just those that are running" :default false]
    ["-p" "--pick N" "Follow nth pod"]])
 
 
@@ -216,12 +217,13 @@
   [args]
   (let [parsed (parse-opts args describe-opts)
         {:keys [options arguments]} parsed
+        {:keys [all]} options
         pick (some-> options :pick parse-long dec)
-        pods (->> (raw-pods)
-                  (map raw-pod->pod)
-                  (filter :node/ip)
-                  (fuzzy-filter (first arguments) :metadata/name)
-                  (pick-nth pick))]
+        pods (cond->> (raw-pods)
+               :first (map raw-pod->pod)
+               (not all) (filter :node/ip)
+               :always (fuzzy-filter (first arguments) :metadata/name)
+               :finally (pick-nth pick))]
     (if (= 1 (count pods))
       (.waitFor (run-kubectl "describe" "pod" (-> pods first :metadata/name)))
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
