@@ -111,15 +111,20 @@
   (-> (kubectl-data "-o" "json" "get" "pods")
       :out
       (json/decode true)
-      :items))
+      :items)
+  #_(-> (slurp "sample.json")
+        (json/decode true)
+        :items))
 
 (defn raw-container->container
-  [statuses raw-container]
+  [statuses global-phase raw-container]
   (let [cname (:name raw-container)
         [state {:keys [reason]}] (-> (get statuses cname) :state first)]
    {:container/name (keyword cname)
    :container/image (:image raw-container)
-   :container/status (if (= :running state) "Running" reason)}))
+   :container/status (cond (= :running state) "Running"
+                           reason reason
+                           :else global-phase)}))
 
 (defn parse-date-time
   [input]
@@ -132,7 +137,7 @@
     (with-meta
       {:metadata/app (or (-> raw-pod :metadata :labels :app) name)
        :metadata/name name
-       :containers (mapv #(raw-container->container container-statuses %) (-> raw-pod :spec :containers))
+       :containers (mapv #(raw-container->container container-statuses (-> raw-pod :status :phase) %) (-> raw-pod :spec :containers))
        :node/name (-> raw-pod :spec :nodeName)
        :node/ip (-> raw-pod :status :hostIP)
        :status/state (-> raw-pod :status :phase)
@@ -140,9 +145,13 @@
       {:raw raw-pod})))
 
 #_(def p (raw-pods))
-#_(pprint (first p))
+#_(->> (filter #(= "Pending" (-> % :status :phase)) p)
+       ; (map raw-pod->pod)
+       ; (map (partial prep-pod (OffsetDateTime/now)))
+       first clojure.pprint/pprint)
+#_(clojure.pprint/pprint (first (filter #(= "Pending" (-> % :status :phase)) p)))
 #_(->> (map raw-pod->pod p)
-       (filter #(= "call-of-duty-stats-api" (:metadata/app %)))
+       (filter #(= "app-name" (:metadata/app %)))
        (map meta)
        (pprint))
 #_(count (map :metadata/app p))
