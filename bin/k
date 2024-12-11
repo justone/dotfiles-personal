@@ -14,6 +14,7 @@
 
 (deps/add-deps '{:deps {org.endot/scribe {:mvn/version "1.0.0"}}})
 (require '[scribe.highlight :as highlight])
+(require '[scribe.main :as sm])
 
 (pods/load-pod 'justone/tabl "0.3.0")
 (require '[pod.tabl.doric :as doric])
@@ -208,14 +209,17 @@
 ;; Describe
 
 (def describe-opts
-  [["-c" "--container CONT" "Container to select"]
+  [["-h" "--help" "Show help."]
+   ["-c" "--container CONT" "Container to select"]
    ["-a" "--all" "Look at all pods, not just those that are running" :default false]
-   ["-p" "--pick N" "Follow nth pod"]])
+   ["-p" "--pick N" "Pick nth pod"]])
 
 
 (defn describe
   [args]
-  (let [parsed (parse-opts args describe-opts)
+  (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
+                          :cli-options describe-opts}
+                         args)
         {:keys [options arguments]} parsed
         {:keys [all]} options
         pick (some-> options :pick parse-long dec)
@@ -233,8 +237,9 @@
 ;; Exec
 
 (def exec-opts
-  [["-c" "--container CONT" "Container to select"]
-   ["-p" "--pick N" "Follow nth pod"]
+  [["-h" "--help" "Show help."]
+   ["-c" "--container CONT" "Container to select"]
+   ["-p" "--pick N" "Pick nth pod"]
    ["-m" "--multiple" "Run against multiple pods in sequence"]
    ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
@@ -244,7 +249,9 @@
 
 (defn exec
   [args]
-  (let [parsed (parse-opts args exec-opts)
+  (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
+                          :cli-options exec-opts}
+                         args)
         {:keys [options arguments]} parsed
         {:keys [pick container multiple xpanes]} options
         pick (some-> pick parse-long dec)
@@ -288,12 +295,15 @@
 ;; Copy
 
 (def copy-opts
-  [["-c" "--container CONT" "Container to select"]
-   ["-p" "--pick N" "Follow nth pod"]])
+  [["-h" "--help" "Show help."]
+   ["-c" "--container CONT" "Container to select."]
+   ["-p" "--pick N" "Pick nth pod."]])
 
 (defn copy
   [args]
-  (let [parsed (parse-opts args copy-opts)
+  (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
+                          :cli-options copy-opts}
+                         args)
         {:keys [options arguments]} parsed
         {:keys [pick container]} options
         pick (some-> pick parse-long dec)
@@ -330,17 +340,19 @@
 ;; Logs
 
 (def logs-opts
-  [["-c" "--container CONT" "Container to select"]
+  [["-h" "--help" "Show help."]
+   ["-c" "--container CONT" "Container to select"]
    ["-n" "--number NUMLINES" "How many lines to go back" :default 10]
    ["-f" "--follow" "Follow log" :default false]
    ["-a" "--all" "Follow all pods" :default false]
    ["-p" "--pick N" "Follow nth pod"]
-   ["-x" "--xpanes" "Output command lines for piping to xpanes"]
-   ])
+   ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn logs
   [args]
-  (let [parsed (parse-opts args logs-opts)
+  (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
+                          :cli-options logs-opts}
+                         args)
         {:keys [options arguments]} parsed
         {:keys [all container follow number pick xpanes]} options
         ; _ (clojure.pprint/pprint options)
@@ -481,7 +493,9 @@
      :ages (pr-str sorted-ages)}))
 
 (def pods-opts
-  [["-s" "--summary" "Summarize by app name and version" :default false]])
+  [["-h" "--help" "Show help."]
+   ["-s" "--summary" "Summarize by app name and version" :default false]
+   ["-p" "--plain" "No color." :default false]])
 
 (def status-colors
   "Colors for each status. Picked from the output of `highlight --print-colors`"
@@ -496,14 +510,17 @@
 
 (defn pods
   [args]
-  (let [parsed (parse-opts args pods-opts)
+  (let [parsed (sm/basic {:usage "List Kubernetes pods."
+                          :cli-options pods-opts}
+                         args)
         {:keys [options]} parsed
+        {:keys [summary plain]} options
         now (OffsetDateTime/now)
         prepped (->> (raw-pods)
                      (map raw-pod->pod)
                      (map (partial prep-pod now)))]
     (cond
-      (:summary options)
+      summary
       (->> (summarize-pods prepped)
            (sort-by (juxt :name :version :count))
            (doric/table {:format 'tabl.format.k8s} columns-pods-summary)
@@ -514,8 +531,9 @@
       (->> prepped
            (doric/table {:format 'tabl.format.k8s} columns-pods)
            (string/split-lines)
-           (map #(highlight/add % (re-pattern (string/join "|" (keys status-colors)))
-                                {:explicit status-colors}))
+           (map #(cond-> %
+                   (not plain) (highlight/add (re-pattern (string/join "|" (keys status-colors)))
+                                {:explicit status-colors})))
            (run! println))))
   nil)
 
