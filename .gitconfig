@@ -34,13 +34,13 @@
 	unstage = reset HEAD
 	lol = log --oneline --graph --decorate
 	lg = "lpt"
-	lgs = "lpt -30"
+	lgs = "lpt -50"
 	lgss = "lpt -6"
 	la = "lpt --all"
-	las = "lpt --all -30"
+	las = "lpt --all -50"
 	lass = "lpt --all -6"
 	lr = "lpt --exclude \"*stash*\" --exclude \"*/dead/*\" --exclude \"*/renovate*\" --exclude \"*/dependabot*\" --exclude \"*/v*-rc*\" --all"
-	lrs = "lpt --exclude \"*stash*\" --exclude \"*/dead/*\" --exclude \"*/renovate*\" --exclude \"*/dependabot*\" --exclude \"*/v*-rc*\" --all -30"
+	lrs = "lpt --exclude \"*stash*\" --exclude \"*/dead/*\" --exclude \"*/renovate*\" --exclude \"*/dependabot*\" --exclude \"*/v*-rc*\" --all -50"
 	lrss = "lpt --exclude \"*stash*\" --exclude \"*/dead/*\" --exclude \"*/renovate*\" --exclude \"*/dependabot*\" --exclude \"*/v*-rc*\" --all -6"
 	; from https://stackoverflow.com/a/60875067
 	; stash-index = "!f() { ! git diff --cached --exit-code --quiet && git stash push --quiet --keep-index -m \"temp for stash-index\" && git stash push \"$@\" && git stash pop --quiet stash@{1} && git stash show -p | git apply -R; }; f"
