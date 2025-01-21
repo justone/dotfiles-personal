@@ -86,6 +86,7 @@ endif
 " conjure
 let g:conjure#client#clojure#nrepl#eval#auto_require = v:false
 let g:conjure#log#botright = v:true
+let g:conjure#log#hud#open_when = 'log-win-not-visible'
 " let g:conjure#client#clojure#nrepl#eval#print_options#length = 100
 " let g:conjure#highlight#enabled = v:true
 " let g:conjure#log#fold#enabled = v:true
