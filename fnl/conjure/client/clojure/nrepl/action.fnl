@@ -232,15 +232,6 @@
 (fn escape-backslashes [s]
   (s:gsub "\\" "\\\\"))
 
-; (fn eval-file [opts]
-;   (try-ensure-conn
-;     (fn []
-;       (server.eval
-;         (a.assoc opts :code (.. "(#?(:cljs cljs.core/load-file"
-;                                 " :default clojure.core/load-file)"
-;                                 " \"" (escape-backslashes opts.file-path) "\")"))
-;         (eval-cb-fn opts)))))
-
 (fn eval-file [opts]
   (try-ensure-conn
     (fn []
@@ -312,6 +303,33 @@
                     $1
                     {:raw-out? true
                      :ignore-nil? true})}))))))
+
+(fn eval-macro-expand [expander]
+  (try-ensure-conn
+    (fn []
+      (let [form (a.get (extract.form {}) :content)]
+        (when (not (a.empty? form))
+          (log.append [(.. "; " expander " (form): " form)] {:break? true})
+          (eval-str
+            {:code (..
+                     (if (= :clojure.walk/macroexpand-all expander)
+                       "(require 'clojure.walk) "
+                       "")
+                     "(" expander " '" form ")")
+             :context (extract.context)
+             :cb #(ui.display-result
+                    $1
+                    {:raw-out? true
+                     :ignore-nil? true})}))))))
+
+(fn macro-expand-1 []
+  (eval-macro-expand :macroexpand-1))
+
+(fn macro-expand []
+  (eval-macro-expand :macroexpand))
+
+(fn macro-expand-all []
+  (eval-macro-expand :clojure.walk/macroexpand-all))
 
 (fn clone-current-session []
   (try-ensure-conn
@@ -740,4 +758,7 @@
  : shadow-select
  : test-runners
  : view-source
- : view-tap}
+ : view-tap
+ : macro-expand-1
+ : macro-expand
+ : macro-expand-all}
