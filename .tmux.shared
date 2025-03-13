@@ -96,6 +96,7 @@ if-shell '[ $(echo "$(tmux -V | cut -d" " -f2 | cut -da -f1) >= 2.9" | bc) -eq 1
 # monitor activity
 setw -g monitor-activity on
 set -g visual-activity off
+set -g activity-action none
 
 # moar history
 set -g history-limit 75000
