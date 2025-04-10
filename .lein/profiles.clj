@@ -5,11 +5,13 @@
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
                         [djblue/portal "0.57.2"]
                         ; [hashp "0.2.1"]
-                        [pjstadig/humane-test-output "0.11.0"]]
+                        ; [pjstadig/humane-test-output "0.11.0"]
+                        ]
          ; :injections [(require 'sc.api)]
          ; #_#_
-         :injections [(require 'pjstadig.humane-test-output)
-                      (pjstadig.humane-test-output/activate!)
+         :injections [
+                      ; (require 'pjstadig.humane-test-output)
+                      ; (pjstadig.humane-test-output/activate!)
 
                       ; (require 'hashp.core)
 
