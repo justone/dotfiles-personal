@@ -337,6 +337,38 @@
     nil))
 
 
+;; Port forward
+
+(def port-forward-opts
+  [["-h" "--help" "Show help."]
+   ["-p" "--pick N" "Pick nth pod."]])
+
+(defn port-forward
+  [args]
+  (let [parsed (sm/basic {:usage "Set up port forward"
+                          :cli-options port-forward-opts}
+                         args)
+        {:keys [options arguments]} parsed
+        {:keys [pick]} options
+        pick (some-> pick parse-long dec)
+        pods (->> (raw-pods)
+                  (map raw-pod->pod)
+                  (filter :node/ip)
+                  (fuzzy-filter (first arguments) :metadata/name)
+                  (pick-nth pick))
+        first-pod (first pods)
+        unique-apps (distinct (map :metadata/app pods))]
+    (cond
+      (= 1 (count unique-apps))
+      (do (when (not= 1 (count pods))
+            (perr "Multiple pods detected, selecing first..."))
+          (.waitFor (apply run-kubectl "port-forward" (:metadata/name first-pod) (rest arguments))))
+
+      :else
+      (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
+    nil))
+
+
 ;; Logs
 
 (def logs-opts
@@ -576,6 +608,7 @@
    {:name "start"         :doc "start a deployment"   :fn start}
    {:name "stop"          :doc "stop a deployment"    :fn stop}
    {:name "copy"          :doc "copy to or from pod"  :fn copy}
+   {:name "port-forward"  :doc "set up port forward"  :fn port-forward}
    {:name "raw"           :doc "send through to raw"  :fn raw}
    {:name "pick-context"  :doc "pick k8s context"     :fn pick-context}])
 
