@@ -86,10 +86,13 @@
 [include]
 	path = ~/.gitconfig.local
 [branch]
-	sort = authordate
+	sort = -committerdate
 [rerere]
 	enabled = true
 [diff "clojure"]
 	xfuncname = (^\\(.*|\\s*\\(defn.*)
 [pull]
 	ff = only
+[column]
+	ui = auto,dense
+	status = never
