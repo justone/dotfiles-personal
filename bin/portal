@@ -15,3 +15,5 @@
     (let [{:keys [parsed]} (parse/default-parse line)]
       (tap> parsed)
       (recur (read-line)))))
+
+; vim: set ft=clojure:
