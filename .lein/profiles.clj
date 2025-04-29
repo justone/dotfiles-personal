@@ -3,7 +3,7 @@
                    [lein-pprint  "1.3.2"]]
          :aliases {"outdated" ["with-profile" "antq" "run" "-m" "antq.core"]}
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [djblue/portal "0.57.2"]
+                        [djblue/portal "0.59.0"]
                         ; [hashp "0.2.1"]
                         ; [pjstadig/humane-test-output "0.11.0"]
                         ]
