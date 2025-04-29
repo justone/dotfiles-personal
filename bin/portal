@@ -1,0 +1,17 @@
+#!/usr/bin/env bb
+
+(require '[babashka.deps :as deps])
+(deps/add-deps '{:deps {djblue/portal {:mvn/version "LATEST"}
+                        ;; pre-release version from a branch
+                        io.github.justone/scribe {:git/sha "a02162ab2a56ca1b53bfb9a6c54fe5e10511f911"}}})
+(require '[portal.api :as p])
+(require '[scribe.parse :as parse])
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (p/open)
+  (add-tap p/submit)
+  (.addShutdownHook (Runtime/getRuntime) (Thread. #(p/close)))
+  (loop [line (read-line)]
+    (let [{:keys [parsed]} (parse/default-parse line)]
+      (tap> parsed)
+      (recur (read-line)))))
