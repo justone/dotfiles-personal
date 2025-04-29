@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Wraps an edn stream in a vector
+
+bb -I '(vec *input*)'
