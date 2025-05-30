@@ -13,7 +13,10 @@
   (.addShutdownHook (Runtime/getRuntime) (Thread. #(p/close)))
   (loop [line (read-line)]
     (let [{:keys [parsed]} (parse/default-parse line)]
-      (tap> parsed)
-      (recur (read-line)))))
+      (when parsed
+        (tap> parsed)
+        (recur (read-line)))))
+  ;; if EOF is reached, hold the portal open till killed
+  @(promise))
 
 ; vim: set ft=clojure:
