@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# highlight metric name first, then tags, and finally greys the instructional comments
+highlight "^[\w_]+" | highlight "[\w_]+=\"[^\"]+\"" | highlight --colors 243 "^#.*"
