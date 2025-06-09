@@ -1,0 +1,27 @@
+#!/usr/bin/env bb
+
+(ns puge
+  (:require [babashka.deps :as deps]))
+
+(deps/add-deps '{:deps {mvxcvi/puget {:mvn/version "1.3.4"}
+                        ;; pre-release version from a branch
+                        io.github.justone/scribe {:git/sha "a02162ab2a56ca1b53bfb9a6c54fe5e10511f911"}}})
+(require '[puget.printer :as puget])
+(require '[scribe.parse :as parse])
+(require '[scribe.main :as main])
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (let [{:keys [options]} (main/basic {:usage "Pretty print parsed data with Puget."
+                                       :cli-options [["-h" "--help" "Show help."]
+                                                     ["-n" "--no-color" "Disable color output."]]})
+        {:keys [no-color]} options
+        printer (if no-color
+                  #(puget/pprint %)
+                  #(puget/with-color (puget/pprint %)))]
+    (loop [line (read-line)]
+      (when line
+        (let [{:keys [parsed]} (parse/default-parse line)]
+          (printer parsed)
+          (recur (read-line)))))))
+
+; vim: set ft=clojure:
