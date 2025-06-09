@@ -183,12 +183,16 @@
   )
 
 (defn fuzzy-filter
-  [match name-fn items]
-  (let [lookup (into {} (map (juxt name-fn identity)) items)
-        pat (fuzzy match)]
-    (if-some [item (get lookup match)]
-      [item]
-      (filter #(re-matches pat (name-fn %)) items))))
+  ([match name-fn items]
+   (fuzzy-filter nil match name-fn items))
+  ([{:keys [literal] :as _opts} match name-fn items]
+   (if literal
+     (filter #(string/includes? (name-fn %) match) items)
+     (let [lookup (into {} (map (juxt name-fn identity)) items)
+           pat (fuzzy match)]
+       (if-some [item (get lookup match)]
+         [item]
+         (filter #(re-matches pat (name-fn %)) items))))))
 
 #_(fuzzy-filter "exch" :metadata/app (map raw-pod->pod (raw-pods)))
 
@@ -241,6 +245,7 @@
    ["-c" "--container CONT" "Container to select"]
    ["-p" "--pick N" "Pick nth pod"]
    ["-m" "--multiple" "Run against multiple pods in sequence"]
+   ["-l" "--literal" "Don't do fuzzy matching"]
    ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn find-container
@@ -253,12 +258,12 @@
                           :cli-options exec-opts}
                          args)
         {:keys [options arguments]} parsed
-        {:keys [pick container multiple xpanes]} options
+        {:keys [pick container multiple literal xpanes]} options
         pick (some-> pick parse-long dec)
         pods (->> (raw-pods)
                   (map raw-pod->pod)
                   (filter :node/ip)
-                  (fuzzy-filter (first arguments) :metadata/name)
+                  (fuzzy-filter {:literal literal} (first arguments) :metadata/name)
                   (pick-nth pick))
         first-pod (first pods)
         container-name (fn [pod]
@@ -378,6 +383,7 @@
    ["-f" "--follow" "Follow log" :default false]
    ["-a" "--all" "Follow all pods" :default false]
    ["-p" "--pick N" "Follow nth pod"]
+   ["-l" "--literal" "Don't do fuzzy matching"]
    ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn logs
@@ -386,13 +392,13 @@
                           :cli-options logs-opts}
                          args)
         {:keys [options arguments]} parsed
-        {:keys [all container follow number pick xpanes]} options
+        {:keys [all container follow number pick xpanes literal]} options
         ; _ (clojure.pprint/pprint options)
         pick (some-> pick parse-long dec)
         pods (->> (raw-pods)
                   (map raw-pod->pod)
                   (filter :node/ip)
-                  (fuzzy-filter (first arguments) :metadata/name)
+                  (fuzzy-filter {:literal literal} (first arguments) :metadata/name)
                   (pick-nth pick))
         first-pod (first pods)
         container-name (fn [pod]
