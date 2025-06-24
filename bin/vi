@@ -1,5 +1,8 @@
 #!/bin/bash
 
+NVIM_APPNAME=nvim-astro5
+export NVIM_APPNAME
+
 BIN=vim
 if type nvim &> /dev/null; then
     BIN=nvim
@@ -9,7 +12,9 @@ CMD=$(basename $0)
 if [[ $CMD == 'vi' ]] || [[ $CMD == 'vim' ]]; then
     exec $BIN "$@"
 elif [[ $CMD == 'viff' ]]; then
-    exec $BIN -c ":CtrlP" "$@"
+    # exec $BIN -c ":CtrlP" "$@"
+    exec $BIN -c ":Telescope git_files" "$@"
 elif [[ $CMD == 'vifl' ]]; then
-    exec $BIN -c ":CtrlPMRU" "$@"
+    # exec $BIN -c ":CtrlPMRU" "$@"
+    exec $BIN -c ":normal ,fl" "$@"
 fi
