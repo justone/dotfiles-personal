@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export DFT_COLOR=always
 export DFT_DISPLAY=side-by-side-show-both
 export DFT_SYNTAX_HIGHLIGHT=off
 export GIT_EXTERNAL_DIFF=difft
