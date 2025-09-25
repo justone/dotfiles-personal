@@ -78,11 +78,9 @@
 (def kubectl-cmd (or (which "kubectl")
                      (which "microk8s.kubectl")))
 
-(def extra-kubectl (atom []))
-
 (defn kubectl-data
-  [& args]
-  (let [result (apply sh/sh kubectl-cmd (concat @extra-kubectl args))]
+  [extra-kubectl & args]
+  (let [result (apply sh/sh kubectl-cmd (concat extra-kubectl args))]
     (if (zero? (:exit result))
       result
       (throw (ex-info (:err result) result)))))
@@ -90,12 +88,12 @@
 #_(kubectl-data "-o" "json" "get" "pod")
 
 (defn kubectl-raw-cmd
-  [& args]
-  (concat [kubectl-cmd] @extra-kubectl args))
+  [extra-kubectl & args]
+  (concat [kubectl-cmd] extra-kubectl args))
 
 (defn run-kubectl
-  [& args]
-  (let [cmd (apply kubectl-raw-cmd args)
+  [extra-kubectl & args]
+  (let [cmd (apply kubectl-raw-cmd extra-kubectl args)
         _ (perr (string/join " " cmd))
         pb (doto (ProcessBuilder. cmd)
              (.inheritIO))
@@ -108,8 +106,10 @@
 ;; Data fetching functions
 
 (defn raw-pods
-  []
-  (-> (kubectl-data "-o" "json" "get" "pods")
+  [extra-kubectl all-ns?]
+  (-> (if all-ns?
+        (kubectl-data extra-kubectl "-o" "json" "get" "pods" "-A")
+        (kubectl-data extra-kubectl "-o" "json" "get" "pods"))
       :out
       (json/decode true)
       :items)
@@ -136,7 +136,10 @@
   (let [name (-> raw-pod :metadata :name)
         container-statuses (into {} (map (juxt :name identity) (-> raw-pod :status :containerStatuses)))]
     (with-meta
-      {:metadata/app (or (-> raw-pod :metadata :labels :app) name)
+      {:metadata/app (or (-> raw-pod :metadata :labels :app)
+                         (-> raw-pod :metadata :labels :app.kubernetes.io/name)
+                         name)
+       :metadata/namespace (-> raw-pod :metadata :namespace)
        :metadata/name name
        :containers (mapv #(raw-container->container container-statuses (-> raw-pod :status :phase) %) (-> raw-pod :spec :containers))
        :node/name (-> raw-pod :spec :nodeName)
@@ -157,6 +160,18 @@
        (pprint))
 #_(count (map :metadata/app p))
 #_(print-table (map raw-pod->pod p))
+
+(defn regex?
+  [v]
+  (instance? java.util.regex.Pattern v))
+
+(defn included-namespace?
+  [excluded]
+  (let [included? (if (seq excluded)
+                    (apply every-pred (map #(fn [p] (not (string/starts-with? (:metadata/namespace p) %))) excluded))
+                    (constantly true))]
+    (fn [p]
+      (included? p))))
 
 (defn raw-deployments
   []
@@ -220,20 +235,20 @@
 
 
 (defn describe
-  [args]
+  [{:keys [extra-kubectl all-ns?]} args]
   (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
                           :cli-options describe-opts}
                          args)
         {:keys [options arguments]} parsed
         {:keys [all]} options
         pick (some-> options :pick parse-long dec)
-        pods (cond->> (raw-pods)
+        pods (cond->> (raw-pods extra-kubectl all-ns?)
                :first (map raw-pod->pod)
                (not all) (filter :node/ip)
                :always (fuzzy-filter (first arguments) :metadata/name)
                :finally (pick-nth pick))]
     (if (= 1 (count pods))
-      (.waitFor (run-kubectl "describe" "pod" (-> pods first :metadata/name)))
+      (.waitFor (run-kubectl extra-kubectl "describe" "-n" (-> pods first :metadata/namespace) "pod" (-> pods first :metadata/name)))
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
     nil))
 
@@ -253,15 +268,16 @@
   (first (filter #(= k (:container/name %)) containers)))
 
 (defn exec
-  [args]
+  [{:keys [extra-kubectl all-ns? excluded-namespaces]} args]
   (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
                           :cli-options exec-opts}
                          args)
         {:keys [options arguments]} parsed
         {:keys [pick container multiple literal xpanes]} options
         pick (some-> pick parse-long dec)
-        pods (->> (raw-pods)
+        pods (->> (raw-pods extra-kubectl all-ns?)
                   (map raw-pod->pod)
+                  (filter (included-namespace? excluded-namespaces))
                   (filter :node/ip)
                   (fuzzy-filter {:literal literal} (first arguments) :metadata/name)
                   (pick-nth pick))
@@ -279,18 +295,18 @@
     (cond
       multiple
       (doseq [pod pods]
-        (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name pod) "-c" (name (container-name pod)) "--" command)))
+        (.waitFor (apply run-kubectl extra-kubectl "exec" "-n" (:metadata/namespace pod) "-it" (:metadata/name pod) "-c" (name (container-name pod)) "--" command)))
 
       xpanes
       (->> pods
-           (map #(apply kubectl-raw-cmd "exec" "-it" (:metadata/name %) "-c" (name (container-name %)) "--" command))
+           (map #(apply kubectl-raw-cmd extra-kubectl "exec" "-n" (:metadata/namespace %) "-it" (:metadata/name %) "-c" (name (container-name %)) "--" command))
            (map #(string/join " " %))
            (run! println))
 
       (= 1 (count unique-apps))
       (do (when (not= 1 (count pods))
             (perr "Multiple pods detected, selecing first..."))
-          (.waitFor (apply run-kubectl "exec" "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" command)))
+          (.waitFor (apply run-kubectl extra-kubectl "exec" "-n" (:metadata/namespace first-pod) "-it" (:metadata/name first-pod) "-c" (name (container-name first-pod)) "--" command)))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
@@ -305,15 +321,16 @@
    ["-p" "--pick N" "Pick nth pod."]])
 
 (defn copy
-  [args]
+  [{:keys [extra-kubectl all-ns? excluded-namespaces]} args]
   (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
                           :cli-options copy-opts}
                          args)
         {:keys [options arguments]} parsed
         {:keys [pick container]} options
         pick (some-> pick parse-long dec)
-        pods (->> (raw-pods)
+        pods (->> (raw-pods extra-kubectl all-ns?)
                   (map raw-pod->pod)
+                  (filter (included-namespace? excluded-namespaces))
                   (filter :node/ip)
                   (fuzzy-filter (first arguments) :metadata/name)
                   (pick-nth pick))
@@ -335,7 +352,7 @@
       (= 1 (count unique-apps))
       (do (when (not= 1 (count pods))
             (perr "Multiple pods detected, selecing first..."))
-          (.waitFor (apply run-kubectl "cp" "-c" (name (container-name first-pod)) cp-args)))
+          (.waitFor (apply run-kubectl extra-kubectl "cp" "-n" (:metadata/namespace first-pod) "-c" (name (container-name first-pod)) cp-args)))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
@@ -349,15 +366,16 @@
    ["-p" "--pick N" "Pick nth pod."]])
 
 (defn port-forward
-  [args]
+  [{:keys [extra-kubectl all-ns? excluded-namespaces]} args]
   (let [parsed (sm/basic {:usage "Set up port forward"
                           :cli-options port-forward-opts}
                          args)
         {:keys [options arguments]} parsed
         {:keys [pick]} options
         pick (some-> pick parse-long dec)
-        pods (->> (raw-pods)
+        pods (->> (raw-pods extra-kubectl all-ns?)
                   (map raw-pod->pod)
+                  (filter (included-namespace? excluded-namespaces))
                   (filter :node/ip)
                   (fuzzy-filter (first arguments) :metadata/name)
                   (pick-nth pick))
@@ -367,7 +385,7 @@
       (= 1 (count unique-apps))
       (do (when (not= 1 (count pods))
             (perr "Multiple pods detected, selecing first..."))
-          (.waitFor (apply run-kubectl "port-forward" (:metadata/name first-pod) (rest arguments))))
+          (.waitFor (apply run-kubectl extra-kubectl "port-forward" "-n" (:metadata/namespace first-pod) (:metadata/name first-pod) (rest arguments))))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
@@ -387,7 +405,7 @@
    ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn logs
-  [args]
+  [{:keys [extra-kubectl all-ns? excluded-namespaces]} args]
   (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
                           :cli-options logs-opts}
                          args)
@@ -395,8 +413,9 @@
         {:keys [all container follow number pick xpanes literal]} options
         ; _ (clojure.pprint/pprint options)
         pick (some-> pick parse-long dec)
-        pods (->> (raw-pods)
+        pods (->> (raw-pods extra-kubectl all-ns?)
                   (map raw-pod->pod)
+                  (filter (included-namespace? excluded-namespaces))
                   (filter :node/ip)
                   (fuzzy-filter {:literal literal} (first arguments) :metadata/name)
                   (pick-nth pick))
@@ -411,17 +430,17 @@
         unique-apps (distinct (map :metadata/app pods))]
     (cond
       all
-      (.waitFor (run-kubectl "logs" (str "--tail=" number) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" follow) "-c" (name (container-name first-pod))))
+      (.waitFor (run-kubectl extra-kubectl "logs" "-n" (-> first-pod :metadata/namespace) (str "--tail=" number) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" follow) "-c" (name (container-name first-pod))))
 
       xpanes
       (->> pods
-           (map #(string/join " " (kubectl-raw-cmd "logs" (str "--tail=" number) (-> % :metadata/name) (str "--follow=" follow) "-c" (name (container-name %)))))
+           (map #(string/join " " (kubectl-raw-cmd extra-kubectl "logs"  "-n" (-> first-pod :metadata/namespace) (str "--tail=" number) (-> % :metadata/name) (str "--follow=" follow) "-c" (name (container-name %)))))
            (run! println))
 
       (= 1 (count unique-apps))
       (do (when (not= 1 (count pods))
             (perr "Multiple pods detected, selecing first..."))
-          (.waitFor (run-kubectl "logs" (str "--tail=" number) (-> first-pod :metadata/name) (str "--follow=" follow) "-c" (name (container-name first-pod)))))
+          (.waitFor (run-kubectl extra-kubectl "logs" "-n" (-> first-pod :metadata/namespace) (str "--tail=" number) (-> first-pod :metadata/name) (str "--follow=" follow) "-c" (name (container-name first-pod)))))
 
       :else
       (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
@@ -431,13 +450,13 @@
 ;; Restart
 
 (defn restart
-  [args]
+  [{:keys [extra-kubectl]} args]
   (let [deployments (->> (raw-deployments)
                          (map raw-deployment->deployment)
                          (fuzzy-filter (first args) :metadata/name))
         deployment-name (some->> deployments first :metadata/name)]
     (if (= 1 (count deployments))
-      (.waitFor (run-kubectl "rollout" "restart" "deployment" deployment-name))
+      (.waitFor (run-kubectl extra-kubectl "rollout" "restart" "deployment" deployment-name))
       (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
     nil))
 
@@ -445,13 +464,13 @@
 ;; Stop
 
 (defn stop
-  [args]
+  [{:keys [extra-kubectl]} args]
   (let [deployments (->> (raw-deployments)
                          (map raw-deployment->deployment)
                          (fuzzy-filter (first args) :metadata/name))
         deployment-name (some->> deployments first :metadata/name (str "deployment.v1.apps/"))]
     (if (= 1 (count deployments))
-      (.waitFor (run-kubectl "scale" deployment-name "--replicas" "0"))
+      (.waitFor (run-kubectl extra-kubectl "scale" deployment-name "--replicas" "0"))
       (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
     nil))
 
@@ -459,13 +478,13 @@
 ;; Start
 
 (defn start
-  [args]
+  [{:keys [extra-kubectl]} args]
   (let [deployments (->> (raw-deployments)
                          (map raw-deployment->deployment)
                          (fuzzy-filter (first args) :metadata/name))
         deployment-name (some->> deployments first :metadata/name (str "deployment.v1.apps/"))]
     (if (= 1 (count deployments))
-      (.waitFor (run-kubectl "scale" deployment-name "--replicas" "1"))
+      (.waitFor (run-kubectl extra-kubectl "scale" deployment-name "--replicas" "1"))
       (println "Too many matches:" (string/join ", " (map :metadata/name deployments))))
     nil))
 
@@ -490,6 +509,7 @@
   (let [{:keys [containers]} pod
         app-containers (remove (comp non-app-containers :container/name) containers)]
     {:name (:metadata/app pod)
+     :namespace (:metadata/namespace pod)
      :full-name (:metadata/name pod)
      :version (-> (or (find-container :api app-containers)
                       (find-container :frontend app-containers)
@@ -517,11 +537,12 @@
 
 (defn- summarize-pods
   [prepped]
-  (for [[[name version] matches] (group-by (juxt :name :version) prepped)
+  (for [[[namespace name version] matches] (group-by (juxt :namespace :name :version) prepped)
         :let [sorted-ages (sort-by duration->seconds (filter some? (map :age matches)))
               oldest (last sorted-ages)
               youngest (first sorted-ages)]]
     {:count (count matches)
+     :namespace namespace
      :name name
      :version version
      :youngest youngest
@@ -547,27 +568,29 @@
    "Running" 34})
 
 (defn pods
-  [args]
+  [{:keys [extra-kubectl all-ns? excluded-namespaces]} args]
   (let [parsed (sm/basic {:usage "List Kubernetes pods."
                           :cli-options pods-opts}
                          args)
         {:keys [options]} parsed
         {:keys [summary plain]} options
         now (OffsetDateTime/now)
-        prepped (->> (raw-pods)
+        prepped (->> (raw-pods extra-kubectl all-ns?)
                      (map raw-pod->pod)
-                     (map (partial prep-pod now)))]
+                     (filter (included-namespace? excluded-namespaces))
+                     (map (partial prep-pod now)))
+        show-ns? (->> prepped (map :namespace) distinct count (< 1))]
     (cond
       summary
       (->> (summarize-pods prepped)
-           (sort-by (juxt :name :version :count))
-           (doric/table {:format 'tabl.format.k8s} columns-pods-summary)
+           (sort-by (juxt :namespace :name :version :count))
+           (doric/table {:format 'tabl.format.k8s} (if show-ns? (cons {:name :namespace :align :left} columns-pods-summary) columns-pods-summary))
            (string/split-lines)
            (run! println))
 
       :else
       (->> prepped
-           (doric/table {:format 'tabl.format.k8s} columns-pods)
+           (doric/table {:format 'tabl.format.k8s} (if show-ns? (cons {:name :namespace :align :left} columns-pods) columns-pods))
            (string/split-lines)
            (map #(cond-> %
                    (not plain) (highlight/add (re-pattern (string/join "|" (keys status-colors)))
@@ -586,7 +609,7 @@
       :contexts))
 
 (defn pick-context
-  [args]
+  [_config args]
   (let [contexts (->> (raw-contexts)
                          (fuzzy-filter (first args) :name))
         context-name (some->> contexts first :name)]
@@ -598,8 +621,8 @@
 ;; Raw
 
 (defn raw
-  [args]
-  (.waitFor (apply run-kubectl args))
+  [{:keys [extra-kubectl]} args]
+  (.waitFor (apply run-kubectl extra-kubectl args))
   nil)
 
 
@@ -625,6 +648,14 @@
 (def cli-options
   [["-c" "--context CONTEXT" "Specify context to use"]])
 
+(defn custom-config [context]
+  (cond
+    (not context)
+    {:all-ns? true}
+
+    :else
+    {:all-ns? false}))
+
 (defn -main [& args]
   (let [
         parsed (parse-opts args cli-options :in-order true)
@@ -632,11 +663,13 @@
         {:keys [context]} options
         [subcommand & subargs] arguments
         fns (fuzzy-filter subcommand :name subcommands)
-        chosen-fn (some-> fns first :fn)]
-    (when context
-      (reset! extra-kubectl ["--context" context]))
+        chosen-fn (some-> fns first :fn)
+        config (merge
+                 (when context
+                   {:extra-kubectl ["--context" context]})
+                 (custom-config context))]
     (if (= 1 (count fns))
-      (chosen-fn subargs)
+      (chosen-fn config subargs)
       (if (and (< 0 (count arguments)) (< 1 (count fns)))
         (println "Too many matches:" (string/join ", " (map :name fns)))
         (do
