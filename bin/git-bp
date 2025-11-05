@@ -1,6 +1,8 @@
 #!/bin/bash
 
-first="${1:-master}"
+main_branch=$(git main-branch)
+
+first="${1:-$main_branch}"
 second="${2:-HEAD}"
 
 common=$(diff -u <(git rev-list --first-parent "$first") <(git rev-list --first-parent "$second") | sed -ne 's/^ //p' | head -n 1)

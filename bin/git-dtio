@@ -1,6 +1,8 @@
 #!/bin/bash
 
-TARGET="${1:-master...}"
+main_branch=$(git main-branch)
+
+TARGET="${1:-$main_branch...}"
 
 for f in `git di $TARGET --name-only`; do
   GIT_PAGER="less -RS -+X" git dti $TARGET -- $f

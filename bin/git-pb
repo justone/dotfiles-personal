@@ -1,9 +1,10 @@
 #!/bin/bash
 
 br=$(git rev-parse --abbrev-ref HEAD)
+main_branch=$(git main-branch)
 
-if [[ "$br" == "master" || "$br" == "main" ]]; then
-  echo "not on master/main"
+if [[ "$br" == "$main_branch" ]]; then
+  echo "not on master/main branch"
   exit 1
 fi
 
