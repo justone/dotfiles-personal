@@ -1,0 +1,47 @@
+#!/usr/bin/env bb
+
+;; This is in the after bin directory so that it doesn't use the bb.edn that's
+;; in bin and instead will use the project bb.edn if there is one.
+
+(ns bbn
+  (:require [babashka.classpath :as cp]
+            [babashka.deps :as deps]
+            [babashka.fs :as fs]
+            [babashka.nrepl.server :as srv]))
+
+(deps/add-deps '{:deps {org.endot/scribe {:mvn/version "1.0.0"}}})
+(require '[scribe.main :as main])
+
+(def ^:private main-options
+  {:usage "Start a Babashka nREPL server."
+   :cli-options [["-h" "--help" "Show help."]
+                 ["-c" "--classpath" "Print the classpath and exit."]
+                 ["-f" "--force" "Run the nREPL server anyway."]
+                 ["-p" "--port" "Port to listen on." :parse-fn parse-long]]})
+
+(defn nrepl
+  [args]
+  (let [{{:keys [classpath force port]} :options} (main/basic main-options args)
+        port (or port (+ 1024 (rand-int 16384)))]
+    (cond
+      (and (= (System/getProperty "user.home") (System/getProperty "user.dir"))
+           (not force))
+      (throw (ex-info "Not running in homedir. Pass `-f` to do it anyway." {:babashka/exit 1}))
+
+      classpath
+      (run! println (cp/split-classpath (cp/get-classpath)))
+
+      :else
+      (do (srv/start-server! {:host "localhost"
+                              :port port})
+          (spit ".nrepl-port" (str port))
+          (-> (Runtime/getRuntime)
+              (.addShutdownHook
+                (Thread. (fn [] (fs/delete ".nrepl-port")))))
+
+          (deref (promise))))))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (nrepl *command-line-args*))
+
+; vim: set ft=clojure:
