@@ -1,0 +1,4 @@
+{:dynamic-vars
+ {clojure.core/*print-namespace-maps* false
+  #_#_
+  clojure.core/*warn-on-reflection* true}}
