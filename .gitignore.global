@@ -18,6 +18,7 @@ znate.vim
 !.vim/
 .lein-repl-history
 .tool-versions
+mise.toml
 
 # draw.io/diagrams.net
 .$*.bkp
