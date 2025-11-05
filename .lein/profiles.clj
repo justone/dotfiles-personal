@@ -1,9 +1,10 @@
-{:user  {:plugins [[cider/cider-nrepl "0.28.6"]
+{:user  {:plugins [[cider/cider-nrepl "0.58.0"]
                    [lein-oneoff  "0.3.2"]
                    [lein-pprint  "1.3.2"]]
          :aliases {"outdated" ["with-profile" "antq" "run" "-m" "antq.core"]}
          :dependencies [[vvvvalvalval/scope-capture "0.3.2"]
-                        [djblue/portal "0.61.0"]
+                        [nrepl/nrepl "1.5.0"]
+                        [djblue/portal "0.62.0"]
                         ; [hashp "0.2.1"]
                         ; [pjstadig/humane-test-output "0.11.0"]
                         ]
