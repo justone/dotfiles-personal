@@ -246,10 +246,17 @@
                :first (map raw-pod->pod)
                (not all) (filter :node/ip)
                :always (fuzzy-filter (first arguments) :metadata/name)
-               :finally (pick-nth pick))]
-    (if (= 1 (count pods))
-      (.waitFor (run-kubectl extra-kubectl "describe" "-n" (-> pods first :metadata/namespace) "pod" (-> pods first :metadata/name)))
-      (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
+               :finally (pick-nth pick))
+        first-pod (first pods)
+        unique-apps (distinct (map :metadata/app pods))]
+
+    (cond
+      (= 1 (count unique-apps))
+      (do (when (not= 1 (count pods))
+            (perr "Multiple pods detected, selecing first..."))
+          (.waitFor (run-kubectl extra-kubectl "describe" "-n" (:metadata/namespace first-pod) "pod" (:metadata/name first-pod))))
+
+      :else (println "Too many matches:" (string/join ", " (map :metadata/name pods))))
     nil))
 
 
@@ -402,15 +409,16 @@
    ["-a" "--all" "Follow all pods" :default false]
    ["-p" "--pick N" "Follow nth pod"]
    ["-l" "--literal" "Don't do fuzzy matching"]
+   ["-M" "--more-max-requests" "Bump up the --max-log-requests to 20"]
    ["-x" "--xpanes" "Output command lines for piping to xpanes"]])
 
 (defn logs
-  [{:keys [extra-kubectl all-ns? excluded-namespaces]} args]
+  [{:keys [extra-kubectl all-ns? excluded-namespaces name-label]} args]
   (let [parsed (sm/basic {:usage "Pull Kubernetes logs."
                           :cli-options logs-opts}
                          args)
         {:keys [options arguments]} parsed
-        {:keys [all container follow number pick xpanes literal]} options
+        {:keys [all container follow more-max-requests number pick xpanes literal]} options
         ; _ (clojure.pprint/pprint options)
         pick (some-> pick parse-long dec)
         pods (->> (raw-pods extra-kubectl all-ns?)
@@ -427,10 +435,12 @@
                                              (find-container :frontend containers)
                                              (first (remove (comp non-app-containers :container/name) containers)))]
                            (:container/name container)))
-        unique-apps (distinct (map :metadata/app pods))]
+        unique-apps (distinct (map :metadata/app pods))
+        extra-kubectl (cond-> extra-kubectl
+                        more-max-requests (conj "--max-log-requests" "20"))]
     (cond
       all
-      (.waitFor (run-kubectl extra-kubectl "logs" "-n" (-> first-pod :metadata/namespace) (str "--tail=" number) (str "-lapp=" (-> pods first :metadata/app)) (str "--follow=" follow) "-c" (name (container-name first-pod))))
+      (.waitFor (run-kubectl extra-kubectl "logs" "-n" (-> first-pod :metadata/namespace) (str "--tail=" number) (format "-l%s=%s" name-label (-> pods first :metadata/app)) (str "--follow=" follow) "-c" (name (container-name first-pod))))
 
       xpanes
       (->> pods
@@ -651,10 +661,12 @@
 (defn custom-config [context]
   (cond
     (not context)
-    {:all-ns? true}
+    {:all-ns? true
+     :name-label "app"}
 
     :else
-    {:all-ns? false}))
+    {:all-ns? false
+     :name-label "app"}))
 
 (defn -main [& args]
   (let [
