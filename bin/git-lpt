@@ -7,7 +7,7 @@ HASH="%C(always,red)%h%C(always,reset)"
 RELATIVE_TIME="%C(always,green)%aI%C(always,reset)"
 AUTHOR="%C(always,bold blue)%an%C(always,reset)"
 REFS="%C(always,yellow)%d%C(always,reset)"
-SUBJECT="%<(50,trunc)%s"
+SUBJECT="%<(80,trunc)%s"
 
 FORMAT="$HASH $RELATIVE_TIME{$AUTHOR{$SUBJECT{$REFS"
 
